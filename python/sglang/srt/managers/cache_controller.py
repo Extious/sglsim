@@ -354,6 +354,11 @@ class HiCacheController:
         self.ack_backup_queue = Queue()
         self.host_mem_release_queue = Queue()
 
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            return
+
         self.prefetch_thread.start()
         self.backup_thread.start()
 
@@ -940,6 +945,11 @@ class HiCacheController:
         """
         Manage prefetching operations from storage backend to host memory.
         """
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            return
+
         self.prefetch_buffer = Queue()
         self.prefetch_io_aux_thread = threading.Thread(
             target=self.prefetch_io_aux_func, daemon=True
@@ -1008,7 +1018,7 @@ class HiCacheController:
             self.mem_pool_host.get_data_page(host_indices[i * self.page_size])
             for i in range(len(hash_values))
         ]
-        return self.storage_backend.batch_set(hash_values, data)
+        return self.storage_backend.batch_set(hash_values, data, extra_info)
 
     def _page_set_zero_copy(self, hash_values, host_indices, extra_info=None) -> bool:
         return all(
@@ -1042,6 +1052,11 @@ class HiCacheController:
         """
         Manage backup operations from host memory to storage backend.
         """
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            return
+
         while not self.storage_stop_event.is_set():
             try:
                 operation = self.backup_queue.get(block=True, timeout=1)
@@ -1054,3 +1069,126 @@ class HiCacheController:
 
             except Empty:
                 continue
+
+    @staticmethod
+    def _simulator_calc_prefetch_pages(
+        required_pages: int, page_size_byte: int, max_dur: float, bandwidth: float
+    ) -> tuple[float, float]:
+        prefetch_dur = required_pages * page_size_byte / bandwidth
+        if prefetch_dur > max_dur:
+            completed_pages = max(max_dur * bandwidth / page_size_byte, 1)
+            return completed_pages, max_dur
+        return required_pages, prefetch_dur
+
+    def handle_simulator_backup_operation(self):
+        if not self.enable_storage:
+            return
+        while True:
+            try:
+                operation = self.backup_queue.get(block=False)
+                if operation is None:
+                    return
+                if not self.backup_skip:
+                    self._page_backup(operation)
+                self.ack_backup_queue.put(operation)
+            except Empty:
+                return
+
+    def handle_simulator_prefetch_operation(self):
+        if not self.enable_storage:
+            return
+
+        from sglang.srt.simulator.state import get_active_state
+
+        state = get_active_state()
+        remain_dur = state.current_inference_dur if state is not None else 0
+        bandwidth = self._simulator_disk_read_bandwidth()
+        if bandwidth <= 0:
+            return
+        page_size_byte = self.mem_pool_host.get_size_per_token()
+
+        chunked_prefetch_operation = getattr(self, "chunked_prefetch_operation", None)
+        if chunked_prefetch_operation is not None:
+            operation = chunked_prefetch_operation["operation"]
+            storage_hit_count = chunked_prefetch_operation["storage_hit_count"]
+            completed_tokens, prefetch_dur = self._simulator_calc_prefetch_pages(
+                storage_hit_count - operation.completed_tokens,
+                page_size_byte,
+                remain_dur,
+                bandwidth,
+            )
+            if completed_tokens < storage_hit_count - operation.completed_tokens:
+                operation.completed_tokens += completed_tokens
+                remain_dur = 0
+            else:
+                operation.completed_tokens = int(storage_hit_count)
+                operation.mark_terminate()
+                remain_dur -= prefetch_dur
+                setattr(self, "chunked_prefetch_operation", None)
+                self.append_host_mem_release(operation.host_indices[storage_hit_count:])
+            self._update_simulator_prefetch_stats(operation)
+
+        while remain_dur > 0:
+            try:
+                operation = self.prefetch_queue.get(block=False)
+                if operation is None:
+                    return
+
+                hash_value, storage_hit_count = self._storage_hit_query(operation)
+                if (
+                    self.prefetch_threshold is not None
+                    and storage_hit_count < self.prefetch_threshold
+                ):
+                    operation.mark_terminate()
+                    self.append_host_mem_release(operation.host_indices)
+                    continue
+
+                operation.hash_value = hash_value[: (storage_hit_count // self.page_size)]
+                storage_hit_count = storage_hit_count // self.page_size * self.page_size
+
+                completed_tokens, prefetch_dur = self._simulator_calc_prefetch_pages(
+                    storage_hit_count,
+                    page_size_byte,
+                    remain_dur,
+                    bandwidth,
+                )
+                if completed_tokens < storage_hit_count:
+                    operation.completed_tokens = completed_tokens
+                    setattr(
+                        self,
+                        "chunked_prefetch_operation",
+                        {
+                            "operation": operation,
+                            "storage_hit_count": storage_hit_count,
+                        },
+                    )
+                    remain_dur = 0
+                else:
+                    operation.completed_tokens = int(
+                        storage_hit_count // self.page_size * self.page_size
+                    )
+                    operation.mark_terminate()
+                    remain_dur -= prefetch_dur
+                self._update_simulator_prefetch_stats(operation)
+                self.append_host_mem_release(operation.host_indices[storage_hit_count:])
+            except Empty:
+                return
+
+    def _simulator_disk_read_bandwidth(self) -> float:
+        try:
+            from sglang.srt.simulator.config import get_platform_config
+
+            return float(get_platform_config().get("disk_read_bandwidth_gb", 0)) * 1e9
+        except Exception:
+            return 0
+
+    def _update_simulator_prefetch_stats(self, operation) -> None:
+        try:
+            from sglang.srt.simulator.state import get_active_runtime
+        except Exception:
+            return
+        runtime = get_active_runtime()
+        if runtime is None:
+            return
+        req_stats = runtime.request_stats[getattr(operation, "request_id", "")]
+        req_stats.prefetch_complete_tokens = operation.completed_tokens

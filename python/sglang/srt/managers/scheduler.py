@@ -201,6 +201,9 @@ from sglang.srt.observability.trace import process_tracing_init, trace_set_threa
 from sglang.srt.parser.reasoning_parser import ReasoningParser
 from sglang.srt.sampling.sampling_batch_info import SamplingBatchInfo
 from sglang.srt.server_args import PortArgs, ServerArgs, get_global_server_args
+from sglang.srt.simulator.config import SimulatorSettings, set_active_settings
+from sglang.srt.simulator.predictor import build_simulator_predictor
+from sglang.srt.simulator.scheduler import SchedulerSimulatorRuntime
 from sglang.srt.speculative.spec_info import SpeculativeAlgorithm
 from sglang.srt.utils import (
     DynamicGradMode,
@@ -302,6 +305,11 @@ class Scheduler(
 
         # Parse args
         self.server_args = server_args
+        self.simulator_settings = SimulatorSettings.from_server_args(server_args)
+        set_active_settings(self.simulator_settings)
+        simulator_overlap_schedule = not server_args.disable_overlap_schedule
+        if self.simulator_settings.enabled:
+            server_args.disable_overlap_schedule = True
         self.tp_rank = tp_rank
         self.moe_ep_rank = moe_ep_rank
         self.pp_rank = pp_rank
@@ -361,6 +369,11 @@ class Scheduler(
 
         # Init model configs
         self.init_model_config()
+        self.simulator_predictor = (
+            build_simulator_predictor(self.server_args, self.model_config)
+            if self.simulator_settings.enabled
+            else None
+        )
 
         # Init metrics stats
         self.init_metrics(tp_rank, pp_rank, dp_rank)
@@ -431,6 +444,12 @@ class Scheduler(
 
         # Init the grammar backend for constrained generation
         self.grammar_manager = GrammarManager(self)
+
+        self.simulator_runtime = (
+            SchedulerSimulatorRuntime.from_scheduler(self, simulator_overlap_schedule)
+            if self.simulator_settings.enabled
+            else None
+        )
 
         self.is_initializing = False
 
@@ -1330,6 +1349,9 @@ class Scheduler(
     @DynamicGradMode()
     def event_loop_overlap(self):
         """A scheduler loop that overlaps the CPU processing and GPU computation."""
+        if self.simulator_settings.enabled:
+            return self.event_loop_normal()
+
         self.result_queue: Deque[
             Tuple[ScheduleBatch, Union[GenerationBatchResult, EmbeddingBatchResult]]
         ] = deque()
@@ -1554,6 +1576,9 @@ class Scheduler(
                 barrier(group=self.tp_cpu_group)
             for req in recv_reqs:
                 unwrap_shm_features(req)
+
+        if self.simulator_runtime is not None:
+            recv_reqs = self.simulator_runtime.filter_recv_requests(recv_reqs)
 
         return recv_reqs
 
@@ -2319,6 +2344,13 @@ class Scheduler(
         if self.prefill_delayer:
             prefill_delayer_single_pass.finalize(actual_prefill=ret is not None)
 
+        if self.simulator_runtime is not None:
+            self.simulator_runtime.on_new_batch_prefill(
+                ret,
+                waiting_queue_len=len(self.waiting_queue),
+                running_batch_len=len(self.running_batch.reqs),
+            )
+
         return ret
 
     def _get_new_batch_prefill_raw(
@@ -2781,6 +2813,9 @@ class Scheduler(
                 ActiveRanksOutput(status=dp_active_ranks.tolist())
             )
 
+        if self.simulator_runtime is not None:
+            self.simulator_runtime.on_run_batch(batch, ret)
+
         return ret
 
     def launch_batch_sample_if_needed(
@@ -2830,6 +2865,9 @@ class Scheduler(
         self.log_batch_result_stats(batch, result)
         self._maybe_clear_mm_inputs(batch)
         self.maybe_send_health_check_signal()
+
+        if self.simulator_runtime is not None:
+            self.simulator_runtime.on_process_batch_result(batch)
 
     def maybe_send_health_check_signal(self):
         if self.return_health_check_ipcs:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
@@ -377,6 +378,14 @@ class SchedulerProfilerMixin:
                 self.start_profile()
 
     def profile(self: Scheduler, recv_req: ProfileReq):
+        if getattr(self, "simulator_runtime", None) is not None:
+            if recv_req.type == ProfileReqType.START_PROFILE:
+                self.simulator_runtime.reset()
+                return ProfileReqOutput(True, "Simulator profiling started")
+
+            metrics = self.simulator_runtime.dump_outputs()
+            return ProfileReqOutput(True, json.dumps(metrics))
+
         if recv_req.type == ProfileReqType.START_PROFILE:
             if recv_req.profile_by_stage or recv_req.start_step:
                 return self.init_profile(

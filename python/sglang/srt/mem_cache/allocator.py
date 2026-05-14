@@ -372,6 +372,22 @@ class PagedTokenToKVPoolAllocator(BaseTokenToKVPoolAllocator):
         kvcache: KVCache,
         need_sort: bool,
     ):
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            from sglang.srt.simulator.allocator import (
+                IndexableWrapper,
+                alloc_decode_cpu,
+                alloc_extend_cpu,
+            )
+
+            allocator_module = __import__(
+                "sglang.srt.mem_cache.allocator",
+                fromlist=["alloc_extend_kernel", "alloc_decode_kernel"],
+            )
+            allocator_module.alloc_extend_kernel = IndexableWrapper(alloc_extend_cpu)
+            allocator_module.alloc_decode_kernel = IndexableWrapper(alloc_decode_cpu)
+
         super().__init__(size, page_size, dtype, device, kvcache, need_sort)
         self.num_pages = size // page_size
         self.debug_mode = get_bool_env_var("SGLANG_DEBUG_MEMORY_POOL")

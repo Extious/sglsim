@@ -83,6 +83,13 @@ class StorageBackendFactory:
             ImportError: If backend module cannot be imported
             Exception: If backend initialization fails
         """
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            from sglang.srt.simulator.hicache import SimulatorHiCacheStorage
+
+            return SimulatorHiCacheStorage()
+
         # First check if backend is already registered
         if backend_name in cls._registry:
             registry_entry = cls._registry[backend_name]

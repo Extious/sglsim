@@ -6,7 +6,7 @@
 
 **Architecture:** Add a first-class `sglang.srt.simulator` runtime package, then wire it into server args, `ModelRunner`, `Scheduler`, HiCache, and `bench_serving`. Each phase produces a testable slice so the final behavior does not depend on import-time hooks.
 
-**Tech Stack:** Python, SGLang SRT, pytest, existing `tools/sglang-simulator` logic as migration reference.
+**Tech Stack:** Python, SGLang SRT, pytest, native `sglang.srt.simulator` implementation.
 
 ---
 
@@ -65,6 +65,6 @@ PYTHONPATH=python SGLANG_USE_CPU_ENGINE=1 FLASHINFER_DISABLE_VERSION_CHECK=1 \
 python -m sglang.launch_server \
   --model-path Qwen/Qwen3-32B-FP8 \
   --simulator \
-  --sim-config-path tools/sglang-simulator/test/assets/config.json \
+  --sim-config-path test/registered/unit/simulator/assets/config.json \
   --skip-server-warmup
 ```

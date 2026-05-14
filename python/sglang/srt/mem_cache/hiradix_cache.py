@@ -44,6 +44,7 @@ from sglang.srt.mem_cache.radix_cache import (
 )
 from sglang.srt.mem_cache.utils import convert_to_bigram_key
 from sglang.srt.observability.metrics_collector import StorageMetricsCollector
+from sglang.srt.server_args import get_global_server_args
 
 if TYPE_CHECKING:
     from sglang.srt.mem_cache.cache_init_params import CacheInitParams
@@ -975,6 +976,9 @@ class HiRadixCache(RadixCache):
         self.writing_check()
 
     def check_hicache_events(self):
+        if get_global_server_args().simulator:
+            self.cache_controller.handle_simulator_backup_operation()
+            self.cache_controller.handle_simulator_prefetch_operation()
         self.writing_check()
         self.loading_check()
         if self.enable_storage:

@@ -741,6 +741,13 @@ class ServerArgs:
     # For forward hooks
     forward_hooks: Optional[List[dict[str, Any]]] = None
 
+    # For simulator mode
+    simulator: bool = False
+    sim_config_path: Optional[str] = None
+    simulator_mode: Literal["offline", "blocking"] = "offline"
+    simulator_output_dir: str = "/tmp/sglang_simulator/output"
+    simulator_num_warmup: int = 0
+
     def __post_init__(self):
         """
         Orchestrates the handling of various server arguments, ensuring proper configuration and validation.
@@ -753,6 +760,15 @@ class ServerArgs:
 
         # Validate SSL arguments early (before dummy-model short-circuit).
         self._handle_ssl_validation()
+
+        if self.simulator:
+            if not self.sim_config_path:
+                raise ValueError("--sim-config-path is required when --simulator is enabled.")
+            if not os.path.exists(self.sim_config_path):
+                raise ValueError(
+                    f"--sim-config-path does not exist: {self.sim_config_path}"
+                )
+            self.simulator_mode = self.simulator_mode.lower()
 
         if self.model_path.lower() in ["none", "dummy"]:
             # Skip for dummy models
@@ -5960,6 +5976,37 @@ class ServerArgs:
             type=json_list_type,
             default=ServerArgs.forward_hooks,
             help="JSON-formatted forward hook specifications to attach to the model.",
+        )
+        parser.add_argument(
+            "--simulator",
+            action="store_true",
+            default=ServerArgs.simulator,
+            help="Enable native SGLang simulator mode.",
+        )
+        parser.add_argument(
+            "--sim-config-path",
+            type=str,
+            default=ServerArgs.sim_config_path,
+            help="Path to simulator JSON config.",
+        )
+        parser.add_argument(
+            "--simulator-mode",
+            type=str,
+            choices=["offline", "blocking"],
+            default=ServerArgs.simulator_mode,
+            help="Simulator execution mode. offline advances logical time; blocking sleeps for predicted latency.",
+        )
+        parser.add_argument(
+            "--simulator-output-dir",
+            type=str,
+            default=ServerArgs.simulator_output_dir,
+            help="Directory for simulator metrics output.",
+        )
+        parser.add_argument(
+            "--simulator-num-warmup",
+            type=int,
+            default=ServerArgs.simulator_num_warmup,
+            help="Number of initial simulator requests to exclude from metrics.",
         )
 
     @classmethod

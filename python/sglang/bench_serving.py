@@ -910,12 +910,82 @@ class BenchmarkMetrics:
     max_concurrent_requests: int = 0
 
 
+def inject_simulation_params(
+    request: DatasetRow,
+    *,
+    created_time: float,
+    total_request: int,
+    queue_start: Optional[float] = None,
+) -> None:
+    if request.extra_request_body is None:
+        request.extra_request_body = {}
+    sampling_params = request.extra_request_body.setdefault("sampling_params", {})
+    custom_params = sampling_params.setdefault("custom_params", {})
+    simulation = {
+        "created_time": created_time,
+        "total_request": total_request,
+    }
+    if queue_start is not None:
+        simulation["queue_start"] = queue_start
+    custom_params["simulation"] = simulation
+
+
+def load_simulator_metrics(output_dir: str) -> BenchmarkMetrics:
+    metrics_path = os.path.join(output_dir, "metrics.json")
+    if not os.path.exists(metrics_path):
+        raise FileNotFoundError(
+            f"Simulator metrics file not found: {metrics_path}. "
+            "Make sure the server was launched with --simulator and benchmark profiling completed."
+        )
+    with open(metrics_path) as f:
+        data = json.load(f)
+    metric_fields = BenchmarkMetrics.__dataclass_fields__
+    return BenchmarkMetrics(**{name: data.get(name, -1) for name in metric_fields})
+
+
 async def get_request(
     input_requests: List[DatasetRow],
     request_rate: float,
     use_trace_timestamps: bool = False,
     slowdown_factor: float = 1.0,
+    simulator: bool = False,
+    simulator_timestamp_scale_s: float = 1000.0,
 ) -> AsyncGenerator[DatasetRow, None]:
+    if simulator:
+        total_request = len(input_requests)
+        if use_trace_timestamps:
+            input_requests.sort(key=lambda r: r.timestamp)
+            trace_start = input_requests[0].timestamp if input_requests else 0
+            for request in input_requests:
+                if request.timestamp is None:
+                    raise ValueError(
+                        "Trace timestamps are required when simulator mode uses trace replay."
+                    )
+                created_time = (
+                    (request.timestamp - trace_start)
+                    / simulator_timestamp_scale_s
+                    * slowdown_factor
+                )
+                inject_simulation_params(
+                    request,
+                    created_time=created_time,
+                    total_request=total_request,
+                )
+                yield request
+            return
+
+        created_time = 0.0
+        for request in input_requests:
+            inject_simulation_params(
+                request,
+                created_time=created_time,
+                total_request=total_request,
+            )
+            yield request
+            if request_rate != float("inf"):
+                created_time += float(np.random.exponential(1.0 / request_rate))
+        return
+
     if use_trace_timestamps:
         print(
             f"Using trace timestamps for request generation with slowdown factor {slowdown_factor}."
@@ -1184,6 +1254,9 @@ async def benchmark(
     mooncake_num_rounds=1,
     profile_prefill_url: Optional[List[str]] = None,
     profile_decode_url: Optional[List[str]] = None,
+    simulator: bool = False,
+    simulator_timestamp_scale_s: float = 1000.0,
+    simulator_output_dir: str = "/tmp/sglang_simulator/output",
 ):
     if backend in ASYNC_REQUEST_FUNCS:
         request_func = ASYNC_REQUEST_FUNCS[backend]
@@ -1326,7 +1399,14 @@ async def benchmark(
         )
         pbar_total *= args.mooncake_num_rounds
     else:
-        request_generator = get_request(input_requests, request_rate)
+        request_generator = get_request(
+            input_requests,
+            request_rate,
+            use_trace_timestamps=use_trace_timestamps,
+            slowdown_factor=mooncake_slowdown_factor,
+            simulator=simulator,
+            simulator_timestamp_scale_s=simulator_timestamp_scale_s,
+        )
 
     # Prepare LoRA request distribution parameters
     if lora_request_distribution == "distinct":
@@ -1433,6 +1513,8 @@ async def benchmark(
         accept_length=accept_length,
         plot_throughput=args.plot_throughput,
     )
+    if simulator:
+        metrics = load_simulator_metrics(simulator_output_dir)
 
     print("\n{s:{c}^{n}}".format(s=" Serving Benchmark Result ", n=50, c="="))
     print("{:<40} {:<10}".format("Backend:", backend))
@@ -1694,6 +1776,16 @@ def run_benchmark(args_: argparse.Namespace):
 
     if not hasattr(args, "served_model_name"):
         args.served_model_name = None
+    if not hasattr(args, "simulator"):
+        args.simulator = False
+    if not hasattr(args, "simulator_output_dir"):
+        args.simulator_output_dir = "/tmp/sglang_simulator/output"
+    if not hasattr(args, "simulator_timestamp_scale_s"):
+        args.simulator_timestamp_scale_s = 1000.0
+
+    if getattr(args, "simulator", False):
+        args.profile = True
+        os.environ["SGLANG_SIMULATOR_OUTPUT_DIR"] = args.simulator_output_dir
 
     if getattr(args, "print_requests", False):
         assert args.backend == "sglang-oai-chat"  # only support this now
@@ -1886,6 +1978,9 @@ def run_benchmark(args_: argparse.Namespace):
             mooncake_num_rounds=args.mooncake_num_rounds,
             profile_prefill_url=getattr(args, "profile_prefill_url", None),
             profile_decode_url=getattr(args, "profile_decode_url", None),
+            simulator=getattr(args, "simulator", False),
+            simulator_timestamp_scale_s=args.simulator_timestamp_scale_s,
+            simulator_output_dir=args.simulator_output_dir,
         )
     )
 
@@ -2056,6 +2151,23 @@ def get_args_parser() -> ArgumentParser:
         "to execute at a time. This means that when used in combination, the "
         "actual request rate may be lower than specified with --request-rate, "
         "if the server is not processing requests fast enough to keep up.",
+    )
+    parser.add_argument(
+        "--simulator",
+        action="store_true",
+        help="Enable benchmark support for native SGLang simulator mode.",
+    )
+    parser.add_argument(
+        "--simulator-output-dir",
+        type=str,
+        default="/tmp/sglang_simulator/output",
+        help="Directory where the simulator server writes metrics.json.",
+    )
+    parser.add_argument(
+        "--simulator-timestamp-scale-s",
+        type=float,
+        default=1000.0,
+        help="Scale used to convert trace timestamps to seconds in simulator mode.",
     )
     parser.add_argument("--output-file", type=str, help="Output JSONL file name.")
     parser.add_argument(

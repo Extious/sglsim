@@ -465,6 +465,14 @@ class ModelRunner(ModelRunnerKVCacheMixin):
             enable=self.server_args.enable_memory_saver
         )
 
+        if self.server_args.simulator:
+            from sglang.srt.simulator.model_runner import (
+                initialize_simulator_model_runner,
+            )
+
+            initialize_simulator_model_runner(self, pre_model_load_memory)
+            return
+
         if self.server_args.remote_instance_weight_loader_use_transfer_engine():
             self.remote_instance_init_transfer_engine()
 
@@ -2730,6 +2738,13 @@ class ModelRunner(ModelRunnerKVCacheMixin):
         reinit_attn_backend: bool = False,
         split_forward_count: int = 1,
     ) -> ModelRunnerOutput:
+        if self.server_args.simulator:
+            from sglang.srt.simulator.model_runner import (
+                build_mock_model_runner_output,
+            )
+
+            return build_mock_model_runner_output(self, forward_batch)
+
         self.forward_pass_id += 1
 
         with get_global_expert_distribution_recorder().with_forward_pass(
@@ -2895,6 +2910,11 @@ class ModelRunner(ModelRunnerKVCacheMixin):
         Returns:
             A list of next_token_ids
         """
+        if self.server_args.simulator:
+            from sglang.srt.simulator.model_runner import build_mock_next_token_ids
+
+            return build_mock_next_token_ids(self, forward_batch)
+
         # For duplex models with multiple output streams.
         if isinstance(logits_output, tuple):
             return torch.stack(
@@ -2936,6 +2956,9 @@ class ModelRunner(ModelRunnerKVCacheMixin):
             logits_output: The logits output from the model forward
             forward_batch: The forward batch that generates logits_output
         """
+        if self.server_args.simulator:
+            return
+
         if not forward_batch.token_ids_logprobs:
             return
 

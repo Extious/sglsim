@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import logging
+import os
 import threading
 from collections import defaultdict
 from dataclasses import dataclass
@@ -63,6 +64,22 @@ if _is_npu:
     from sgl_kernel_npu.kvcacheio import TransferDirection, transfer_kv_dim_exchange
 
 logger = logging.getLogger(__name__)
+
+
+def _simulator_platform_config() -> dict:
+    from sglang.srt.simulator.config import get_platform_config
+
+    return get_platform_config()
+
+
+def _simulator_memory_read_bandwidth() -> Optional[float]:
+    value_gb = _simulator_platform_config().get("memory_read_bandwidth_gb")
+    return value_gb * 1e9 if value_gb else None
+
+
+def _simulator_memory_write_bandwidth() -> Optional[float]:
+    value_gb = _simulator_platform_config().get("memory_write_bandwidth_gb")
+    return value_gb * 1e9 if value_gb else None
 
 
 def synchronized(func):
@@ -161,6 +178,11 @@ class HostKVCache(abc.ABC):
         device: str,
         allocator_type: str = "default",
     ):
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            pin_memory = False
+
         self.device_pool = device_pool
         self.page_size = page_size
         self.layout = layout
@@ -400,6 +422,19 @@ class MHATokenToKVPoolHost(HostKVCache):
         layer_id,
         io_backend,
     ):
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            from sglang.srt.simulator.hicache import record_hicache_l2_load
+
+            record_hicache_l2_load(
+                host_indices,
+                device_indices,
+                self.get_ksize_per_token(),
+                _simulator_memory_read_bandwidth(),
+            )
+            return
+
         if io_backend == "kernel":
             if self.layout == "layer_first":
                 if self.can_use_jit:
@@ -512,6 +547,19 @@ class MHATokenToKVPoolHost(HostKVCache):
     def backup_from_device_all_layer(
         self, device_pool, host_indices, device_indices, io_backend
     ):
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            from sglang.srt.simulator.hicache import record_hicache_l2_backup
+
+            record_hicache_l2_backup(
+                host_indices,
+                device_indices,
+                self.get_size_per_token(),
+                _simulator_memory_write_bandwidth(),
+            )
+            return
+
         if io_backend == "kernel":
             if self.layout == "layer_first":
                 if self.can_use_jit:
@@ -617,6 +665,11 @@ class MHATokenToKVPoolHost(HostKVCache):
             raise ValueError(f"Unsupported IO backend: {io_backend}")
 
     def get_data_page(self, index, flat: bool = True) -> torch.Tensor:
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            return torch.ones(size=(1, 1)) * index
+
         if self.layout == "layer_first":
             data_page = self.kv_buffer[:, :, index : index + self.page_size, :, :]
         elif self.layout == "page_first":
@@ -639,6 +692,11 @@ class MHATokenToKVPoolHost(HostKVCache):
         ).flatten()
 
     def set_from_flat_data_page(self, index: int, data_page: torch.Tensor) -> None:
+        from sglang.srt.server_args import get_global_server_args
+
+        if get_global_server_args().simulator:
+            return
+
         if self.layout == "layer_first":
             self.kv_buffer[:, :, index : index + self.page_size, :, :] = (
                 data_page.reshape(

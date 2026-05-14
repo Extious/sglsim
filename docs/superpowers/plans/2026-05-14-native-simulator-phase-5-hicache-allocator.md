@@ -167,7 +167,7 @@ class SimulatorHiCacheStorage:
 
 - [ ] **Step 4: Implement allocator helper**
 
-Create `python/sglang/srt/simulator/allocator.py` by moving the existing hook logic from `tools/sglang-simulator/src/sglang_simulator/simulation/sglang/mem_cache_allocator.py` into this file:
+Create `python/sglang/srt/simulator/allocator.py` with the native CPU paged-allocation helpers:
 
 ```python
 from __future__ import annotations
@@ -354,7 +354,7 @@ in background thread target startup paths, and expose explicit methods:
         ...
 ```
 
-Use the current hook logic from `tools/sglang-simulator/src/sglang_simulator/simulation/sglang/cache_controller.py` as source.
+Implement the simulator backup/prefetch branches directly in `cache_controller.py`.
 
 - [ ] **Step 6: Patch HiRadixCache event check**
 
