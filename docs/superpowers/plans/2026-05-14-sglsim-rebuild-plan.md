@@ -1,6 +1,6 @@
 # SGLSim Rebuild Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox syntax for tracking; all planned steps are now complete.
 
 **Goal:** Build `sglsim` outside `Archived/` as a CPU-only simulator fork, migrating only scheduling, cache metadata, simulator metrics, workload replay, and AIConfigurator prediction from the archived SGLang checkpoint.
 
@@ -66,7 +66,7 @@ Agents must not write outside their owned paths.
 - Create: `python/sglsim/srt/server_args.py`
 - Create: `test/unit/simulator/test_package.py`
 
-- [ ] **Step 1: Create directories**
+- [x] **Step 1: Create directories**
 
 Run:
 
@@ -76,7 +76,7 @@ mkdir -p python/sglsim/srt test/unit/simulator
 
 Expected: directories exist outside `Archived/`.
 
-- [ ] **Step 2: Create `pyproject.toml`**
+- [x] **Step 2: Create `pyproject.toml`**
 
 Create `pyproject.toml`:
 
@@ -121,7 +121,7 @@ testpaths = ["test/unit"]
 pythonpath = ["python"]
 ```
 
-- [ ] **Step 3: Create package init files**
+- [x] **Step 3: Create package init files**
 
 Create `python/sglsim/__init__.py`:
 
@@ -135,7 +135,7 @@ Create `python/sglsim/srt/__init__.py`:
 """SGLSim runtime components."""
 ```
 
-- [ ] **Step 4: Create simulator-only server args**
+- [x] **Step 4: Create simulator-only server args**
 
 Create `python/sglsim/srt/server_args.py`:
 
@@ -187,7 +187,7 @@ class ServerArgs:
             raise ValueError(f"Simulator config path does not exist: {self.sim_config_path}")
 ```
 
-- [ ] **Step 5: Create launch entrypoint**
+- [x] **Step 5: Create launch entrypoint**
 
 Create `python/sglsim/launch_server.py`:
 
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 6: Create package tests**
+- [x] **Step 6: Create package tests**
 
 Create `test/unit/simulator/test_package.py`:
 
@@ -236,7 +236,7 @@ def test_server_args_require_existing_config(tmp_path: Path):
     assert args.simulator_mode == "offline"
 ```
 
-- [ ] **Step 7: Create uv environment**
+- [x] **Step 7: Create uv environment**
 
 Run:
 
@@ -247,7 +247,7 @@ uv pip install -e '.[test]'
 
 Expected: environment creation and editable install succeed.
 
-- [ ] **Step 8: Run package tests**
+- [x] **Step 8: Run package tests**
 
 Run:
 
@@ -257,7 +257,7 @@ uv run pytest test/unit/simulator/test_package.py -q
 
 Expected: `2 passed`.
 
-- [ ] **Step 9: Commit bootstrap**
+- [x] **Step 9: Commit bootstrap**
 
 Run:
 
@@ -285,7 +285,7 @@ Expected: commit succeeds and includes the archive move plus bootstrap files.
 - Create: `test/unit/simulator/test_predictor.py`
 - Create: `test/unit/simulator/test_metrics.py`
 
-- [ ] **Step 1: Write config tests**
+- [x] **Step 1: Write config tests**
 
 Create `test/unit/simulator/test_config.py`:
 
@@ -320,7 +320,7 @@ def test_settings_reject_non_aiconfigurator(tmp_path: Path):
         SimulatorSettings.from_server_args(args)
 ```
 
-- [ ] **Step 2: Run config tests to verify failure**
+- [x] **Step 2: Run config tests to verify failure**
 
 Run:
 
@@ -330,7 +330,7 @@ uv run pytest test/unit/simulator/test_config.py -q
 
 Expected: FAIL because `sglsim.srt.simulator.config` does not exist.
 
-- [ ] **Step 3: Implement config**
+- [x] **Step 3: Implement config**
 
 Create `python/sglsim/srt/simulator/__init__.py`:
 
@@ -401,7 +401,7 @@ def get_platform_config() -> dict[str, Any]:
     return _ACTIVE_SETTINGS.raw_config.get("platform", {})
 ```
 
-- [ ] **Step 4: Run config tests**
+- [x] **Step 4: Run config tests**
 
 Run:
 
@@ -411,7 +411,7 @@ uv run pytest test/unit/simulator/test_config.py -q
 
 Expected: `2 passed`.
 
-- [ ] **Step 5: Migrate types/predictor/state/metrics**
+- [x] **Step 5: Migrate types/predictor/state/metrics**
 
 Use these files as reference and rename imports from `sglang` to `sglsim`:
 
@@ -433,7 +433,7 @@ build_simulator_predictor raises ValueError if AIConfigurator cannot be construc
 No token-count latency fallback is allowed in the final predictor path.
 ```
 
-- [ ] **Step 6: Create predictor and metrics tests**
+- [x] **Step 6: Create predictor and metrics tests**
 
 Create tests equivalent to archived simulator tests but import from `sglsim`, and include these assertions:
 
@@ -444,7 +444,7 @@ assert metrics["completed"] == 1
 assert state.global_clock == 0.5
 ```
 
-- [ ] **Step 7: Run simulator core tests**
+- [x] **Step 7: Run simulator core tests**
 
 Run:
 
@@ -454,7 +454,7 @@ uv run pytest test/unit/simulator/test_config.py test/unit/simulator/test_predic
 
 Expected: all tests pass.
 
-- [ ] **Step 8: Commit simulator core**
+- [x] **Step 8: Commit simulator core**
 
 Run:
 
@@ -477,7 +477,7 @@ Expected: commit succeeds.
 - Create or Modify: `python/sglsim/srt/simulator/scheduler.py`
 - Create: `test/unit/simulator/test_scheduler.py`
 
-- [ ] **Step 1: Create scheduling tests**
+- [x] **Step 1: Create scheduling tests**
 
 Create `test/unit/simulator/test_scheduler.py` with offline replay and blocking immediate-arrival tests derived from:
 
@@ -493,7 +493,7 @@ assert [req.rid for req in second_arrival] == ["r2"]
 assert runtime.request_stats["r1"].input_length == 3
 ```
 
-- [ ] **Step 2: Run scheduler tests to verify failure**
+- [x] **Step 2: Run scheduler tests to verify failure**
 
 Run:
 
@@ -503,7 +503,7 @@ uv run pytest test/unit/simulator/test_scheduler.py -q
 
 Expected: FAIL because scheduling modules do not exist.
 
-- [ ] **Step 3: Implement request and batch dataclasses**
+- [x] **Step 3: Implement request and batch dataclasses**
 
 Create minimal CPU-only request and batch classes with these public fields:
 
@@ -517,7 +517,7 @@ cached_tokens: int
 is_chunked: int
 ```
 
-- [ ] **Step 4: Implement `SchedulerSimulatorRuntime`**
+- [x] **Step 4: Implement `SchedulerSimulatorRuntime`**
 
 Migrate simulator scheduler logic from:
 
@@ -534,7 +534,7 @@ Add run_requests(reqs) that builds prediction requests from CPU request metadata
 Raise RuntimeError if predictor is missing.
 ```
 
-- [ ] **Step 5: Implement `CPUScheduler`**
+- [x] **Step 5: Implement `CPUScheduler`**
 
 Create a simple scheduler that:
 
@@ -547,7 +547,7 @@ calls runtime.on_process_batch_result
 appends mock token id 1 to each request output_ids
 ```
 
-- [ ] **Step 6: Run scheduler tests**
+- [x] **Step 6: Run scheduler tests**
 
 Run:
 
@@ -557,7 +557,7 @@ uv run pytest test/unit/simulator/test_scheduler.py -q
 
 Expected: tests pass.
 
-- [ ] **Step 7: Commit scheduling**
+- [x] **Step 7: Commit scheduling**
 
 Run:
 
@@ -579,7 +579,7 @@ Expected: commit succeeds.
 - Create: `python/sglsim/srt/mem_cache/hicache.py`
 - Create: `test/unit/simulator/test_mem_cache.py`
 
-- [ ] **Step 1: Create mem-cache tests**
+- [x] **Step 1: Create mem-cache tests**
 
 Tests must cover:
 
@@ -590,7 +590,7 @@ HiCache key persistence
 transfer duration = num_tokens * bytes_per_token / bandwidth_bytes
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run:
 
@@ -600,7 +600,7 @@ uv run pytest test/unit/simulator/test_mem_cache.py -q
 
 Expected: FAIL because mem-cache modules do not exist.
 
-- [ ] **Step 3: Implement metadata allocator**
+- [x] **Step 3: Implement metadata allocator**
 
 Implement `PageAllocator` with:
 
@@ -611,15 +611,15 @@ release(pages: list[int]) -> None
 
 No torch tensors are required.
 
-- [ ] **Step 4: Implement prefix cache**
+- [x] **Step 4: Implement prefix cache**
 
 Implement `PrefixCache.insert(tokens, pages)` and `PrefixCache.match(tokens)` returning matched tokens and pages.
 
-- [ ] **Step 5: Implement HiCache storage and transfer estimator**
+- [x] **Step 5: Implement HiCache storage and transfer estimator**
 
 Implement persistent key storage at `/tmp/sglsim/hicache_storage_keys.txt` by default and a pure arithmetic transfer estimator.
 
-- [ ] **Step 6: Run mem-cache tests**
+- [x] **Step 6: Run mem-cache tests**
 
 Run:
 
@@ -629,7 +629,7 @@ uv run pytest test/unit/simulator/test_mem_cache.py -q
 
 Expected: tests pass.
 
-- [ ] **Step 7: Commit mem-cache**
+- [x] **Step 7: Commit mem-cache**
 
 Run:
 
@@ -652,7 +652,7 @@ Expected: commit succeeds.
 - Create: `test/unit/simulator/test_bench_serving.py`
 - Create: `test/unit/simulator/test_server.py`
 
-- [ ] **Step 1: Create benchmark tests**
+- [x] **Step 1: Create benchmark tests**
 
 Migrate core behavior from:
 
@@ -668,7 +668,7 @@ simulation_params["total_request"] == 3
 loaded_metrics["completed"] == 1
 ```
 
-- [ ] **Step 2: Implement benchmark helpers**
+- [x] **Step 2: Implement benchmark helpers**
 
 Implement:
 
@@ -681,7 +681,7 @@ main(argv=None)
 
 Do not import the archived benchmark module.
 
-- [ ] **Step 3: Create server integration tests**
+- [x] **Step 3: Create server integration tests**
 
 Test that `SimulatorApp.generate()`:
 
@@ -692,15 +692,15 @@ returns output_ids filled with mock token id 1
 writes metrics.json
 ```
 
-- [ ] **Step 4: Implement simulator app**
+- [x] **Step 4: Implement simulator app**
 
 Create `python/sglsim/srt/http/server.py` with a dependency-free `SimulatorApp` class first. Do not require FastAPI in this task.
 
-- [ ] **Step 5: Wire launch_server**
+- [x] **Step 5: Wire launch_server**
 
 `python -m sglsim.launch_server --sim-config-path test/unit/simulator/assets/config.json` should build settings and print `SGLSim simulator server ready` without importing GPU runtime.
 
-- [ ] **Step 6: Run integration tests**
+- [x] **Step 6: Run integration tests**
 
 Run:
 
@@ -711,7 +711,7 @@ uv run python -m sglsim.launch_server --sim-config-path test/unit/simulator/asse
 
 Expected: tests pass and launch command exits 0.
 
-- [ ] **Step 7: Commit integration**
+- [x] **Step 7: Commit integration**
 
 Run:
 
@@ -730,7 +730,7 @@ Expected: commit succeeds.
 - Modify: `README.md`
 - Modify: `pyproject.toml` if dependency cleanup is needed
 
-- [ ] **Step 1: Check no archived package imports outside archive**
+- [x] **Step 1: Check no archived package imports outside archive**
 
 Run:
 
@@ -750,7 +750,7 @@ PY
 
 Expected: no output.
 
-- [ ] **Step 2: Check no GPU runtime keywords outside archive**
+- [x] **Step 2: Check no GPU runtime keywords outside archive**
 
 Run:
 
@@ -772,7 +772,7 @@ PY
 
 Expected: no output except README documentation lines that explicitly list unsupported GPU features.
 
-- [ ] **Step 3: Update README scope**
+- [x] **Step 3: Update README scope**
 
 Ensure `README.md` includes:
 
@@ -796,7 +796,7 @@ Ensure `README.md` includes:
 - LoRA or checkpoint weight updates
 ```
 
-- [ ] **Step 4: Run full tests**
+- [x] **Step 4: Run full tests**
 
 Run:
 
@@ -806,7 +806,7 @@ uv run pytest -q
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit cleanup**
+- [x] **Step 5: Commit cleanup**
 
 Run:
 
