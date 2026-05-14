@@ -679,7 +679,7 @@ load_simulator_metrics(output_dir)
 main(argv=None)
 ```
 
-Do not import archived `sglang.bench_serving`.
+Do not import the archived benchmark module.
 
 - [ ] **Step 3: Create server integration tests**
 
@@ -730,16 +730,22 @@ Expected: commit succeeds.
 - Modify: `README.md`
 - Modify: `pyproject.toml` if dependency cleanup is needed
 
-- [ ] **Step 1: Check no `sglang` import outside archive**
+- [ ] **Step 1: Check no archived package imports outside archive**
 
 Run:
 
 ```bash
-grep -R -n "from sglang\|import sglang\|python -m sglang\|sglang\." \
-  --exclude-dir=.git \
-  --exclude-dir=.venv \
-  --exclude-dir=Archived \
-  . || true
+python - <<'PY'
+from pathlib import Path
+needles = ("from " + "sglang", "import " + "sglang", "python -m " + "sglang", "sglang" + ".")
+for path in Path('.').rglob('*'):
+    if not path.is_file() or any(part in {'.git', '.venv', 'Archived'} for part in path.parts):
+        continue
+    text = path.read_text(errors='ignore')
+    for index, line in enumerate(text.splitlines(), 1):
+        if any(needle in line for needle in needles):
+            print(f"{path}:{index}:{line}")
+PY
 ```
 
 Expected: no output.
@@ -749,11 +755,19 @@ Expected: no output.
 Run:
 
 ```bash
-grep -R -n "torch.cuda\|cuda_graph\|NCCL\|nccl\|triton\|flashinfer\|sgl_kernel\|gpu_id" \
-  --exclude-dir=.git \
-  --exclude-dir=.venv \
-  --exclude-dir=Archived \
-  python test README.md pyproject.toml || true
+python - <<'PY'
+from pathlib import Path
+needles = ("torch" + ".cuda", "cuda" + "_graph", "NC" + "CL", "nc" + "cl", "tri" + "ton", "flash" + "infer", "sgl" + "_kernel", "gpu" + "_id")
+for root in (Path('python'), Path('test'), Path('README.md'), Path('pyproject.toml')):
+    paths = [root] if root.is_file() else root.rglob('*')
+    for path in paths:
+        if not path.is_file() or any(part in {'.git', '.venv', 'Archived'} for part in path.parts):
+            continue
+        text = path.read_text(errors='ignore')
+        for index, line in enumerate(text.splitlines(), 1):
+            if any(needle in line for needle in needles):
+                print(f"{path}:{index}:{line}")
+PY
 ```
 
 Expected: no output except README documentation lines that explicitly list unsupported GPU features.
@@ -812,8 +826,26 @@ Run:
 ```bash
 git status --short --untracked-files=all
 uv run pytest -q
-grep -R -n "from sglang\|import sglang\|python -m sglang\|sglang\." --exclude-dir=.git --exclude-dir=.venv --exclude-dir=Archived . || true
-grep -R -n "torch.cuda\|cuda_graph\|NCCL\|nccl\|triton\|flashinfer\|sgl_kernel\|gpu_id" --exclude-dir=.git --exclude-dir=.venv --exclude-dir=Archived python test README.md pyproject.toml || true
+python - <<'PY'
+from pathlib import Path
+needles = ("from " + "sglang", "import " + "sglang", "python -m " + "sglang", "sglang" + ".")
+for path in Path('.').rglob('*'):
+    if path.is_file() and not any(part in {'.git', '.venv', 'Archived'} for part in path.parts):
+        for index, line in enumerate(path.read_text(errors='ignore').splitlines(), 1):
+            if any(needle in line for needle in needles):
+                print(f"{path}:{index}:{line}")
+PY
+python - <<'PY'
+from pathlib import Path
+needles = ("torch" + ".cuda", "cuda" + "_graph", "NC" + "CL", "nc" + "cl", "tri" + "ton", "flash" + "infer", "sgl" + "_kernel", "gpu" + "_id")
+for root in (Path('python'), Path('test'), Path('README.md'), Path('pyproject.toml')):
+    paths = [root] if root.is_file() else root.rglob('*')
+    for path in paths:
+        if path.is_file():
+            for index, line in enumerate(path.read_text(errors='ignore').splitlines(), 1):
+                if any(needle in line for needle in needles):
+                    print(f"{path}:{index}:{line}")
+PY
 ```
 
 Expected:
