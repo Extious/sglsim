@@ -30,8 +30,8 @@ class SimulatorSettings:
 
         raw_config = json.loads(path.read_text())
         predictor_name = raw_config.get("predictor", {}).get("name", "aiconfigurator")
-        if predictor_name != "aiconfigurator":
-            raise ValueError("predictor.name must be aiconfigurator")
+        if predictor_name not in ("aiconfigurator", "constant"):
+            raise ValueError(f"Unsupported predictor.name: {predictor_name}")
 
         mode = getattr(server_args, "simulator_mode", "offline").lower()
         if mode not in ("offline", "blocking"):

@@ -18,8 +18,21 @@ def test_storage_transfer_seconds_zero_for_no_tokens():
     assert estimate_storage_transfer_seconds(0, 10, 1000) == 0.0
 
 
-def test_host_transfer_rejects_non_positive_bandwidth():
-    assert estimate_host_transfer_seconds(100, 10, 0) == 0.0
+def test_segmented_host_transfer_is_slower_for_scattered_indices():
+    import torch
+
+    from sglsim.srt.simulator.native import cache_controller_patch
+
+    host_pool = SimpleNamespace(size_per_token=100, layer_num=2)
+    contiguous = torch.tensor([0, 1, 2, 3], dtype=torch.int64)
+    scattered = torch.tensor([0, 1, 10, 11], dtype=torch.int64)
+    contiguous_dur = cache_controller_patch._segmented_host_transfer_seconds(
+        contiguous, contiguous, 10, cat="H2D"
+    )
+    scattered_dur = cache_controller_patch._segmented_host_transfer_seconds(
+        scattered, scattered, 10, cat="H2D"
+    )
+    assert scattered_dur > contiguous_dur
 
 
 def test_simulated_host_pool_transfer_records_load_and_backup_durations():

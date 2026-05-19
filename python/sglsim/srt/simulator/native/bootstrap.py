@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import os
+
 from sglsim.srt.simulator.native.config import NativeSimulationConfig
 
 
 def install_native_simulation(server_args) -> NativeSimulationConfig:
     config = NativeSimulationConfig.from_server_args(server_args)
+
+    if os.getenv("SGLSIM_FORCE_CPU_SIM", "1") == "1" or not _cuda_available():
+        from sglsim.srt.simulator.native import sgl_kernel_patch
+
+        sgl_kernel_patch.install()
 
     from sglsim.srt.simulator.native import cache_controller_patch
     from sglsim.srt.simulator.native import memory_pool_patch
@@ -18,6 +25,15 @@ def install_native_simulation(server_args) -> NativeSimulationConfig:
     cache_controller_patch.install(config)
     memory_pool_patch.install(config)
     return config
+
+
+def _cuda_available() -> bool:
+    try:
+        import torch
+
+        return torch.cuda.is_available()
+    except Exception:
+        return False
 
 
 def run_native_scheduler_process(*args, **kwargs):

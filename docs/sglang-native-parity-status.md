@@ -27,3 +27,21 @@ Result on 2026-05-18:
 ```text
 24 passed
 ```
+
+Performance simulation parity (native patch vs hook simulator):
+
+| Capability | Status |
+|------------|--------|
+| blocking mode latency sleep | supported |
+| offline trace replay (`created_time`, `future_queue`) | supported |
+| overlap schedule timing model | supported |
+| KV pool capacity estimate (`estimate_kv_cache_pool_capacity`) | supported |
+| HiCache segmented host bandwidth model | supported |
+| constant predictor fallback | supported |
+| `bench_serving` / dataset tooling | not in scope (deferred) |
+
+Verification:
+
+```bash
+uv run --extra native pytest -q test/unit/native/test_scheduler_simulator_runtime.py test/integration/test_native_offline_simulation.py
+```

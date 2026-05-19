@@ -17,6 +17,8 @@ _HOST_READ_BANDWIDTH_BYTES = 200e9
 _HOST_WRITE_BANDWIDTH_BYTES = 100e9
 _STORAGE_READ_BANDWIDTH_BYTES = 8e9
 _STORAGE_WRITE_BANDWIDTH_BYTES = 4e9
+_KV_CACHE_BYTES: int | None = None
+_KV_CACHE_BYTES_PER_LAYER: int | None = None
 
 
 def estimate_host_transfer_seconds(
@@ -44,6 +46,8 @@ def _load_platform_bandwidths(config: Any) -> None:
     global _HOST_WRITE_BANDWIDTH_BYTES
     global _STORAGE_READ_BANDWIDTH_BYTES
     global _STORAGE_WRITE_BANDWIDTH_BYTES
+    global _KV_CACHE_BYTES
+    global _KV_CACHE_BYTES_PER_LAYER
 
     sim_config_path = str(getattr(config, "sim_config_path", "") or "")
     if not sim_config_path:
@@ -70,6 +74,48 @@ def _load_platform_bandwidths(config: Any) -> None:
         platform.get("disk_write_bandwidth_gb") or _STORAGE_WRITE_BANDWIDTH_BYTES / 1e9
     ) * 1e9
 
+    try:
+        from sglsim.srt.simulator.kv_capacity import (
+            get_kv_cache_bytes,
+            get_kv_cache_bytes_per_layer,
+        )
+        from sglsim.srt.simulator.types import DataType, ModelInfo, SchedulerConfig
+
+        model_raw = raw.get("model", {})
+        sched_raw = raw.get("scheduler", {})
+        model = ModelInfo(
+            model_path=model_raw.get("model_path"),
+            attention_arch=model_raw.get("attention_arch"),
+            context_len=model_raw.get("context_len"),
+            hidden_size=model_raw.get("hidden_size"),
+            head_dim=model_raw.get("head_dim"),
+            num_attention_heads=model_raw.get("num_attention_heads"),
+            num_hidden_layers=model_raw.get("num_hidden_layers"),
+            num_key_value_heads=model_raw.get("num_key_value_heads"),
+            v_head_dim=model_raw.get("v_head_dim"),
+            vocab_size=model_raw.get("vocab_size"),
+            kv_lora_rank=model_raw.get("kv_lora_rank"),
+            qk_rope_head_dim=model_raw.get("qk_rope_head_dim"),
+            qk_nope_head_dim=model_raw.get("qk_nope_head_dim"),
+            torch_dtype=model_raw.get("torch_dtype"),
+        )
+        sched_config = SchedulerConfig(
+            tp_size=int(sched_raw.get("tp_size", 1)),
+            ep_size=int(sched_raw.get("ep_size", 1)),
+            dp_size=int(sched_raw.get("dp_size", 1)),
+            pp_size=int(sched_raw.get("pp_size", 1)),
+            backend_name=str(sched_raw.get("backend_name", "sglang")),
+            backend_version=sched_raw.get("backend_version"),
+        )
+        for field_name in ("data_type", "kv_cache_data_type"):
+            value = sched_raw.get(field_name)
+            if value is not None:
+                setattr(sched_config, field_name, DataType(value))
+        _KV_CACHE_BYTES = get_kv_cache_bytes(model, sched_config)
+        _KV_CACHE_BYTES_PER_LAYER = get_kv_cache_bytes_per_layer(model, sched_config)
+    except Exception:
+        logger.debug("Failed to derive KV cache byte sizes from simulator config.")
+
 
 def _len_tensor(value: Any) -> int:
     if value is None:
@@ -92,26 +138,60 @@ def _record_hicache_backup(dur: float) -> None:
         state.inc_hicache_l2_backup_dur(dur)
 
 
-def _host_bytes_per_token(self: Any, per_layer: bool = False) -> int:
-    size_per_token = int(getattr(self, "size_per_token", 0) or 0)
+def _host_bytes_per_token(host_pool: Any, *, per_layer: bool = False) -> int:
+    if per_layer and _KV_CACHE_BYTES_PER_LAYER is not None:
+        return _KV_CACHE_BYTES_PER_LAYER
+    if not per_layer and _KV_CACHE_BYTES is not None:
+        return _KV_CACHE_BYTES
+    size_per_token = int(getattr(host_pool, "size_per_token", 0) or 0)
     if not per_layer:
-        return size_per_token
-    layer_num = int(getattr(self, "layer_num", 1) or 1)
+        return max(size_per_token, 1)
+    layer_num = int(getattr(host_pool, "layer_num", 1) or 1)
     return max(1, size_per_token // max(1, layer_num))
 
 
-def _contiguous_segment_count(src_indices: Any, dst_indices: Any) -> int:
-    # Native runtime only needs metadata timing here. Keep segmentation visible
-    # for future profiling without importing numpy in the hot path.
+def _segment_lengths(src_indices: Any, dst_indices: Any) -> list[int]:
     src = _tensor_to_list(src_indices)
     dst = _tensor_to_list(dst_indices)
-    if len(src) <= 1 or len(src) != len(dst):
-        return max(1, len(src))
-    count = 1
+    if not src or len(src) != len(dst):
+        return [max(1, len(src))]
+    lengths: list[int] = []
+    start = 0
     for i in range(1, len(src)):
         if src[i] != src[i - 1] + 1 or dst[i] != dst[i - 1] + 1:
-            count += 1
-    return count
+            lengths.append(i - start)
+            start = i
+    lengths.append(len(src) - start)
+    return lengths
+
+
+def _est_bandwidth_batch(size_bytes_arr: list[float], cat: str) -> list[float]:
+    if cat == "H2D":
+        eff = 0.85
+        t0 = 6.67e-6
+        bw = _HOST_READ_BANDWIDTH_BYTES * eff
+    else:
+        eff = 0.85
+        t0 = 4e-6
+        bw = _HOST_WRITE_BANDWIDTH_BYTES * eff
+    out: list[float] = []
+    for size_bytes in size_bytes_arr:
+        x = float(size_bytes)
+        out.append(x * bw / (t0 * bw + x))
+    return out
+
+
+def _segmented_host_transfer_seconds(
+    host_indices: Any,
+    device_indices: Any,
+    bytes_per_elem: int,
+    *,
+    cat: str,
+) -> float:
+    seg_lens = _segment_lengths(host_indices, device_indices)
+    size_bytes_arr = [length * float(bytes_per_elem) for length in seg_lens]
+    bandwidth_arr = _est_bandwidth_batch(size_bytes_arr, cat)
+    return float(sum(size / bw for size, bw in zip(size_bytes_arr, bandwidth_arr)))
 
 
 def _tensor_to_list(value: Any) -> list[int]:
@@ -133,10 +213,10 @@ def simulated_load_to_device_per_layer(
     layer_id: int,
     io_backend: str,
 ) -> None:
-    num_tokens = min(_len_tensor(host_indices), _len_tensor(device_indices))
-    bytes_per_token = _host_bytes_per_token(self, per_layer=True)
-    dur = estimate_host_transfer_seconds(
-        num_tokens, bytes_per_token, _HOST_READ_BANDWIDTH_BYTES
+    del device_pool, layer_id, io_backend
+    bytes_per_elem = _host_bytes_per_token(self, per_layer=True)
+    dur = _segmented_host_transfer_seconds(
+        host_indices, device_indices, bytes_per_elem, cat="H2D"
     )
     _record_hicache_load(dur)
 
@@ -144,10 +224,10 @@ def simulated_load_to_device_per_layer(
 def simulated_backup_from_device_all_layer(
     self: Any, device_pool: Any, host_indices: Any, device_indices: Any, io_backend: str
 ) -> None:
-    num_tokens = min(_len_tensor(host_indices), _len_tensor(device_indices))
-    bytes_per_token = _host_bytes_per_token(self, per_layer=False)
-    dur = estimate_host_transfer_seconds(
-        num_tokens, bytes_per_token, _HOST_WRITE_BANDWIDTH_BYTES
+    del device_pool, io_backend
+    bytes_per_elem = _host_bytes_per_token(self, per_layer=False)
+    dur = _segmented_host_transfer_seconds(
+        host_indices, device_indices, bytes_per_elem, cat="D2H"
     )
     _record_hicache_backup(dur)
 
@@ -184,7 +264,7 @@ def handle_backup_operation(self: Any) -> None:
         completed_tokens = int(getattr(operation, "completed_tokens", 0) or 0)
         if completed_tokens <= 0:
             completed_tokens = _len_tensor(getattr(operation, "host_indices", []))
-        bytes_per_token = _host_bytes_per_token(getattr(self, "mem_pool_host", None))
+        bytes_per_token = _host_bytes_per_token(getattr(self, "mem_pool_host", None), per_layer=False)
         _record_hicache_backup(
             estimate_storage_transfer_seconds(
                 completed_tokens, bytes_per_token, _STORAGE_WRITE_BANDWIDTH_BYTES
@@ -215,7 +295,7 @@ def handle_prefetch_operation(self: Any) -> None:
         return
     state = get_active_state()
     remain_dur = float(getattr(state, "current_inference_dur", 0.0) if state else 0.0)
-    bytes_per_token = _host_bytes_per_token(getattr(self, "mem_pool_host", None))
+    bytes_per_token = _host_bytes_per_token(getattr(self, "mem_pool_host", None), per_layer=False)
 
     chunked = getattr(self, "chunked_prefetch_operation", None)
     if chunked is not None:

@@ -198,6 +198,14 @@ class SimulatorConfigManager:
         sched_config: SchedulerConfig,
     ) -> Any:
         predictor_config = self.raw_config.get("predictor", {})
+        predictor_name = predictor_config.get("name", "aiconfigurator")
+        if predictor_name == "constant":
+            from sglsim.srt.simulator.predictor_constant import ConstantTimePredictor
+
+            return ConstantTimePredictor(
+                prefill_ms=float(predictor_config.get("prefill_ms", 10.0)),
+                decode_ms=float(predictor_config.get("decode_ms", 1.0)),
+            )
         if predictor_config.get("name") != "aiconfigurator":
             raise ValueError(f"Unknown predictor name: {predictor_config.get('name')}")
 
@@ -217,6 +225,11 @@ class SimulatorConfigManager:
 
 
 def build_simulator_predictor(server_args: Any, model_config: Any) -> Any:
+    config_path = getattr(server_args, "sim_config_path", None)
+    if not config_path:
+        from sglsim.srt.simulator.predictor_constant import ConstantTimePredictor
+
+        return ConstantTimePredictor()
     try:
         settings = SimulatorSettings.from_server_args(server_args)
         manager = SimulatorConfigManager(settings)

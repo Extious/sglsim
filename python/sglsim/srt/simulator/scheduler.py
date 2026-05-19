@@ -57,6 +57,46 @@ class PredictorAdapter:
         return float(self.predictor.predict_infer_time(PredictionBatch(requests)))
 
 
+def _safe_len(value: Any) -> int:
+    if value is None:
+        return 0
+    return int(len(value))
+
+
+def _past_kv_length(req: Any) -> int:
+    return _safe_len(getattr(req, "prefix_indices", None)) + _safe_len(
+        getattr(req, "output_ids", None)
+    )
+
+
+def build_prediction_requests(batch) -> list[dict[str, int]]:
+    requests: list[dict[str, int]] = []
+    forward_mode = getattr(batch, "forward_mode", None)
+    if forward_mode is None:
+        return requests
+
+    if forward_mode.is_extend():
+        for req in batch.reqs:
+            extend_length = getattr(req, "extend_input_len", None)
+            if extend_length is None:
+                extend_length = _safe_len(getattr(req, "input_ids", None))
+            requests.append(
+                {
+                    "extend_length": int(extend_length),
+                    "past_kv_length": _past_kv_length(req),
+                }
+            )
+    elif forward_mode.is_decode():
+        for req in batch.reqs:
+            requests.append(
+                {
+                    "extend_length": 1,
+                    "past_kv_length": _past_kv_length(req),
+                }
+            )
+    return requests
+
+
 class SchedulerSimulatorRuntime:
     def __init__(
         self,
@@ -78,9 +118,21 @@ class SchedulerSimulatorRuntime:
         self.future_queue: list[tuple[float, int, Any]] = []
         self.offline_recv_all_request = False
         self.last_cpu_ts = 0.0
+        self.last_flush_ts = 0.0
         self._last_prediction_requests: list[dict] = []
         set_active_state(self.state)
         set_active_runtime(self)
+
+    @classmethod
+    def from_native_config(cls, config, server_args, predictor: Any) -> SchedulerSimulatorRuntime:
+        overlap_schedule = not getattr(server_args, "disable_overlap_schedule", False)
+        return cls(
+            mode=config.mode,
+            output_dir=config.output_dir,
+            num_warmup=config.num_warmup,
+            overlap_schedule=overlap_schedule,
+            predictor=predictor,
+        )
 
     @classmethod
     def from_scheduler(cls, scheduler, overlap_schedule: bool):
@@ -118,7 +170,7 @@ class SchedulerSimulatorRuntime:
             self._record_arrived_requests(recv_reqs)
             return recv_reqs
 
-        immediate = []
+        immediate: list[Any] = []
         for req in recv_reqs:
             sim_params = self._simulation_params(req)
             if not self._is_generate_req(req) or sim_params is None:
@@ -129,6 +181,7 @@ class SchedulerSimulatorRuntime:
             total_request = sim_params["total_request"]
             if len(self.future_queue) == total_request:
                 self.offline_recv_all_request = True
+                heapq.heapify(self.future_queue)
 
         arrived = list(immediate)
         while self.offline_recv_all_request and self.future_queue:
@@ -150,20 +203,21 @@ class SchedulerSimulatorRuntime:
             stats = self.request_stats[req.rid]
             stats.rid = req.rid
             stats.input_length = len(req.input_ids)
-            stats.output_length = req.sampling_params.max_new_tokens
+            stats.output_length = int(getattr(req.sampling_params, "max_new_tokens", 0) or 0)
             if self.mode == "blocking":
-                stats.created_time = sim_params.get("server_created_time", now)
+                stats.created_time = float(sim_params.get("server_created_time", now))
                 stats.last_event_time = stats.created_time
                 stats.queue_start = now
             else:
-                stats.created_time = sim_params["created_time"]
+                stats.created_time = float(sim_params["created_time"])
                 stats.last_event_time = stats.created_time
                 queue_start = sim_params.get("queue_start")
                 if queue_start is not None:
-                    self.state.set_global_clock(queue_start)
+                    self.state.set_global_clock(float(queue_start))
                 stats.queue_start = self.state.global_clock
         if recv_reqs and self.last_cpu_ts == 0:
-            self.last_cpu_ts = time.time()
+            self.last_cpu_ts = now
+            self.state.set_global_clock(0.0)
 
     def on_new_batch_prefill(self, new_batch, waiting_queue_len: int, running_batch_len: int) -> None:
         if new_batch is not None:
@@ -171,32 +225,15 @@ class SchedulerSimulatorRuntime:
                 stats = self.request_stats[req.rid]
                 stats.final_reused_tokens = getattr(req, "cached_tokens", 0)
                 if stats.queue_end == -1:
-                    stats.queue_end = time.time() if self.mode == "blocking" else self.state.global_clock
+                    stats.queue_end = (
+                        time.time() if self.mode == "blocking" else self.state.global_clock
+                    )
         elif self.mode == "offline" and self.future_queue and running_batch_len == 0:
             next_created_time, _, _ = self.future_queue[0]
             self.state.set_global_clock(next_created_time + 1e-6)
         elif running_batch_len == 0 and waiting_queue_len > 0:
             self.state.step_global_clock(0.005)
             self.state.set_current_inference_dur(0.005)
-
-    def _build_prediction_batch(self, batch) -> list[dict]:
-        requests = []
-        for req in batch.reqs:
-            if batch.forward_mode.is_extend():
-                extend_length = len(req.input_ids)
-                past_kv_length = getattr(req, "cached_tokens", 0)
-            elif batch.forward_mode.is_decode():
-                extend_length = 1
-                past_kv_length = len(req.input_ids) + len(req.output_ids)
-            else:
-                continue
-            requests.append(
-                {
-                    "extend_length": extend_length,
-                    "past_kv_length": past_kv_length,
-                }
-            )
-        return requests
 
     def run_requests(self, reqs: list[Any], *, decode: bool = False):
         from sglsim.srt.scheduling.batch import GenerationBatchResult, ScheduleBatch
@@ -208,7 +245,7 @@ class SchedulerSimulatorRuntime:
     def on_run_batch(self, batch, result) -> None:
         if result.__class__.__name__ != "GenerationBatchResult":
             return
-        requests = self._build_prediction_batch(batch)
+        requests = build_prediction_requests(batch)
         if not requests:
             return
         self.state.inc_iteration()
@@ -256,7 +293,7 @@ class SchedulerSimulatorRuntime:
         )
         self.last_cpu_ts = time.time()
 
-    def dump_outputs(self) -> dict:
+    def dump_outputs(self, *, time_cost: float | None = None) -> dict:
         stats = sorted(
             [item for item in self.request_stats.values() if item.rid],
             key=lambda item: item.created_time,
@@ -266,4 +303,13 @@ class SchedulerSimulatorRuntime:
             stats,
             self.iteration_stats,
             num_warmup=self.num_warmup,
+            align_timestamps=True,
+            time_cost=time_cost,
         )
+
+    def dump_outputs_and_reset(self) -> dict:
+        time_cost = time.time() - self.last_flush_ts if self.last_flush_ts else 0.0
+        metrics = self.dump_outputs(time_cost=time_cost)
+        self.reset()
+        self.last_flush_ts = time.time()
+        return metrics

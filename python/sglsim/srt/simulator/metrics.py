@@ -113,14 +113,39 @@ def calc_metrics(stats: list[RequestStats], num_warmup: int = 0) -> dict[str, An
     }
 
 
+def _align_request_timestamps(stats: list[RequestStats], num_warmup: int) -> None:
+    if not stats:
+        return
+    metric_stats = stats[num_warmup:] if len(stats) > num_warmup else stats
+    if not metric_stats:
+        return
+    min_created_time = metric_stats[0].created_time
+    for item in stats:
+        if item.created_time >= 0:
+            item.created_time -= min_created_time
+        if item.queue_start >= 0:
+            item.queue_start -= min_created_time
+        if item.queue_end >= 0:
+            item.queue_end -= min_created_time
+        if item.last_event_time >= 0:
+            item.last_event_time -= min_created_time
+
+
 def dump_simulator_outputs(
     output_dir: str,
     stats: list[RequestStats],
     iterations: list[dict[str, Any]],
     num_warmup: int = 0,
+    *,
+    align_timestamps: bool = False,
+    time_cost: float | None = None,
 ) -> dict[str, Any]:
     os.makedirs(output_dir, exist_ok=True)
+    if align_timestamps:
+        _align_request_timestamps(stats, num_warmup)
     metrics = calc_metrics(stats, num_warmup=num_warmup)
+    if time_cost is not None:
+        metrics["time_cost"] = time_cost
 
     with open(os.path.join(output_dir, "metrics.json"), "w") as f:
         json.dump(metrics, f)
