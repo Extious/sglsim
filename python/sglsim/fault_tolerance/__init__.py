@@ -1,2 +1,0 @@
-"""Fault-tolerance simulation helpers."""
-

@@ -1,2 +1,0 @@
-"""CPU-only scheduling primitives."""
-
