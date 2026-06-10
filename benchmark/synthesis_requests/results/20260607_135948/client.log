@@ -1,0 +1,58 @@
+[2026-06-07 14:00:27,140] ERROR Experiment failed: HTTP Error 500: Internal Server Error
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/run.py", line 177, in main
+    run_experiment(
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/run.py", line 125, in run_experiment
+    rows = run_client(
+           ^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 413, in run_client
+    rows = asyncio.run(
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 393, in _run_client_async
+    nested = await asyncio.gather(*tasks)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 347, in _bounded_post
+    rows = await _run()
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 327, in _run
+    turn_outputs = await asyncio.to_thread(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 304, in run_multi_turn_session_sync
+    response, e2e_latency_s = post_chat_completions_sync(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 266, in post_chat_completions_sync
+    return _post_json_sync(
+           ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 231, in _post_json_sync
+    with opener.open(req, timeout=timeout_s) as resp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error

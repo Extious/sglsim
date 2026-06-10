@@ -1,730 +1,243 @@
-# Copyright 2023-2024 SGLang Team
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-"""A controller that dispatches requests to multiple data parallel workers."""
+"""Data-parallel request dispatch aligned with sglang.srt.managers.data_parallel_controller."""
 
-import faulthandler
+from __future__ import annotations
+
 import logging
 import multiprocessing as mp
-import signal
-import threading
-import time
+import zlib
 from enum import Enum, auto
-from typing import Callable, List, Optional
 
-import psutil
-import setproctitle
-import zmq
-
-from sglsim.srt.environ import envs
-from sglsim.srt.layers.dp_attention import compute_dp_attention_world_info
 from sglsim.srt.managers.io_struct import (
-    ActiveRanksOutput,
-    BatchTokenizedEmbeddingReqInput,
-    BatchTokenizedGenerateReqInput,
-    BlockReqInput,
-    ProfileReq,
     SimulateGpuFailureReqInput,
     SimulateGpuRecoveryReqInput,
-    TokenizedEmbeddingReqInput,
     TokenizedGenerateReqInput,
-    WatchLoadUpdateReq,
 )
-from sglsim.srt.managers.schedule_batch import Req
-from sglsim.srt.managers.scheduler import run_scheduler_process
-from sglsim.srt.observability.cpu_monitor import start_cpu_monitor_thread
-from sglsim.srt.observability.req_time_stats import DPControllerReqTimeStats
-from sglsim.srt.observability.trace import process_tracing_init, trace_set_thread_info
-from sglsim.srt.server_args import (
-    DP_ATTENTION_HANDSHAKE_PORT_DELTA,
-    PortArgs,
-    ServerArgs,
-)
-from sglsim.srt.utils import numa_utils
-from sglsim.srt.utils.common import (
-    configure_logger,
-    kill_itself_when_parent_died,
-    maybe_reindex_device_id,
-)
-from sglsim.srt.utils.network import (
-    NetworkAddress,
-    bind_port,
-    get_zmq_socket,
-    get_zmq_socket_on_host,
-)
-from sglsim.srt.utils.torch_memory_saver_adapter import TorchMemorySaverAdapter
-from sglsim.srt.utils.watchdog import Watchdog
-from sglsim.utils import TypeBasedDispatcher, get_exception_traceback
+from sglsim.srt.server_args import PortArgs, ServerArgs
+from sglsim.srt.simulation.manager.config import ConfigManager
+from sglsim.srt.utils.network import SimZmqContext, SimZmqSocket, get_zmq_socket
 
 logger = logging.getLogger(__name__)
 
 
-class LoadBalanceMethod(Enum):
-    """Load balance method."""
+def routing_key_to_dp_rank(routing_key: str, dp_size: int) -> int:
+    if dp_size <= 1:
+        return 0
+    key_bytes = routing_key.encode("utf-8")
+    return zlib.crc32(key_bytes) % dp_size
 
+
+class LoadBalanceMethod(Enum):
     ROUND_ROBIN = auto()
-    FOLLOW_BOOTSTRAP_ROOM = auto()
-    TOTAL_REQUESTS = auto()
-    TOTAL_TOKENS = auto()
 
     @classmethod
-    def from_str(cls, method: str):
-        method = method.upper()
-        try:
-            return cls[method]
-        except KeyError as exc:
-            raise ValueError(f"Invalid load balance method: {method}") from exc
+    def from_str(cls, method: str) -> LoadBalanceMethod:
+        name = method.upper()
+        if name in ("AUTO", "ROUND_ROBIN"):
+            return cls.ROUND_ROBIN
+        raise ValueError(f"Unsupported load_balance_method: {method}")
 
 
-class DPBudget:
-    def __init__(self, dp_size: int):
-        self.dp_size = dp_size
-        self.total_requests = [0] * dp_size
-        self.total_tokens = [0] * dp_size
-
-    def update_budget(self, load_update: WatchLoadUpdateReq):
-        """Update the budget."""
-        for load in load_update.loads:
-            self.total_requests[load.dp_rank] = load.num_reqs
-            self.total_tokens[load.dp_rank] = load.num_tokens
-
-    def dispatch(self, method: LoadBalanceMethod, exclude: set = None):
-        candidates = [i for i in range(self.dp_size) if not exclude or i not in exclude]
-        if not candidates:
-            return None
-
-        if method == LoadBalanceMethod.TOTAL_REQUESTS:
-            target_rank = min(candidates, key=lambda i: self.total_requests[i])
-        elif method == LoadBalanceMethod.TOTAL_TOKENS:
-            target_rank = min(
-                candidates,
-                key=lambda i: (self.total_tokens[i], self.total_requests[i]),
-            )
-        else:
-            return None
-
-        self.total_requests[target_rank] += 1
-        return target_rank
+class SchedulerWorkerDiedError(RuntimeError):
+    """Raised when a DP scheduler subprocess has exited unexpectedly."""
 
 
 class DataParallelController:
-    """A controller that dispatches requests to multiple data parallel workers."""
-
     def __init__(
         self,
         server_args: ServerArgs,
         port_args: PortArgs,
-        run_scheduler_process_func: Callable,
+        *,
+        scheduler_procs: list[mp.Process] | None = None,
     ) -> None:
-        # Parse args
         self.server_args = server_args
         self.port_args = port_args
+        self._scheduler_procs = scheduler_procs
+        sched = ConfigManager.get_scheduler_config()
         self.load_balance_method = LoadBalanceMethod.from_str(
-            server_args.load_balance_method
+            sched.load_balance_method
         )
-        self.run_scheduler_process_func = run_scheduler_process_func
-
-        # For DP balance
-        self.global_balance_id = 0
-
-        # Init inter-process communication
-        self.context = zmq.Context(1 + server_args.dp_size)
-        if server_args.node_rank == 0:
-            self.recv_from_tokenizer = get_zmq_socket(
-                self.context, zmq.PULL, port_args.scheduler_input_ipc_name, False
-            )
-
-        # Dispatch method
+        self.enable_routing_key_affinity = sched.enable_routing_key_affinity
         self.round_robin_counter = 0
-        dispatch_lookup = {
-            LoadBalanceMethod.ROUND_ROBIN: self.round_robin_scheduler,
-            LoadBalanceMethod.FOLLOW_BOOTSTRAP_ROOM: self.follow_bootstrap_room_scheduler,
-            LoadBalanceMethod.TOTAL_REQUESTS: self.total_requests_scheduler,
-            LoadBalanceMethod.TOTAL_TOKENS: self.total_tokens_scheduler,
-        }
-        self.dispatching = dispatch_lookup[self.load_balance_method]
-
-        # Load balance budget
-        self.dp_budget = DPBudget(server_args.dp_size)
-
-        # To protect changing env vars to set CUDA_VISIBLE_DEVICES.
-        self.env_lock = threading.Lock()
-
-        # Launch data parallel workers
-        self.scheduler_procs = []
-        self.workers: List[zmq.Socket] = [None] * server_args.dp_size
-        self.status: List[bool] = [True] * server_args.dp_size
-
-        if server_args.enable_dp_attention:
-            self.launch_dp_attention_schedulers(server_args, port_args)
-            self.control_message_step = server_args.tp_size
-        else:
-            self.launch_dp_schedulers(server_args, port_args)
-            self.control_message_step = 1
-
-        self.init_dispatcher()
-
-        self.failed_dp_ranks: set = set()
-
-        self.soft_watchdog = Watchdog.create(
-            debug_name="DataParallelController",
-            watchdog_timeout=server_args.soft_watchdog_timeout,
-            soft=True,
-            test_stuck_time=envs.SGLANG_TEST_STUCK_DP_CONTROLLER.get(),
+        self.routing_key_to_rank: dict[str, int] = {}
+        ctx = SimZmqContext()
+        self.recv_from_tokenizer = get_zmq_socket(
+            ctx,
+            SimZmqSocket.PULL,
+            port_args.scheduler_input_ipc_name,
+            bind=False,
         )
-
-        if server_args.enable_metrics:
-            start_cpu_monitor_thread("data_parallel_controller")
-
-    def send_to_all_workers(self, obj):
-        for i, worker in enumerate(self.workers):
-            if self.status[i]:
-                worker.send_pyobj(obj)
-
-    def send_control_message(self, obj):
-        # Send control messages to first worker of tp group
-        for worker in self.workers[:: self.control_message_step]:
-            worker.send_pyobj(obj)
-
-    def handle_load_update_req(self, obj):
-        self.dp_budget.update_budget(obj)
-
-    def update_active_ranks(self, ranks: ActiveRanksOutput):
-        self.status = ranks.status
-
-    # -------------------------------------------------------------
-    # GPU Failure Simulation
-    # -------------------------------------------------------------
-    def handle_simulate_gpu_failure(self, req: SimulateGpuFailureReqInput):
-        dp_rank = req.dp_rank
-        if dp_rank < 0 or dp_rank >= len(self.workers):
-            logger.error("Invalid dp_rank=%d for GPU failure simulation", dp_rank)
-            return
-        logger.warning("DPC: forwarding GPU failure to dp_rank=%d", dp_rank)
-        self.failed_dp_ranks.add(dp_rank)
-        self.workers[dp_rank].send_pyobj(req)
-
-    # -------------------------------------------------------------
-    # GPU Recovery Simulation
-    # -------------------------------------------------------------
-    def handle_simulate_gpu_recovery(self, req: SimulateGpuRecoveryReqInput):
-        dp_rank = req.dp_rank
-        if dp_rank < 0 or dp_rank >= len(self.workers):
-            logger.error("Invalid dp_rank=%d for GPU recovery", dp_rank)
-            return
-        logger.warning("DPC: forwarding GPU recovery to dp_rank=%d", dp_rank)
-        self.failed_dp_ranks.discard(dp_rank)
-        self.workers[dp_rank].send_pyobj(req)
-
-    def dispatching_with_trace(self, req: Req):
-        req.time_stats = DPControllerReqTimeStats.new_from_obj(req.time_stats)
-
-        req.time_stats.set_dp_dispatch_time()
-        self.dispatching(req)
-        req.time_stats.set_dp_dispatch_finish_time()
-
-    def dispatch_batch_generate(self, batch_req: BatchTokenizedGenerateReqInput):
-        for req in batch_req:
-            self.dispatching_with_trace(req)
-
-    def dispatch_batch_embedding(self, batch_req: BatchTokenizedEmbeddingReqInput):
-        for req in batch_req:
-            self.dispatching_with_trace(req)
-
-    def init_dispatcher(self):
-        self._request_dispatcher = TypeBasedDispatcher(
-            [
-                (TokenizedGenerateReqInput, self.dispatching_with_trace),
-                (TokenizedEmbeddingReqInput, self.dispatching_with_trace),
-                (BatchTokenizedGenerateReqInput, self.dispatch_batch_generate),
-                (BatchTokenizedEmbeddingReqInput, self.dispatch_batch_embedding),
-                (BlockReqInput, self.send_to_all_workers),
-                (ProfileReq, self.send_to_all_workers),
-                (WatchLoadUpdateReq, self.handle_load_update_req),
-                (ActiveRanksOutput, self.update_active_ranks),
-                (SimulateGpuFailureReqInput, self.handle_simulate_gpu_failure),
-                (SimulateGpuRecoveryReqInput, self.handle_simulate_gpu_recovery),
-            ]
-        )
-        self._request_dispatcher.add_fallback_fn(self.send_control_message)
-
-    def launch_dp_schedulers(self, server_args, port_args):
-        base_gpu_id = 0
-
-        threads = []
-        sockets = []
-        ready_events = []
-        for dp_rank in range(server_args.dp_size):
-            tmp_port_args = PortArgs.init_new(server_args)
-            tmp_port_args.tokenizer_ipc_name = port_args.tokenizer_ipc_name
-            tmp_port_args.detokenizer_ipc_name = port_args.detokenizer_ipc_name
-
-            # This port is checked free in PortArgs.init_new.
-            # We hold it first so that the next dp worker gets a different port
-            sockets.append(bind_port(tmp_port_args.nccl_port))
-
-            ready_event = threading.Event()
-            ready_events.append(ready_event)
-
-            # Create a thread for each worker
-            thread = threading.Thread(
-                target=self.launch_tensor_parallel_group_thread,
-                args=(server_args, tmp_port_args, base_gpu_id, dp_rank, ready_event),
+        self.workers = [
+            get_zmq_socket(
+                ctx,
+                SimZmqSocket.PUSH,
+                port_args.scheduler_input_ipc_name_for_dp(dp_rank),
+                bind=True,
             )
-            threads.append(thread)
-            base_gpu_id += (
-                server_args.tp_size * server_args.pp_size * server_args.gpu_id_step
-            )
+            for dp_rank in range(sched.dp_size)
+        ]
+        self.status = [True] * len(self.workers)
 
-            if server_args.node_rank == 0:
-                self.workers[dp_rank] = get_zmq_socket(
-                    self.context,
-                    zmq.PUSH,
-                    tmp_port_args.scheduler_input_ipc_name,
-                    True,
-                )
-
-        # Free all sockets before starting the threads to launch TP workers
-        for sock in sockets:
-            sock.close()
-
-        # Start all threads
-        for thread in threads:
-            thread.start()
-        for event in ready_events:
-            event.wait()
-
-    def launch_tensor_parallel_group_thread(
-        self,
-        server_args: ServerArgs,
-        port_args: PortArgs,
-        base_gpu_id: int,
-        dp_rank: int,
-        ready_event: threading.Event,
-    ):
-        self.launch_tensor_parallel_group(server_args, port_args, base_gpu_id, dp_rank)
-        ready_event.set()
-
-        # This thread cannot be closed because otherwise the `kill_itself_when_parent_died`
-        # function in scheduler.py will kill the scheduler.
-        while True:
-            time.sleep(30 * 24 * 3600)
-
-    def _broadcast_worker_ports(
-        self, server_args: ServerArgs, worker_ports: Optional[List[int]] = None
-    ) -> List[int]:
-        """Broadcast worker ports from node 0 to all other nodes.
-
-        Node 0 acts as the server, waiting for all other nodes to connect and
-        sending them the pre-allocated worker ports. Other nodes act as clients,
-        connecting to node 0 to receive their copy of the worker ports.
-
-        Args:
-            server_args: Server arguments containing node configuration.
-            worker_ports: Pre-allocated worker ports to broadcast.
-
-        Returns:
-            List of worker ports (same on all nodes after broadcast).
-        """
-        # Determine the endpoint for inter-node communication
-        if server_args.dist_init_addr is None:
-            na = NetworkAddress(
-                server_args.host or "127.0.0.1",
-                server_args.port + DP_ATTENTION_HANDSHAKE_PORT_DELTA,
-            )
-        else:
-            na = NetworkAddress.parse(server_args.dist_init_addr)
-            na = NetworkAddress(na.host, na.port + DP_ATTENTION_HANDSHAKE_PORT_DELTA)
-        endpoint = na.to_tcp()
-
-        if server_args.node_rank == 0:
-            # Node 0: Broadcast worker ports to all other nodes
-            return self._broadcast_ports_as_server(
-                endpoint, server_args.nnodes - 1, worker_ports
-            )
-        else:
-            # Other nodes: Receive worker ports from node 0
-            return self._receive_ports_as_client(endpoint, server_args.node_rank)
-
-    def _broadcast_ports_as_server(
-        self, endpoint: str, expected_clients: int, worker_ports: List[int]
-    ) -> List[int]:
-        """Broadcast worker ports to all client nodes."""
-        logger.debug(f"Broadcasting worker ports to {expected_clients} client nodes")
-        logger.debug(f"Worker ports: {worker_ports}")
-
-        rep_socket = get_zmq_socket(self.context, zmq.REP, endpoint, True)
-
-        try:
-            connected_clients = 0
-            while connected_clients < expected_clients:
-                # Wait for client handshake
-                client_rank = rep_socket.recv().decode()
-                logger.debug(f"Received handshake from node {client_rank}")
-
-                # Send worker ports to client
-                rep_socket.send_pyobj(worker_ports)
-                connected_clients += 1
-                logger.debug(
-                    f"Sent worker ports to {connected_clients}/{expected_clients} nodes"
-                )
-
-            logger.debug("Worker port broadcast completed")
-            return worker_ports
-        finally:
-            rep_socket.close()
-
-    def _receive_ports_as_client(self, endpoint: str, node_rank: int) -> List[int]:
-        """Receive worker ports from the server node."""
-        logger.debug(f"Connecting to node 0 to receive worker ports")
-
-        req_socket = get_zmq_socket(self.context, zmq.REQ, endpoint, False)
-        req_socket.setsockopt(zmq.RCVTIMEO, 600 * 1000)  # 10 minute timeout
-        req_socket.setsockopt(zmq.SNDTIMEO, 600 * 1000)
-
-        try:
-            # Send handshake with our node rank
-            req_socket.send(str(node_rank).encode())
-
-            # Receive worker ports
-            worker_ports = req_socket.recv_pyobj()
-            logger.debug(f"Received {len(worker_ports)} worker ports from node 0")
-            return worker_ports
-        except zmq.Again:
-            logger.error("Timeout waiting for worker ports from node 0")
-            raise RuntimeError(
-                "Failed to receive worker ports from node 0 within timeout"
-            )
-        finally:
-            req_socket.close()
-
-    def launch_dp_attention_schedulers(
-        self, server_args: ServerArgs, port_args: PortArgs
-    ):
-        if server_args.dist_init_addr is None:
-            bind_host = "127.0.0.1"
-        else:
-            bind_host = NetworkAddress.parse(server_args.dist_init_addr).host
-
-        # Pre-allocate worker ports on node 0 to avoid conflicts
-        worker_ports = []
-        if server_args.node_rank == 0:
-            for dp_rank in range(server_args.dp_size):
-                worker_port, worker_socket = get_zmq_socket_on_host(
-                    self.context, zmq.PUSH, host=bind_host
-                )
-                worker_ports.append(worker_port)
-                self.workers[dp_rank] = worker_socket
-                logger.debug(
-                    "Assigned port %s to worker %s on host %s",
-                    worker_port,
+    def refresh_worker_status(self) -> list[int]:
+        """Mark workers dead when their scheduler subprocess has exited."""
+        if not self._scheduler_procs:
+            return []
+        dead: list[int] = []
+        for dp_rank, proc in enumerate(self._scheduler_procs):
+            if proc.exitcode is None:
+                continue
+            if self.status[dp_rank]:
+                logger.error(
+                    "DP scheduler worker %d exited with code %s",
                     dp_rank,
-                    bind_host,
+                    proc.exitcode,
                 )
+            self.status[dp_rank] = False
+            dead.append(dp_rank)
+        return dead
 
-        broadcasted_ports = self._broadcast_worker_ports(
-            server_args, worker_ports if worker_ports else None
-        )
-        self.launch_tensor_parallel_group(
-            server_args, port_args, 0, None, broadcasted_ports
-        )
-
-    def launch_tensor_parallel_group(
-        self,
-        server_args: ServerArgs,
-        port_args: PortArgs,
-        base_gpu_id: int,
-        dp_rank: Optional[int],
-        worker_ports: Optional[List[int]] = None,
-    ):
-        if not server_args.enable_dp_attention:
-            logger.info(f"Launch DP{dp_rank} starting at GPU #{base_gpu_id}.")
-
-        memory_saver_adapter = TorchMemorySaverAdapter.create(
-            enable=server_args.enable_memory_saver
-        )
-
-        scheduler_pipe_readers = []
-
-        pp_size_per_node = max(server_args.pp_size // server_args.nnodes, 1)
-        nnodes_per_pp_rank = max(server_args.nnodes // server_args.pp_size, 1)
-        pp_rank_range = range(
-            pp_size_per_node * (server_args.node_rank // nnodes_per_pp_rank),
-            pp_size_per_node * (server_args.node_rank // nnodes_per_pp_rank + 1),
-        )
-
-        nnodes_per_tp_group = nnodes_per_pp_rank
-        tp_size_per_node = server_args.tp_size // nnodes_per_tp_group
-        tp_rank_range = range(
-            tp_size_per_node * (server_args.node_rank % nnodes_per_tp_group),
-            tp_size_per_node * (server_args.node_rank % nnodes_per_tp_group + 1),
-        )
-
-        attn_cp_rank = 0
-        moe_dp_rank = 0
-        for pp_rank in pp_rank_range:
-            for tp_rank in tp_rank_range:
-                rank_port_args = port_args
-
-                if server_args.enable_dp_attention:
-                    # dp attention has different sharding logic
-                    _, _, dp_rank = compute_dp_attention_world_info(
-                        server_args.enable_dp_attention,
-                        tp_rank,
-                        server_args.tp_size,
-                        server_args.dp_size,
-                        server_args.attn_cp_size,
-                    )
-                    # compute zmq ports for this dp rank
-                    rank_port_args = PortArgs.init_new(
-                        server_args, dp_rank, worker_ports
-                    )
-                    # Data parallelism reuses the tensor parallelism group,
-                    # so all dp ranks should use the same nccl port.
-                    rank_port_args.nccl_port = port_args.nccl_port
-
-                reader, writer = mp.Pipe(duplex=False)
-                gpu_id = (
-                    server_args.base_gpu_id
-                    + base_gpu_id
-                    + ((pp_rank % pp_size_per_node) * tp_size_per_node)
-                    + (tp_rank % tp_size_per_node) * server_args.gpu_id_step
-                )
-                attn_dp_size = (
-                    server_args.dp_size if server_args.enable_dp_attention else 1
-                )
-
-                # Parallelism hierarchy (outermost to innermost):
-                # - Attention: Global(TP) -> DP -> ATTN_CP -> ATTN_TP (innermost)
-                # - MoE: Global(TP) -> MOE_DP -> EP -> MOE_TP (innermost)
-                attn_tp_size = (
-                    server_args.tp_size // attn_dp_size // server_args.attn_cp_size
-                )
-                attn_cp_rank = (tp_rank // attn_tp_size) % server_args.attn_cp_size
-                moe_dp_rank = tp_rank // (
-                    server_args.tp_size // server_args.moe_dp_size
-                )
-                moe_ep_rank = (
-                    tp_rank
-                    % (server_args.tp_size // server_args.moe_dp_size)
-                    // (
-                        server_args.tp_size
-                        // server_args.moe_dp_size
-                        // server_args.ep_size
-                    )
-                )
-
-                with self.env_lock, maybe_reindex_device_id(gpu_id) as gpu_id:
-                    proc = mp.Process(
-                        target=self.run_scheduler_process_func,
-                        args=(
-                            server_args,
-                            rank_port_args,
-                            gpu_id,
-                            tp_rank,
-                            attn_cp_rank,
-                            moe_dp_rank,
-                            moe_ep_rank,
-                            pp_rank,
-                            dp_rank,
-                            writer,
-                        ),
-                    )
-                    with memory_saver_adapter.configure_subprocess(), numa_utils.configure_subprocess(
-                        server_args, gpu_id
-                    ):
-                        proc.start()
-                self.scheduler_procs.append(proc)
-                scheduler_pipe_readers.append(reader)
-
-        # Wait for model to finish loading
-        scheduler_info = []
-        for i in range(len(scheduler_pipe_readers)):
-            scheduler_info.append(scheduler_pipe_readers[i].recv())
-
-        self.max_total_num_tokens = scheduler_info[0]["max_total_num_tokens"]
-        self.max_req_input_len = scheduler_info[0]["max_req_input_len"]
-
-    def _request_excluded_dp_ranks(self, req: Req) -> set:
-        exclude = set(self.failed_dp_ranks)
-        failed_dp_rank = getattr(req, "failed_dp_rank", None)
-        if failed_dp_rank is not None:
-            try:
-                exclude.add(int(failed_dp_rank))
-            except (TypeError, ValueError):
-                logger.warning("Ignoring invalid failed_dp_rank=%r", failed_dp_rank)
-        return exclude
-
-    def _send_to_worker(self, target_worker: Optional[int], req: Req) -> bool:
-        if target_worker is None:
-            logger.error(
-                "No healthy DP worker available for request %s",
-                getattr(req, "rid", "<unknown>"),
+    def ensure_workers_alive(self) -> None:
+        dead = self.refresh_worker_status()
+        if dead:
+            raise SchedulerWorkerDiedError(
+                f"DP scheduler worker(s) died (ranks={dead})"
             )
+
+    def _record_assigned_rank(self, req: TokenizedGenerateReqInput, dp_rank: int) -> None:
+        sim = req.sampling_params.custom_params.setdefault("simulation", {})
+        sim["assigned_dp_rank"] = dp_rank
+
+    def _send_to_worker(self, req: TokenizedGenerateReqInput, dp_rank: int) -> bool:
+        if not self.status[dp_rank]:
             return False
-        self.workers[target_worker].send_pyobj(req)
+        self._record_assigned_rank(req, dp_rank)
+        self.workers[dp_rank].send_pyobj(req)
         return True
 
-    def _first_healthy_worker(self, exclude: set) -> Optional[int]:
-        for rank in range(len(self.workers)):
-            if self.status[rank] and rank not in exclude:
-                return rank
-        return None
+    def handle_simulate_gpu_failure(self, req: SimulateGpuFailureReqInput) -> None:
+        dp_rank = int(req.dp_rank)
+        if dp_rank < 0 or dp_rank >= len(self.workers):
+            raise ValueError(f"Invalid dp_rank={dp_rank}")
+        self.workers[dp_rank].send_pyobj(req)
+        self.status[dp_rank] = False
+        stale_keys = [
+            key for key, rank in self.routing_key_to_rank.items() if rank == dp_rank
+        ]
+        for key in stale_keys:
+            self.routing_key_to_rank.pop(key, None)
+        logger.warning("Simulated GPU failure on dp_rank=%d", dp_rank)
 
-    def maybe_external_dp_rank_routing(self, req: Req, exclude: Optional[set] = None):
-        routed_dp_rank = getattr(req, "routed_dp_rank", None)
-        if routed_dp_rank is not None:
-            exclude = exclude or set()
-            if (
-                routed_dp_rank < 0
-                or routed_dp_rank >= len(self.workers)
-                or routed_dp_rank in exclude
-                or not self.status[routed_dp_rank]
-            ):
-                logger.warning(
-                    "Ignoring direct routing to unavailable DP rank %s for request %s",
-                    routed_dp_rank,
-                    getattr(req, "rid", "<unknown>"),
-                )
-                req.routed_dp_rank = None
-                return False
-            logger.debug(f"Direct routing to DP rank {routed_dp_rank}")
-            self.workers[routed_dp_rank].send_pyobj(req)
-            return True
-        return False
+    def handle_simulate_gpu_recovery(self, req: SimulateGpuRecoveryReqInput) -> None:
+        dp_rank = int(req.dp_rank)
+        if dp_rank < 0 or dp_rank >= len(self.workers):
+            raise ValueError(f"Invalid dp_rank={dp_rank}")
+        self.workers[dp_rank].send_pyobj(req)
+        self.status[dp_rank] = True
+        logger.warning("Simulated GPU recovery on dp_rank=%d", dp_rank)
 
-    def round_robin_scheduler(self, req: Req):
-        exclude = self._request_excluded_dp_ranks(req)
-        if self.maybe_external_dp_rank_routing(req, exclude):
-            return
-
+    def round_robin_scheduler(self, req: TokenizedGenerateReqInput) -> int | None:
         for _ in range(len(self.workers)):
-            if (
-                self.status[self.round_robin_counter]
-                and self.round_robin_counter not in exclude
-            ):
-                logger.debug(f"Choose worker {self.round_robin_counter}")
-                self.workers[self.round_robin_counter].send_pyobj(req)
+            if self.status[self.round_robin_counter]:
+                dp_rank = self.round_robin_counter
+                self._send_to_worker(req, dp_rank)
                 self.round_robin_counter = (self.round_robin_counter + 1) % len(
                     self.workers
                 )
-                return
+                return dp_rank
             self.round_robin_counter = (self.round_robin_counter + 1) % len(
                 self.workers
             )
-        logger.error(
-            "No healthy DP worker available for round-robin request %s",
-            getattr(req, "rid", "<unknown>"),
+        rid = getattr(req, "rid", "?")
+        logger.error("No healthy DP worker for request %s", rid)
+        self.ensure_workers_alive()
+        raise SchedulerWorkerDiedError(
+            f"No healthy DP worker for request {rid}"
         )
 
-    def follow_bootstrap_room_scheduler(self, req: Req):
-        exclude = self._request_excluded_dp_ranks(req)
-        if self.maybe_external_dp_rank_routing(req, exclude):
-            return
+    def routing_key_scheduler(self, req: TokenizedGenerateReqInput) -> int | None:
+        if not req.routing_key:
+            return self.round_robin_scheduler(req)
 
-        # Set default bootstrap_room if in FAKE auto mode and room is None
-        if (
-            req.bootstrap_room is None
-            and self.server_args.disaggregation_transfer_backend == "fake"
-        ):
-            req.bootstrap_room = self.round_robin_counter
+        mapped_rank = self.routing_key_to_rank.get(req.routing_key)
+        if mapped_rank is not None and self.status[mapped_rank]:
+            self._send_to_worker(req, mapped_rank)
+            return mapped_rank
+
+        for _ in range(len(self.workers)):
+            rank = self.round_robin_counter
             self.round_robin_counter = (self.round_robin_counter + 1) % len(
                 self.workers
             )
+            if self.status[rank]:
+                self.routing_key_to_rank[req.routing_key] = rank
+                self._send_to_worker(req, rank)
+                return rank
 
-        assert req.bootstrap_room is not None, (
-            "req.bootstrap_room should not be None. Do not send requests directly to "
-            "prefill or decode instances; send to the router instead."
+        rid = getattr(req, "rid", "?")
+        logger.error("No healthy DP worker for routing-key request %s", rid)
+        self.ensure_workers_alive()
+        raise SchedulerWorkerDiedError(
+            f"No healthy DP worker for request {rid}"
         )
-        target_rank = req.bootstrap_room % len(self.workers)
-        if target_rank in exclude or not self.status[target_rank]:
-            logger.warning(
-                "Bootstrap room targets unavailable DP rank %s for request %s",
-                target_rank,
-                getattr(req, "rid", "<unknown>"),
-            )
-            target_rank = self._first_healthy_worker(exclude)
-        self._send_to_worker(target_rank, req)
 
-    def total_requests_scheduler(self, req: Req):
-        exclude = self._request_excluded_dp_ranks(req)
-        if self.maybe_external_dp_rank_routing(req, exclude):
-            return
-        target_worker = self.dp_budget.dispatch(
-            LoadBalanceMethod.TOTAL_REQUESTS, exclude=exclude
-        )
-        self._send_to_worker(target_worker, req)
-
-    def total_tokens_scheduler(self, req: Req):
-        exclude = self._request_excluded_dp_ranks(req)
-        if self.maybe_external_dp_rank_routing(req, exclude):
-            return
-        target_worker = self.dp_budget.dispatch(
-            LoadBalanceMethod.TOTAL_TOKENS, exclude=exclude
-        )
-        self._send_to_worker(target_worker, req)
-
-    def event_loop(self):
-        while True:
-            while True:
-                self.soft_watchdog.feed()
-                try:
-                    recv_req = self.recv_from_tokenizer.recv_pyobj(zmq.NOBLOCK)
-                except zmq.ZMQError:
-                    break
-                self._request_dispatcher(recv_req)
+    def dispatch(self, req: TokenizedGenerateReqInput) -> int | None:
+        self.ensure_workers_alive()
+        if self.load_balance_method == LoadBalanceMethod.ROUND_ROBIN:
+            # Mirror sglang round_robin_scheduler: when routing-key affinity is
+            # enabled, sticky round-robin assigns the first-seen key to the next
+            # healthy DP rank and keeps subsequent requests on that rank.
+            if self.enable_routing_key_affinity:
+                return self.routing_key_scheduler(req)
+            return self.round_robin_scheduler(req)
+        return None
 
 
-def run_data_parallel_controller_process(
+def launch_scheduler_processes(
     server_args: ServerArgs,
     port_args: PortArgs,
-    pipe_writer,
-    run_scheduler_process_func: Callable = run_scheduler_process,
-):
-    setproctitle.setproctitle("sglang::data_parallel_controller")
-    faulthandler.enable()
-    kill_itself_when_parent_died()
-    parent_process = psutil.Process().parent()
+    ipc_registry,
+    dp_size: int,
+) -> tuple[list[mp.Process], list[mp.Queue], mp.Queue, list[mp.Event]]:
+    from sglsim.srt.managers.scheduler import run_scheduler_process
 
-    configure_logger(server_args)
-    if server_args.enable_trace:
-        process_tracing_init(server_args.otlp_traces_endpoint, "sglang")
-        thread_label = "DP Controller"
-        if server_args.disaggregation_mode == "prefill":
-            thread_label = "Prefill DP Controller"
-        elif server_args.disaggregation_mode == "decode":
-            thread_label = "Decode DP Controller"
-        trace_set_thread_info(thread_label)
+    processes: list[mp.Process] = []
+    cmd_queues: list[mp.Queue] = []
+    ready_events: list[mp.Event] = []
+    stats_queue: mp.Queue = mp.Queue()
 
-    try:
-        controller = DataParallelController(
-            server_args, port_args, run_scheduler_process_func
+    for dp_rank in range(dp_size):
+        cmd_queue: mp.Queue = mp.Queue()
+        ready_event = mp.Event()
+        proc = mp.Process(
+            target=run_scheduler_process,
+            args=(
+                server_args,
+                port_args,
+                dp_rank,
+                ipc_registry,
+                cmd_queue,
+                stats_queue,
+                ready_event,
+            ),
+            daemon=True,
         )
-        pipe_writer.send(
-            {
-                "status": "ready",
-                "max_total_num_tokens": controller.max_total_num_tokens,
-                "max_req_input_len": controller.max_req_input_len,
-            }
-        )
-        if server_args.node_rank == 0:
-            controller.event_loop()
-        for proc in controller.scheduler_procs:
-            proc.join()
-            logger.error(
-                f"Scheduler or DataParallelController {proc.pid} terminated with {proc.exitcode}"
-            )
-    except Exception:
-        traceback = get_exception_traceback()
-        logger.error(f"DataParallelController hit an exception: {traceback}")
-        parent_process.send_signal(signal.SIGQUIT)
+        processes.append(proc)
+        cmd_queues.append(cmd_queue)
+        ready_events.append(ready_event)
+        proc.start()
+
+    for event in ready_events:
+        if not event.wait(timeout=60):
+            raise RuntimeError("DP scheduler subprocess failed to become ready")
+
+    return processes, cmd_queues, stats_queue, ready_events
+
+
+def launch_dp_scheduler_processes(
+    server_args: ServerArgs,
+    port_args: PortArgs,
+    ipc_registry,
+    dp_size: int,
+) -> tuple[list[mp.Process], list[mp.Queue], mp.Queue, list[mp.Event]]:
+    return launch_scheduler_processes(
+        server_args, port_args, ipc_registry, dp_size
+    )

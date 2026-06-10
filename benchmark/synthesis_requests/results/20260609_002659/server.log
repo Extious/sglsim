@@ -1,0 +1,853 @@
+[2026-06-09 00:27:00.637 | 2026-06-09 00:27:00.348] Inferred chunked_prefill_size=8192 from platform HBM 80 GB
+[2026-06-09 00:27:00.654 | 2026-06-09 00:27:00.348] Quant inference result: quant_algo=None, kv_cache_quant_algo=None, quant_dynamic=None
+[2026-06-09 00:27:00.654 | 2026-06-09 00:27:00.348] Loaded model config for Qwen/Qwen3-8B: architecture=Qwen3ForCausalLM, layers=36, n=32, n_kv=8, d=128, hidden_size=4096, inter_size=12288, vocab=151936, context=40960, topk=0, num_experts=0, moe_inter_size=12288, extra_params={'architecture': 'Qwen3ForCausalLM', 'use_qk_norm': True}
+[2026-06-09 00:27:00.998 | 2026-06-09 00:27:00.348] Resolved max_running_requests=2201 (tokens=176085 dp_size=2)
+[2026-06-09 00:27:00.998 | 2026-06-09 00:27:00.348] Inferred l1_capacity_pages=176085 (tokens=176085 page_size=1) from HBM 80 GB mem_fraction_static=0.50 model=Qwen/Qwen3-8B
+[2026-06-09 00:27:00.998 | 2026-06-09 00:27:00.348] Inferred l2_capacity_pages=352170 (hicache_ratio=2.00 hicache_size_gb=0.00)
+[2026-06-09 00:27:00.998 | 2026-06-09 00:27:00.348] Model context_len=40960 for model_path=Qwen/Qwen3-8B
+[2026-06-09 00:27:00.998 | 2026-06-09 00:27:00.348] server_args=ServerArgs(model_path='Qwen/Qwen3-8B', host='127.0.0.1', port=31082, dp_size=2, tp_size=1, pp_size=1, sim_config_path='/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/results/20260609_002659/simulator_config.json', streaming_arrival=True, disable_overlap_schedule=True, max_running_requests=None, load_balance_method=None, chunked_prefill_size=None, log_level='info', log_level_http=None, simulate_detokenizer_time=False)
+[2026-06-09 00:27:00.999 | 2026-06-09 00:27:00.348] Load weight begin.
+[2026-06-09 00:27:00.999 | 2026-06-09 00:27:00.348] Load weight end.
+[2026-06-09 00:27:00.999 | 2026-06-09 00:27:00.348] KV Cache is allocated.
+[2026-06-09 00:27:00.999 | 2026-06-09 00:27:00.348] Capture CUDA graph begin.
+[2026-06-09 00:27:00.999 | 2026-06-09 00:27:00.348] Capture CUDA graph end.
+[2026-06-09 00:27:00.999 | 2026-06-09 00:27:00.348] max_total_num_tokens=176085, chunked_prefill_size=8192, max_prefill_tokens=16384, max_running_requests=2201, context_len=40960, available_gpu_mem=80.00 GB
+[2026-06-09 00:27:00.999 | 2026-06-09 00:27:00.348] max_total_num_tokens=176085, chunked_prefill_size=8192, max_prefill_tokens=16384, max_running_requests=2201, context_len=40960, available_gpu_mem=80.00 GB
+[2026-06-09 00:27:01.007 | 2026-06-09 00:27:00.348] Inferred chunked_prefill_size=8192 from platform HBM 80 GB
+[2026-06-09 00:27:01.008 | 2026-06-09 00:27:00.348] Resolved max_running_requests=2201 (tokens=176085 dp_size=2)
+[2026-06-09 00:27:01.008 | 2026-06-09 00:27:00.348] Model context_len=40960 for model_path=Qwen/Qwen3-8B
+[2026-06-09 00:27:01.010 | 2026-06-09 00:27:00.348] Inferred chunked_prefill_size=8192 from platform HBM 80 GB
+[2026-06-09 00:27:01.010 | 2026-06-09 00:27:00.348] Resolved max_running_requests=2201 (tokens=176085 dp_size=2)
+[2026-06-09 00:27:01.011 | 2026-06-09 00:27:00.348] Model context_len=40960 for model_path=Qwen/Qwen3-8B
+[2026-06-09 00:27:01.237 | 2026-06-09 00:27:00.348] Loading database for system='a100_sxm', backend='sglang', version='0.5.10'
+[2026-06-09 00:27:01.237 | 2026-06-09 00:27:00.348] Loading database for system='a100_sxm', backend='sglang', version='0.5.10'
+[2026-06-09 00:27:02.767 | 2026-06-09 00:27:00.348] Inferred l1_capacity_pages=176085 (tokens=176085 page_size=1) from HBM 80 GB mem_fraction_static=0.50 model=Qwen/Qwen3-8B
+[2026-06-09 00:27:02.767 | 2026-06-09 00:27:00.348] Inferred l2_capacity_pages=352170 (hicache_ratio=2.00 hicache_size_gb=0.00)
+[2026-06-09 00:27:02.850 | 2026-06-09 00:27:00.348] Inferred l1_capacity_pages=176085 (tokens=176085 page_size=1) from HBM 80 GB mem_fraction_static=0.50 model=Qwen/Qwen3-8B
+[2026-06-09 00:27:02.850 | 2026-06-09 00:27:00.348] Inferred l2_capacity_pages=352170 (hicache_ratio=2.00 hicache_size_gb=0.00)
+[2026-06-09 00:27:03.314 | 2026-06-09 00:27:00.348] Detokenizer subprocess ready
+[2026-06-09 00:27:03.314 | 2026-06-09 00:27:00.348] Loading tokenizer for model_path=Qwen/Qwen3-8B
+[2026-06-09 00:27:09.880 | 2026-06-09 00:27:00.348] Tokenizer ready for model_path=Qwen/Qwen3-8B in 6.566s
+[2026-06-09 00:27:09.880 | 2026-06-09 00:27:00.348] launch_subprocesses ready dp_size=2 schedulers=2
+[2026-06-09 00:27:09.901 | 2026-06-09 00:27:00.348] Launching SGLSim HTTP server on 127.0.0.1:31082 model=Qwen/Qwen3-8B clock=WALL+STREAMING
+[2026-06-09 00:27:10.387 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=20-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.395 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=32-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.397 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=1-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.403 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=29-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.404 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=11-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.408 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=7-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.411 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=31-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.412 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=25-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.413 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=21-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.414 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=17-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.415 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=9-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.416 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=13-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.417 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=10-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.418 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=27-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.419 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=24-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.420 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=8-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:10.502 | 2026-06-09 00:27:00.348 DP1] Received 2 request(s), waiting=0 running=0
+[2026-06-09 00:27:10.505 | 2026-06-09 00:27:00.348 DP0] Received 5 request(s), waiting=0 running=0
+[2026-06-09 00:27:10.565 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 0, token usage: 0.05, #running-req: 0, #queue-req: 1, cuda graph: True, input throughput (token/s): 13109.24
+[2026-06-09 00:27:10.579 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 0, token usage: 0.05, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 13109.24
+[2026-06-09 00:27:11.192 | 2026-06-09 00:27:00.348 DP1] Received 5 request(s), waiting=1 running=0
+[2026-06-09 00:27:11.206 | 2026-06-09 00:27:00.348 DP0] Received 4 request(s), waiting=4 running=0
+[2026-06-09 00:27:11.294 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 8195, token usage: 0.09, #running-req: 0, #queue-req: 5, cuda graph: True, input throughput (token/s): 10752.64
+[2026-06-09 00:27:11.308 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 8195, token usage: 0.09, #running-req: 0, #queue-req: 7, cuda graph: True, input throughput (token/s): 10794.46
+[2026-06-09 00:27:12.151 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1506, token usage: 0.14, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 12828.83
+[2026-06-09 00:27:12.162 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1576, token usage: 0.14, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 12831.38
+[2026-06-09 00:27:12.881 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1506, token usage: 0.19, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 12828.83
+[2026-06-09 00:27:12.910 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 5871, token usage: 0.19, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 12561.04
+[2026-06-09 00:27:13.610 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1506, token usage: 0.23, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 12828.83
+[2026-06-09 00:27:13.671 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 5871, token usage: 0.23, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 11274.81
+[2026-06-09 00:27:14.346 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1506, token usage: 0.28, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 12828.83
+[2026-06-09 00:27:14.499 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1576, token usage: 0.28, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 12831.38
+[2026-06-09 00:27:15.102 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 5871, token usage: 0.33, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 12573.98
+[2026-06-09 00:27:15.237 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1576, token usage: 0.33, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 12831.38
+[2026-06-09 00:27:15.906 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 14063, token usage: 0.37, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 10811.47
+[2026-06-09 00:27:15.978 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 1576, token usage: 0.37, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 12831.38
+[2026-06-09 00:27:16.737 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 5879, token usage: 0.42, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 12560.56
+[2026-06-09 00:27:16.837 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 17890, token usage: 0.42, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 10157.73
+[2026-06-09 00:27:17.512 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 14071, token usage: 0.47, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 10818.33
+[2026-06-09 00:27:17.799 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 19477, token usage: 0.47, #running-req: 2, #queue-req: 3, cuda graph: True, input throughput (token/s): 10114.48
+[2026-06-09 00:27:18.448 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 17960, token usage: 0.51, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 10142.67
+[2026-06-09 00:27:18.803 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 20981, token usage: 0.51, #running-req: 3, #queue-req: 2, cuda graph: True, input throughput (token/s): 10054.57
+[2026-06-09 00:27:19.488 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 31959, token usage: 0.56, #running-req: 2, #queue-req: 4, cuda graph: True, input throughput (token/s): 9889.58
+[2026-06-09 00:27:19.863 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 35061, token usage: 0.56, #running-req: 4, #queue-req: 0, cuda graph: True, input throughput (token/s): 10080.12
+[2026-06-09 00:27:20.498 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 18702, token usage: 0.60, #running-req: 4, #queue-req: 3, cuda graph: True, input throughput (token/s): 10117.61
+[2026-06-09 00:27:20.839 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 1221, #cached-token: 13694, token usage: 0.57, #running-req: 6, #queue-req: 0, cuda graph: True, input throughput (token/s): 8964.05
+[2026-06-09 00:27:21.522 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 20217, token usage: 0.65, #running-req: 5, #queue-req: 2, cuda graph: True, input throughput (token/s): 10121.93
+[2026-06-09 00:27:21.768 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 7, #token: 99805, token usage: 0.57, cuda graph: True, gen throughput (token/s): 364.67, #queue-req: 0
+[2026-06-09 00:27:21.788 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 11.301749556791037), ('normal_advance_wall', 9.502141374628991), ('normal_process_last', 1.2898386544547975), ('normal_get_next', 0.364430948975496), ('normal_run_batch', 0.13377287099137902), ('check_hicache_prefill', 0.002221117145381868)]
+[2026-06-09 00:27:22.528 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 34245, token usage: 0.70, #running-req: 6, #queue-req: 0, cuda graph: True, input throughput (token/s): 10037.85
+[2026-06-09 00:27:22.548 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 7, #token: 100085, token usage: 0.57, cuda graph: True, gen throughput (token/s): 364.09, #queue-req: 0
+[2026-06-09 00:27:22.568 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 12.080630180542357), ('normal_advance_wall', 10.274131809477694), ('normal_process_last', 1.292322093504481), ('normal_get_next', 0.3659485630923882), ('normal_run_batch', 0.13605612190440297), ('check_hicache_prefill', 0.0023110820911824703)]
+[2026-06-09 00:27:23.329 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 7, #token: 100365, token usage: 0.57, cuda graph: True, gen throughput (token/s): 363.51, #queue-req: 0
+[2026-06-09 00:27:23.349 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 12.860643770778552), ('normal_advance_wall', 11.04734542244114), ('normal_process_last', 1.29480988078285), ('normal_get_next', 0.36742395209148526), ('normal_run_batch', 0.1382939233444631), ('check_hicache_prefill', 0.0024000031407922506)]
+[2026-06-09 00:27:23.568 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2083, #cached-token: 12771, token usage: 0.71, #running-req: 8, #queue-req: 0, cuda graph: True, input throughput (token/s): 9184.92
+[2026-06-09 00:27:24.112 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 7, #token: 100645, token usage: 0.57, cuda graph: True, gen throughput (token/s): 362.94, #queue-req: 0
+[2026-06-09 00:27:24.131 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 13.641892228624783), ('normal_advance_wall', 11.821808802313171), ('normal_process_last', 1.2972823646850884), ('normal_get_next', 0.3688835334032774), ('normal_run_batch', 0.14054360159207135), ('check_hicache_prefill', 0.0024898049887269735)]
+[2026-06-09 00:27:24.746 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 9, #token: 125323, token usage: 0.71, cuda graph: True, gen throughput (token/s): 390.41, #queue-req: 0
+[2026-06-09 00:27:24.769 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 14.276749934419058), ('normal_advance_wall', 11.949981245328672), ('normal_process_last', 1.6961330604972318), ('normal_get_next', 0.46131247573066503), ('normal_run_batch', 0.15842291142325848), ('check_hicache_prefill', 0.0014795318711549044)]
+[2026-06-09 00:27:24.895 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 7, #token: 100925, token usage: 0.57, cuda graph: True, gen throughput (token/s): 362.36, #queue-req: 0
+[2026-06-09 00:27:24.915 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 14.424417957896367), ('normal_advance_wall', 12.597517012036406), ('normal_process_last', 1.2997443124186248), ('normal_get_next', 0.37036133650690317), ('normal_run_batch', 0.14281815313734114), ('check_hicache_prefill', 0.0025791063671931624)]
+[2026-06-09 00:27:25.680 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 7, #token: 101205, token usage: 0.57, cuda graph: True, gen throughput (token/s): 361.79, #queue-req: 0
+[2026-06-09 00:27:25.681 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 9, #token: 125683, token usage: 0.71, cuda graph: True, gen throughput (token/s): 389.71, #queue-req: 0
+[2026-06-09 00:27:25.699 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 15.208139826427214), ('normal_advance_wall', 13.374439795850776), ('normal_process_last', 1.3022201616549864), ('normal_get_next', 0.3718232597457245), ('normal_run_batch', 0.1450833665439859), ('check_hicache_prefill', 0.0026760875480249524)]
+[2026-06-09 00:27:25.705 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 15.210873262025416), ('normal_advance_wall', 12.876732101431116), ('normal_process_last', 1.6989231954794377), ('normal_get_next', 0.4629469597712159), ('normal_run_batch', 0.16074005223345011), ('check_hicache_prefill', 0.0015720459632575512)]
+[2026-06-09 00:27:26.045 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=11-t0 output_tokens=256 finish_time=1780936046.014
+[2026-06-09 00:27:26.045 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:26.050 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=11-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:26.068 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=29-t0 output_tokens=256 finish_time=1780936046.014
+[2026-06-09 00:27:26.068 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:26.073 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=29-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:26.086 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=25-t0 output_tokens=256 finish_time=1780936046.014
+[2026-06-09 00:27:26.086 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:26.090 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=25-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:26.109 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=9-t0 output_tokens=256 finish_time=1780936046.014
+[2026-06-09 00:27:26.109 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:26.114 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=9-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:26.133 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=13-t0 output_tokens=256 finish_time=1780936046.014
+[2026-06-09 00:27:26.133 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:26.138 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=13-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:26.160 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=24-t0 output_tokens=256 finish_time=1780936046.014
+[2026-06-09 00:27:26.160 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:26.164 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=24-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:26.178 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=10-t0 output_tokens=256 finish_time=1780936046.014
+[2026-06-09 00:27:26.178 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:26.183 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=10-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:26.184 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=0
+[2026-06-09 00:27:26.243 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14884, token usage: 0.13, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 8214.75
+[2026-06-09 00:27:26.619 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 9, #token: 126043, token usage: 0.72, cuda graph: True, gen throughput (token/s): 389.01, #queue-req: 0
+[2026-06-09 00:27:26.642 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 16.14756035548635), ('normal_advance_wall', 13.805247070500627), ('normal_process_last', 1.7020860655466095), ('normal_get_next', 0.4646380530903116), ('normal_run_batch', 0.16337511700112373), ('check_hicache_prefill', 0.001662283088080585)]
+[2026-06-09 00:27:27.245 | 2026-06-09 00:27:00.348 DP1] Received 6 request(s), waiting=0 running=0
+[2026-06-09 00:27:27.544 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 37876, token usage: 0.26, #running-req: 0, #queue-req: 5, cuda graph: True, input throughput (token/s): 8203.75
+[2026-06-09 00:27:27.558 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 9, #token: 126403, token usage: 0.72, cuda graph: True, gen throughput (token/s): 388.31, #queue-req: 0
+[2026-06-09 00:27:27.581 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 17.085259740590118), ('normal_advance_wall', 14.735332915675826), ('normal_process_last', 1.7051786058582366), ('normal_get_next', 0.46624587301630527), ('normal_run_batch', 0.16566727205645293), ('decode_extend_kv', 0.0018926578341051936)]
+[2026-06-09 00:27:28.498 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 9, #token: 126763, token usage: 0.72, cuda graph: True, gen throughput (token/s): 387.62, #queue-req: 0
+[2026-06-09 00:27:28.521 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 18.024285616818815), ('normal_advance_wall', 15.667047003982589), ('normal_process_last', 1.7080168165266514), ('normal_get_next', 0.4678092983085662), ('normal_run_batch', 0.16794288507662714), ('decode_extend_kv', 0.0023136730305850506)]
+[2026-06-09 00:27:28.784 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35292, token usage: 0.39, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 8349.58
+[2026-06-09 00:27:29.440 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 9, #token: 127123, token usage: 0.72, cuda graph: True, gen throughput (token/s): 386.93, #queue-req: 0
+[2026-06-09 00:27:29.463 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 18.965192611096427), ('normal_advance_wall', 16.60041251545772), ('normal_process_last', 1.7109946145210415), ('normal_get_next', 0.46942133049014956), ('normal_run_batch', 0.1702678290894255), ('decode_extend_kv', 0.0027687533292919397)]
+[2026-06-09 00:27:29.871 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=31-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:29.871 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:29.875 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=31-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:29.890 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=1-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:29.890 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:29.894 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=1-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:29.911 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=7-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:29.911 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:29.915 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=7-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:29.939 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=32-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:29.939 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:29.944 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=32-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:29.958 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=21-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:29.958 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:29.962 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=21-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:29.983 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=20-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:29.983 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:29.987 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=20-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:30.003 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=17-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:30.004 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:30.010 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=17-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:30.027 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=27-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:30.027 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:30.031 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=27-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:30.047 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=8-t0 output_tokens=256 finish_time=1780936049.840
+[2026-06-09 00:27:30.047 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:30.052 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=8-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:27:30.056 | 2026-06-09 00:27:00.348 DP0] Received 3 request(s), waiting=0 running=0
+[2026-06-09 00:27:30.059 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35359, token usage: 0.52, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 8348.44
+[2026-06-09 00:27:30.130 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14814, token usage: 0.13, #running-req: 0, #queue-req: 2, cuda graph: True, input throughput (token/s): 8232.16
+[2026-06-09 00:27:31.130 | 2026-06-09 00:27:00.348 DP0] Received 6 request(s), waiting=2 running=0
+[2026-06-09 00:27:31.265 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35273, token usage: 0.65, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 8356.89
+[2026-06-09 00:27:31.381 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 37884, token usage: 0.26, #running-req: 0, #queue-req: 7, cuda graph: True, input throughput (token/s): 8201.56
+[2026-06-09 00:27:32.551 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35168, token usage: 0.78, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 8363.13
+[2026-06-09 00:27:32.691 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35321, token usage: 0.39, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 8357.57
+[2026-06-09 00:27:33.760 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35286, token usage: 0.89, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 8347.28
+[2026-06-09 00:27:33.895 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35287, token usage: 0.50, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 8355.03
+[2026-06-09 00:27:35.099 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35359, token usage: 0.63, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 8349.98
+[2026-06-09 00:27:35.113 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 4, #new-token: 8192, #cached-token: 89650, token usage: 0.94, #running-req: 1, #queue-req: 2, cuda graph: True, input throughput (token/s): 7559.45
+[2026-06-09 00:27:36.447 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35372, token usage: 0.76, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 8350.81
+[2026-06-09 00:27:36.727 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 3, #new-token: 7350, #cached-token: 69412, token usage: 0.98, #running-req: 3, #queue-req: 1, cuda graph: True, input throughput (token/s): 7366.81
+[2026-06-09 00:27:37.764 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35324, token usage: 0.89, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 8355.52
+[2026-06-09 00:27:38.481 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 172555, token usage: 0.98, cuda graph: True, gen throughput (token/s): 295.07, #queue-req: 1
+[2026-06-09 00:27:38.505 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 28.00205197953619), ('normal_advance_wall', 23.2265043790685), ('normal_process_last', 3.0354280978208408), ('normal_get_next', 1.5128384209237993), ('normal_run_batch', 0.2057612893404439), ('refresh_waiting_plans', 0.0541638454888016)]
+[2026-06-09 00:27:39.084 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2549, #cached-token: 20467, token usage: 0.99, #running-req: 1, #queue-req: 7, cuda graph: True, input throughput (token/s): 7658.48
+[2026-06-09 00:27:39.422 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 172795, token usage: 0.98, cuda graph: True, gen throughput (token/s): 257.99, #queue-req: 1
+[2026-06-09 00:27:39.445 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 28.9415429267101), ('normal_advance_wall', 24.159758428344503), ('normal_process_last', 3.0376521142898127), ('normal_get_next', 1.5139891508733854), ('normal_run_batch', 0.2080314283957705), ('refresh_waiting_plans', 0.0541638454888016)]
+[2026-06-09 00:27:39.866 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 17-t1: extend=2560 retries=1 available_tokens=2560 evictable=22230 before_available=1 before_evictable=1776 error=insufficient L1 KV cache pages
+[2026-06-09 00:27:39.926 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 37858, token usage: 0.89, #running-req: 1, #queue-req: 7, cuda graph: True, input throughput (token/s): 12226.62
+[2026-06-09 00:27:40.364 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 173035, token usage: 0.98, cuda graph: True, gen throughput (token/s): 257.72, #queue-req: 1
+[2026-06-09 00:27:40.387 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 29.882174269878305), ('normal_advance_wall', 25.09401531156618), ('normal_process_last', 3.0399597545620054), ('normal_get_next', 1.5151617059018463), ('normal_run_batch', 0.2103183709550649), ('refresh_waiting_plans', 0.0541638454888016)]
+[2026-06-09 00:27:40.889 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2560, #cached-token: 20474, token usage: 0.97, #running-req: 1, #queue-req: 7, cuda graph: True, input throughput (token/s): 7662.85
+[2026-06-09 00:27:41.306 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 173275, token usage: 0.98, cuda graph: True, gen throughput (token/s): 257.45, #queue-req: 1
+[2026-06-09 00:27:41.329 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 30.8235955350101), ('normal_advance_wall', 26.02920691051986), ('normal_process_last', 3.0422448160825297), ('normal_get_next', 1.5162693106103688), ('normal_run_batch', 0.21255789592396468), ('refresh_waiting_plans', 0.0541638454888016)]
+[2026-06-09 00:27:41.624 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 8-t1: extend=5590 retries=1 available_tokens=5590 evictable=8406 before_available=1 before_evictable=3447 error=insufficient L1 KV cache pages
+[2026-06-09 00:27:41.629 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 37888, token usage: 0.92, #running-req: 1, #queue-req: 7, cuda graph: True, input throughput (token/s): 22698.10
+[2026-06-09 00:27:42.249 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 173515, token usage: 0.99, cuda graph: True, gen throughput (token/s): 257.18, #queue-req: 1
+[2026-06-09 00:27:42.273 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 31.766107731149532), ('normal_advance_wall', 26.96537096751854), ('normal_process_last', 3.044563491246663), ('normal_get_next', 1.517402209341526), ('normal_run_batch', 0.21485100884456187), ('refresh_waiting_plans', 0.0541638454888016)]
+[2026-06-09 00:27:42.427 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 4, #new-token: 8192, #cached-token: 92162, token usage: 0.97, #running-req: 2, #queue-req: 3, cuda graph: True, input throughput (token/s): 7400.44
+[2026-06-09 00:27:43.194 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 173755, token usage: 0.99, cuda graph: True, gen throughput (token/s): 256.92, #queue-req: 1
+[2026-06-09 00:27:43.218 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 32.709613918326795), ('normal_advance_wall', 27.902507167309523), ('normal_process_last', 3.0468944038730115), ('normal_get_next', 1.5185455641476437), ('normal_run_batch', 0.2171383126405999), ('refresh_waiting_plans', 0.0541638454888016)]
+[2026-06-09 00:27:43.914 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2093, #cached-token: 23519, token usage: 0.98, #running-req: 5, #queue-req: 3, cuda graph: True, input throughput (token/s): 7124.20
+[2026-06-09 00:27:44.024 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=11-t1 output_tokens=256 finish_time=1780936063.975
+[2026-06-09 00:27:44.024 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:44.029 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=11-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:27:44.061 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=29-t1 output_tokens=256 finish_time=1780936063.975
+[2026-06-09 00:27:44.061 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:44.066 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=29-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:27:44.102 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=25-t1 output_tokens=256 finish_time=1780936063.975
+[2026-06-09 00:27:44.102 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:44.107 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=25-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:27:44.144 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=9-t1 output_tokens=256 finish_time=1780936063.975
+[2026-06-09 00:27:44.144 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:44.151 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=9-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:27:44.186 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=13-t1 output_tokens=256 finish_time=1780936063.975
+[2026-06-09 00:27:44.186 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:44.193 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=13-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:27:44.226 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=24-t1 output_tokens=256 finish_time=1780936063.975
+[2026-06-09 00:27:44.226 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:44.231 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=24-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:27:44.356 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2580, #cached-token: 23107, token usage: 0.15, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 7177.45
+[2026-06-09 00:27:44.721 | 2026-06-09 00:27:00.348 DP1] Received 6 request(s), waiting=0 running=0
+[2026-06-09 00:27:45.097 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25659, token usage: 0.34, #running-req: 1, #queue-req: 5, cuda graph: True, input throughput (token/s): 6401.45
+[2026-06-09 00:27:46.171 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 172518, token usage: 0.98, cuda graph: True, gen throughput (token/s): 309.62, #queue-req: 3
+[2026-06-09 00:27:46.194 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 35.68426981323864), ('normal_advance_wall', 27.530542607069947), ('normal_process_last', 3.6455214347224683), ('normal_get_next', 3.349805642501451), ('decode_check_mem', 1.3234994783997536), ('normal_run_batch', 1.1356600316939875)]
+[2026-06-09 00:27:46.991 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 59427, token usage: 0.53, #running-req: 1, #queue-req: 4, cuda graph: True, input throughput (token/s): 6437.50
+[2026-06-09 00:27:48.845 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 56792, token usage: 0.72, #running-req: 2, #queue-req: 3, cuda graph: True, input throughput (token/s): 6673.77
+[2026-06-09 00:27:49.306 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 172758, token usage: 0.98, cuda graph: True, gen throughput (token/s): 258.05, #queue-req: 3
+[2026-06-09 00:27:49.329 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 38.81768597557675), ('normal_advance_wall', 28.46391646855045), ('normal_get_next', 5.540067401714623), ('normal_process_last', 3.6489163053920493), ('decode_check_mem', 3.5118745653890073), ('normal_run_batch', 1.1411361577920616)]
+[2026-06-09 00:27:50.685 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 56828, token usage: 0.89, #running-req: 2, #queue-req: 3, cuda graph: True, input throughput (token/s): 6677.01
+[2026-06-09 00:27:52.436 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 172998, token usage: 0.98, cuda graph: True, gen throughput (token/s): 257.78, #queue-req: 3
+[2026-06-09 00:27:52.460 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 41.94635716546327), ('normal_advance_wall', 29.398303316091187), ('normal_get_next', 7.724171815789305), ('decode_check_mem', 5.694061842630617), ('normal_process_last', 3.6524734816048294), ('normal_run_batch', 1.1468270814511925)]
+[2026-06-09 00:27:52.506 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 31141, token usage: 0.94, #running-req: 2, #queue-req: 3, cuda graph: True, input throughput (token/s): 9957.53
+[2026-06-09 00:27:53.572 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2666, #cached-token: 5529, token usage: 0.95, #running-req: 2, #queue-req: 4, cuda graph: True, input throughput (token/s): 11485.50
+[2026-06-09 00:27:53.984 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 8195, token usage: 1.00, #running-req: 2, #queue-req: 4, cuda graph: True, input throughput (token/s): 9878.01
+[2026-06-09 00:27:55.001 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 210, #cached-token: 16387, token usage: 1.00, #running-req: 2, #queue-req: 4, cuda graph: True, input throughput (token/s): 6598.95
+[2026-06-09 00:27:55.359 | 2026-06-09 00:27:00.348 DP1] Prefill extend blocked for 13-t2: extend=7982 retries=1 available_tokens=7982 evictable=8822 before_available=1 before_evictable=209 error=insufficient L1 KV cache pages
+[2026-06-09 00:27:55.452 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 2, #token: 159297, token usage: 0.90, cuda graph: True, gen throughput (token/s): 245.00, #queue-req: 5
+[2026-06-09 00:27:55.465 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 44.95511666184757), ('normal_advance_wall', 36.037331770174205), ('normal_process_last', 4.435843384824693), ('normal_get_next', 3.161182181094773), ('normal_run_batch', 1.2888944849837571), ('refresh_waiting_plans', 0.13351949327625334)]
+[2026-06-09 00:27:55.563 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 173238, token usage: 0.98, cuda graph: True, gen throughput (token/s): 257.51, #queue-req: 3
+[2026-06-09 00:27:55.586 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 45.071202266728505), ('normal_advance_wall', 30.33360029675532), ('normal_get_next', 9.903954969602637), ('decode_check_mem', 7.871985046891496), ('normal_process_last', 3.655960902222432), ('normal_run_batch', 1.1522116045234725)]
+[2026-06-09 00:27:55.966 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 2, #token: 159377, token usage: 0.91, cuda graph: True, gen throughput (token/s): 158.43, #queue-req: 5
+[2026-06-09 00:27:55.979 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 45.46850974904373), ('normal_advance_wall', 36.545379734248854), ('normal_process_last', 4.437386293779127), ('normal_get_next', 3.162165520945564), ('normal_run_batch', 1.291105714160949), ('refresh_waiting_plans', 0.13351949327625334)]
+[2026-06-09 00:27:56.481 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 2, #token: 159457, token usage: 0.91, cuda graph: True, gen throughput (token/s): 158.35, #queue-req: 5
+[2026-06-09 00:27:56.494 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 45.982029085513204), ('normal_advance_wall', 37.05359189340379), ('normal_process_last', 4.438949069008231), ('normal_get_next', 3.1631163648562506), ('normal_run_batch', 1.2933002553181723), ('refresh_waiting_plans', 0.13351949327625334)]
+[2026-06-09 00:27:56.996 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 2, #token: 159537, token usage: 0.91, cuda graph: True, gen throughput (token/s): 158.27, #queue-req: 5
+[2026-06-09 00:27:57.008 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 46.49588648544159), ('normal_advance_wall', 37.56207744497806), ('normal_process_last', 4.4405267864931375), ('normal_get_next', 3.164082376169972), ('normal_run_batch', 1.2955231440719217), ('refresh_waiting_plans', 0.13351949327625334)]
+[2026-06-09 00:27:57.512 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 2, #token: 159617, token usage: 0.91, cuda graph: True, gen throughput (token/s): 158.19, #queue-req: 5
+[2026-06-09 00:27:57.524 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 47.01095058978535), ('normal_advance_wall', 38.07077422994189), ('normal_process_last', 4.442052832338959), ('normal_get_next', 3.1650105570442975), ('normal_run_batch', 1.2988344030454755), ('refresh_waiting_plans', 0.13351949327625334)]
+[2026-06-09 00:27:58.027 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 2, #token: 159697, token usage: 0.91, cuda graph: True, gen throughput (token/s): 158.11, #queue-req: 5
+[2026-06-09 00:27:58.040 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 47.52517105336301), ('normal_advance_wall', 38.57974945975002), ('normal_process_last', 4.443601838545874), ('normal_get_next', 3.165947592118755), ('normal_run_batch', 1.3010020066285506), ('refresh_waiting_plans', 0.13351949327625334)]
+[2026-06-09 00:27:58.542 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 2, #token: 159777, token usage: 0.91, cuda graph: True, gen throughput (token/s): 158.03, #queue-req: 5
+[2026-06-09 00:27:58.555 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 48.03970941726584), ('normal_advance_wall', 39.08894933771808), ('normal_process_last', 4.445167813333683), ('normal_get_next', 3.166905195452273), ('normal_run_batch', 1.3032037006923929), ('refresh_waiting_plans', 0.13351949327625334)]
+[2026-06-09 00:27:58.693 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 173478, token usage: 0.99, cuda graph: True, gen throughput (token/s): 257.24, #queue-req: 3
+[2026-06-09 00:27:58.708 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=10-t1 output_tokens=256 finish_time=1780936078.658
+[2026-06-09 00:27:58.708 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:58.713 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=10-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:27:58.716 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 48.19952345290221), ('normal_advance_wall', 31.269836338004097), ('normal_get_next', 12.086550531559624), ('decode_check_mem', 10.052772239898331), ('normal_process_last', 3.6594535008771345), ('normal_run_batch', 1.157334907213226)]
+[2026-06-09 00:27:58.767 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=11-t2 output_tokens=256 finish_time=1780936078.658
+[2026-06-09 00:27:58.768 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:27:58.772 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=18-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:27:58.883 | 2026-06-09 00:27:00.348 DP0] Received 1 request(s), waiting=3 running=6
+[2026-06-09 00:27:59.126 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25561, token usage: 0.77, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 6425.12
+[2026-06-09 00:28:00.403 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=4 running=0
+[2026-06-09 00:28:01.205 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 4, #new-token: 8192, #cached-token: 135207, token usage: 0.81, #running-req: 0, #queue-req: 2, cuda graph: True, input throughput (token/s): 5770.48
+[2026-06-09 00:28:01.859 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 173718, token usage: 0.99, cuda graph: True, gen throughput (token/s): 256.97, #queue-req: 4
+[2026-06-09 00:28:01.883 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 51.36422310140915), ('normal_advance_wall', 32.207037761458196), ('normal_get_next', 14.303256481536664), ('decode_check_mem', 12.26759928802494), ('normal_process_last', 3.6630915781715885), ('normal_run_batch', 1.1628614336950704)]
+[2026-06-09 00:28:03.526 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2223, #cached-token: 34223, token usage: 0.97, #running-req: 3, #queue-req: 2, cuda graph: True, input throughput (token/s): 5555.06
+[2026-06-09 00:28:04.303 | 2026-06-09 00:27:00.348 DP1] KV cache pool is full. Retract requests. #retracted_reqs: 1, #aborted_reqs: 0, #new_tokens_gained: 36449, #new_token_ratio: 0.1730 -> 0.0780
+[2026-06-09 00:28:04.375 | 2026-06-09 00:27:00.348 DP1] Prefill extend blocked for 13-t2: extend=8192 retries=2 available_tokens=8192 evictable=58729 before_available=1 before_evictable=4885 error=insufficient L1 KV cache pages
+[2026-06-09 00:28:04.430 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=31-t1 output_tokens=256 finish_time=1780936084.384
+[2026-06-09 00:28:04.431 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:04.436 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=31-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:28:04.481 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=27-t1 output_tokens=256 finish_time=1780936084.384
+[2026-06-09 00:28:04.481 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:04.486 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=27-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:28:04.520 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=1-t1 output_tokens=256 finish_time=1780936084.384
+[2026-06-09 00:28:04.521 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:04.526 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=1-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:28:04.562 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=7-t1 output_tokens=256 finish_time=1780936084.384
+[2026-06-09 00:28:04.562 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:04.568 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=7-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:28:04.597 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=32-t1 output_tokens=256 finish_time=1780936084.384
+[2026-06-09 00:28:04.597 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:04.602 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=32-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:28:04.642 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=21-t1 output_tokens=256 finish_time=1780936084.384
+[2026-06-09 00:28:04.642 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:04.647 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=21-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:28:04.711 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25687, token usage: 0.79, #running-req: 3, #queue-req: 2, cuda graph: True, input throughput (token/s): 6394.69
+[2026-06-09 00:28:05.501 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 4, #new-token: 8192, #cached-token: 65226, token usage: 0.39, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 8161.01
+[2026-06-09 00:28:06.511 | 2026-06-09 00:27:00.348 DP0] Received 6 request(s), waiting=0 running=0
+[2026-06-09 00:28:06.538 | 2026-06-09 00:27:00.348 DP1] Prefill extend blocked for 10-t2: extend=2662 retries=1 available_tokens=2662 evictable=27808 before_available=1 before_evictable=958 error=insufficient L1 KV cache pages
+[2026-06-09 00:28:06.541 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 2663, #cached-token: 70330, token usage: 0.83, #running-req: 3, #queue-req: 2, cuda graph: True, input throughput (token/s): 250915.58
+[2026-06-09 00:28:07.041 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 4096, #cached-token: 25589, token usage: 1.00, #running-req: 4, #queue-req: 1, cuda graph: True, input throughput (token/s): 6771.04
+[2026-06-09 00:28:07.179 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 30131, token usage: 0.58, #running-req: 1, #queue-req: 7, cuda graph: True, input throughput (token/s): 11058.63
+[2026-06-09 00:28:07.940 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 695, #cached-token: 29685, token usage: 1.00, #running-req: 4, #queue-req: 1, cuda graph: True, input throughput (token/s): 6163.56
+[2026-06-09 00:28:08.477 | 2026-06-09 00:27:00.348 DP1] Prefill extend blocked for 13-t2: extend=3401 retries=1 available_tokens=3401 evictable=27068 before_available=1 before_evictable=91 error=insufficient L1 KV cache pages
+[2026-06-09 00:28:08.525 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 51460, token usage: 0.78, #running-req: 1, #queue-req: 7, cuda graph: True, input throughput (token/s): 6646.95
+[2026-06-09 00:28:09.045 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 145740, token usage: 0.83, cuda graph: True, gen throughput (token/s): 205.88, #queue-req: 2
+[2026-06-09 00:28:09.064 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 58.54687150812242), ('normal_advance_wall', 44.89128331001848), ('normal_process_last', 5.443479590932839), ('normal_get_next', 5.422292810166255), ('normal_run_batch', 2.7520105774747208), ('refresh_waiting_plans', 0.14655895915348083)]
+[2026-06-09 00:28:09.800 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 145900, token usage: 0.83, cuda graph: True, gen throughput (token/s): 214.68, #queue-req: 2
+[2026-06-09 00:28:09.819 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 59.30097337428015), ('normal_advance_wall', 45.63954968051985), ('normal_process_last', 5.4454115816624835), ('normal_get_next', 5.423362495959736), ('normal_run_batch', 2.7542445900617167), ('refresh_waiting_plans', 0.14655895915348083)]
+[2026-06-09 00:28:10.482 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 7923, #cached-token: 25905, token usage: 0.97, #running-req: 1, #queue-req: 8, cuda graph: True, input throughput (token/s): 6384.99
+[2026-06-09 00:28:10.556 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 146060, token usage: 0.83, cuda graph: True, gen throughput (token/s): 214.54, #queue-req: 2
+[2026-06-09 00:28:10.575 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 60.055761178489774), ('normal_advance_wall', 46.38832462509163), ('normal_process_last', 5.447418505093083), ('normal_get_next', 5.424431752995588), ('normal_run_batch', 2.7565778852440417), ('refresh_waiting_plans', 0.14655895915348083)]
+[2026-06-09 00:28:11.312 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 146220, token usage: 0.83, cuda graph: True, gen throughput (token/s): 214.41, #queue-req: 2
+[2026-06-09 00:28:11.331 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 60.810880421311595), ('normal_advance_wall', 47.137588809244335), ('normal_process_last', 5.449375199619681), ('normal_get_next', 5.42548700037878), ('normal_run_batch', 2.7588223143247887), ('refresh_waiting_plans', 0.14655895915348083)]
+[2026-06-09 00:28:12.068 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 146380, token usage: 0.83, cuda graph: True, gen throughput (token/s): 214.27, #queue-req: 2
+[2026-06-09 00:28:12.087 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 61.56641662842594), ('normal_advance_wall', 47.88725585129578), ('normal_process_last', 5.451345716253854), ('normal_get_next', 5.426542954752222), ('normal_run_batch', 2.761066125240177), ('refresh_waiting_plans', 0.14655895915348083)]
+[2026-06-09 00:28:12.343 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 1-t2: extend=5623 retries=1 available_tokens=5623 evictable=23296 before_available=1 before_evictable=3315 error=insufficient L1 KV cache pages
+[2026-06-09 00:28:12.348 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 59434, token usage: 0.84, #running-req: 1, #queue-req: 8, cuda graph: True, input throughput (token/s): 17819.98
+[2026-06-09 00:28:12.827 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 146540, token usage: 0.83, cuda graph: True, gen throughput (token/s): 214.14, #queue-req: 2
+[2026-06-09 00:28:12.846 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 62.32364927837625), ('normal_advance_wall', 48.63741789537016), ('normal_process_last', 5.4533106230665), ('normal_get_next', 5.42756899795495), ('normal_run_batch', 2.764550967491232), ('refresh_waiting_plans', 0.14655895915348083)]
+[2026-06-09 00:28:13.373 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=24-t2 output_tokens=256 finish_time=1780936093.300
+[2026-06-09 00:28:13.373 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:13.378 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=23-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:28:13.423 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=29-t2 output_tokens=256 finish_time=1780936093.300
+[2026-06-09 00:28:13.424 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:13.429 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=5-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:28:13.482 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=9-t2 output_tokens=256 finish_time=1780936093.300
+[2026-06-09 00:28:13.482 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:13.487 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=15-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:28:13.491 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=2 running=1
+[2026-06-09 00:28:13.556 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=25-t2 output_tokens=256 finish_time=1780936093.491
+[2026-06-09 00:28:13.556 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:13.561 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=30-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:28:13.616 | 2026-06-09 00:27:00.348 DP0] Received 1 request(s), waiting=8 running=2
+[2026-06-09 00:28:13.770 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 147182, token usage: 0.84, cuda graph: True, gen throughput (token/s): 245.08, #queue-req: 9
+[2026-06-09 00:28:13.783 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 63.26220823137555), ('normal_advance_wall', 37.73693066206761), ('normal_get_next', 18.538322174805216), ('decode_check_mem', 14.573671903694049), ('normal_process_last', 4.856841347529553), ('normal_run_batch', 2.093575236503966)]
+[2026-06-09 00:28:14.678 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 68550, token usage: 0.44, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 7300.43
+[2026-06-09 00:28:15.801 | 2026-06-09 00:27:00.348 DP1] Received 2 request(s), waiting=0 running=0
+[2026-06-09 00:28:16.215 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 6802, token usage: 0.48, #running-req: 1, #queue-req: 2, cuda graph: True, input throughput (token/s): 11574.23
+[2026-06-09 00:28:17.079 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 147262, token usage: 0.84, cuda graph: True, gen throughput (token/s): 158.63, #queue-req: 9
+[2026-06-09 00:28:17.092 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 66.56964815955143), ('normal_advance_wall', 38.24459840625059), ('normal_get_next', 21.328972178627737), ('decode_check_mem', 17.36259859218262), ('normal_process_last', 4.859348435304128), ('normal_run_batch', 2.099267037701793)]
+[2026-06-09 00:28:17.225 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 6818, token usage: 0.55, #running-req: 1, #queue-req: 2, cuda graph: True, input throughput (token/s): 12369.57
+[2026-06-09 00:28:18.278 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 40217, token usage: 0.60, #running-req: 1, #queue-req: 2, cuda graph: True, input throughput (token/s): 8756.95
+[2026-06-09 00:28:20.037 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 56588, token usage: 0.65, #running-req: 1, #queue-req: 1, cuda graph: True, input throughput (token/s): 9739.93
+[2026-06-09 00:28:20.384 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 147342, token usage: 0.84, cuda graph: True, gen throughput (token/s): 158.56, #queue-req: 9
+[2026-06-09 00:28:20.396 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 69.87259859789629), ('normal_advance_wall', 38.75252664205618), ('normal_get_next', 24.114989880356006), ('decode_check_mem', 20.146918895537965), ('normal_process_last', 4.861891898326576), ('normal_run_batch', 2.1048186940606683)]
+[2026-06-09 00:28:21.321 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 3598, #cached-token: 26043, token usage: 0.67, #running-req: 3, #queue-req: 0, cuda graph: True, input throughput (token/s): 9310.17
+[2026-06-09 00:28:23.322 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 117481, token usage: 0.67, cuda graph: True, gen throughput (token/s): 235.13, #queue-req: 0
+[2026-06-09 00:28:23.340 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 72.81668356794398), ('normal_advance_wall', 54.02774657786358), ('normal_get_next', 7.9760195122798905), ('normal_process_last', 6.762333057355136), ('normal_run_batch', 4.007339251344092), ('decode_check_mem', 1.2762346061645076)]
+[2026-06-09 00:28:23.696 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 147422, token usage: 0.84, cuda graph: True, gen throughput (token/s): 158.48, #queue-req: 9
+[2026-06-09 00:28:23.709 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 73.18368468165863), ('normal_advance_wall', 39.2607358309906), ('normal_get_next', 26.90870633313898), ('decode_check_mem', 22.938929929281585), ('normal_process_last', 4.86443946545478), ('normal_run_batch', 2.1105248630046844)]
+[2026-06-09 00:28:27.012 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 147502, token usage: 0.84, cuda graph: True, gen throughput (token/s): 158.40, #queue-req: 9
+[2026-06-09 00:28:27.025 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 76.49741322966293), ('normal_advance_wall', 39.76917418767698), ('normal_get_next', 29.704524428816512), ('decode_check_mem', 25.733020028099418), ('normal_process_last', 4.867034352617338), ('normal_run_batch', 2.1164734144695103)]
+[2026-06-09 00:28:27.549 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 117681, token usage: 0.67, cuda graph: True, gen throughput (token/s): 275.20, #queue-req: 0
+[2026-06-09 00:28:27.567 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 77.04189141711686), ('normal_advance_wall', 54.7578479408985), ('normal_get_next', 11.46160207875073), ('normal_process_last', 6.765774698345922), ('decode_check_mem', 4.759523368207738), ('normal_run_batch', 4.012521899770945)]
+[2026-06-09 00:28:30.338 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 147582, token usage: 0.84, cuda graph: True, gen throughput (token/s): 158.32, #queue-req: 9
+[2026-06-09 00:28:30.351 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 79.82164329639636), ('normal_advance_wall', 40.27787403704133), ('normal_get_next', 32.5108361603925), ('decode_check_mem', 28.537615200621076), ('normal_process_last', 4.869605510146357), ('normal_run_batch', 2.1222043849993497)]
+[2026-06-09 00:28:31.721 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 117881, token usage: 0.67, cuda graph: True, gen throughput (token/s): 274.92, #queue-req: 0
+[2026-06-09 00:28:31.740 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 81.2126197242178), ('normal_advance_wall', 55.488680977141485), ('normal_get_next', 14.890410331776366), ('decode_check_mem', 8.186060488107614), ('normal_process_last', 6.769385704654269), ('normal_run_batch', 4.019111054716632)]
+[2026-06-09 00:28:33.655 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 147662, token usage: 0.84, cuda graph: True, gen throughput (token/s): 158.24, #queue-req: 9
+[2026-06-09 00:28:33.668 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 83.13694764359389), ('normal_advance_wall', 40.78684436122421), ('normal_get_next', 35.30610473942943), ('decode_check_mem', 31.331174322520383), ('normal_process_last', 4.87220420956146), ('normal_run_batch', 2.129759283736348)]
+[2026-06-09 00:28:34.387 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=20-t1 output_tokens=256 finish_time=1780936114.328
+[2026-06-09 00:28:34.387 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:34.393 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=20-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:28:34.437 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=27-t2 output_tokens=256 finish_time=1780936114.328
+[2026-06-09 00:28:34.437 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:34.442 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=3-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:28:34.578 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=5
+[2026-06-09 00:28:34.635 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25586, token usage: 0.65, #running-req: 0, #queue-req: 8, cuda graph: True, input throughput (token/s): 6419.26
+[2026-06-09 00:28:34.676 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 3, token usage: 0.72, #running-req: 5, #queue-req: 0, cuda graph: True, input throughput (token/s): 13106.79
+[2026-06-09 00:28:35.503 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 6679, #cached-token: 8195, token usage: 0.75, #running-req: 5, #queue-req: 0, cuda graph: True, input throughput (token/s): 9931.94
+[2026-06-09 00:28:35.912 | 2026-06-09 00:27:00.348 DP0] Received 1 request(s), waiting=8 running=0
+[2026-06-09 00:28:36.766 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 59421, token usage: 0.82, #running-req: 0, #queue-req: 8, cuda graph: True, input throughput (token/s): 6437.23
+[2026-06-09 00:28:37.695 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 132965, token usage: 0.76, cuda graph: True, gen throughput (token/s): 278.05, #queue-req: 0
+[2026-06-09 00:28:37.716 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 87.1876717552077), ('normal_advance_wall', 57.55574498558417), ('normal_get_next', 18.430069444235414), ('decode_check_mem', 11.703953247983009), ('normal_process_last', 6.923780531738885), ('normal_run_batch', 4.231229715049267)]
+[2026-06-09 00:28:38.619 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2641, #cached-token: 31194, token usage: 0.98, #running-req: 1, #queue-req: 8, cuda graph: True, input throughput (token/s): 6022.37
+[2026-06-09 00:28:39.657 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 21-t2: extend=5600 retries=1 available_tokens=5600 evictable=21064 before_available=1 before_evictable=1054 error=insufficient L1 KV cache pages
+[2026-06-09 00:28:39.657 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 59447, token usage: 0.85, #running-req: 1, #queue-req: 8, cuda graph: True, input throughput (token/s): 17615.02
+[2026-06-09 00:28:40.634 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 4, #new-token: 8192, #cached-token: 89492, token usage: 0.90, #running-req: 2, #queue-req: 4, cuda graph: True, input throughput (token/s): 8160.79
+[2026-06-09 00:28:42.126 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 133205, token usage: 0.76, cuda graph: True, gen throughput (token/s): 283.84, #queue-req: 0
+[2026-06-09 00:28:42.147 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 91.61695198516827), ('normal_advance_wall', 58.40462190483231), ('normal_get_next', 22.000710103893653), ('decode_check_mem', 15.272284125094302), ('normal_process_last', 6.92763683362864), ('normal_run_batch', 4.236251345020719)]
+[2026-06-09 00:28:42.185 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 34185, token usage: 0.94, #running-req: 4, #queue-req: 4, cuda graph: True, input throughput (token/s): 10260.29
+[2026-06-09 00:28:43.241 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2154, #cached-token: 6041, token usage: 0.95, #running-req: 5, #queue-req: 4, cuda graph: True, input throughput (token/s): 11426.48
+[2026-06-09 00:28:43.596 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 7906, #cached-token: 8195, token usage: 1.00, #running-req: 5, #queue-req: 4, cuda graph: True, input throughput (token/s): 9876.34
+[2026-06-09 00:28:44.738 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 1-t2: extend=286 retries=1 available_tokens=286 evictable=16032 before_available=1 before_evictable=219 error=insufficient L1 KV cache pages
+[2026-06-09 00:28:45.404 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 159927, token usage: 0.91, cuda graph: True, gen throughput (token/s): 226.89, #queue-req: 5
+[2026-06-09 00:28:45.425 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 94.89288088644389), ('normal_advance_wall', 47.809752595378086), ('normal_get_next', 37.59183336957358), ('decode_check_mem', 31.886859683669172), ('normal_process_last', 5.828015176812187), ('normal_run_batch', 3.619164513074793)]
+[2026-06-09 00:28:46.568 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 133445, token usage: 0.76, cuda graph: True, gen throughput (token/s): 283.51, #queue-req: 0
+[2026-06-09 00:28:46.589 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 96.05742113036104), ('normal_advance_wall', 59.25451719376724), ('normal_get_next', 25.581427314085886), ('decode_check_mem', 18.850686574354768), ('normal_process_last', 6.931454465142451), ('normal_run_batch', 4.241409657755867)]
+[2026-06-09 00:28:47.433 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 160127, token usage: 0.91, cuda graph: True, gen throughput (token/s): 237.01, #queue-req: 5
+[2026-06-09 00:28:47.454 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 96.9204711432103), ('normal_advance_wall', 48.65670969081111), ('normal_get_next', 38.76563353999518), ('decode_check_mem', 33.05931769683957), ('normal_process_last', 5.830561992013827), ('normal_run_batch', 3.6227360868360847)]
+[2026-06-09 00:28:51.015 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 133685, token usage: 0.76, cuda graph: True, gen throughput (token/s): 283.19, #queue-req: 0
+[2026-06-09 00:28:51.037 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 100.50312749668956), ('normal_advance_wall', 60.105390434968285), ('normal_get_next', 29.164826800581068), ('decode_check_mem', 22.431747597060166), ('normal_process_last', 6.935319194453768), ('normal_run_batch', 4.248079035896808)]
+[2026-06-09 00:28:51.220 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=10-t2 output_tokens=256 finish_time=1780936131.146
+[2026-06-09 00:28:51.221 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:51.225 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=22-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:28:51.291 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=13-t2 output_tokens=256 finish_time=1780936131.146
+[2026-06-09 00:28:51.291 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:51.296 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=2-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:28:51.321 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=23-t0 output_tokens=256 finish_time=1780936131.146
+[2026-06-09 00:28:51.322 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:51.326 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=23-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:28:51.342 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=5-t0 output_tokens=256 finish_time=1780936131.146
+[2026-06-09 00:28:51.342 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:51.346 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=5-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:28:51.369 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=30-t0 output_tokens=256 finish_time=1780936131.146
+[2026-06-09 00:28:51.369 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:28:51.373 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=30-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:28:51.416 | 2026-06-09 00:27:00.348 DP0] Received 2 request(s), waiting=5 running=5
+[2026-06-09 00:28:51.502 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 160327, token usage: 0.91, cuda graph: True, gen throughput (token/s): 236.80, #queue-req: 7
+[2026-06-09 00:28:51.524 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 100.9883165290812), ('normal_advance_wall', 49.504667153349146), ('normal_get_next', 41.97418921662029), ('decode_check_mem', 36.26596019673161), ('normal_process_last', 5.834086874150671), ('normal_run_batch', 3.6284806112525985)]
+[2026-06-09 00:28:51.580 | 2026-06-09 00:27:00.348 DP1] Received 3 request(s), waiting=0 running=1
+[2026-06-09 00:28:51.773 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14803, token usage: 0.22, #running-req: 1, #queue-req: 2, cuda graph: True, input throughput (token/s): 8234.99
+[2026-06-09 00:28:53.180 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 37833, token usage: 0.35, #running-req: 1, #queue-req: 1, cuda graph: True, input throughput (token/s): 8199.10
+[2026-06-09 00:28:54.984 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35217, token usage: 0.48, #running-req: 2, #queue-req: 0, cuda graph: True, input throughput (token/s): 8354.74
+[2026-06-09 00:28:55.522 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 160527, token usage: 0.91, cuda graph: True, gen throughput (token/s): 236.60, #queue-req: 7
+[2026-06-09 00:28:55.543 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 105.00616779446136), ('normal_advance_wall', 50.35330931248609), ('normal_get_next', 45.133230178267695), ('decode_check_mem', 39.42304942756891), ('normal_process_last', 5.837697732145898), ('normal_run_batch', 3.6341034692013636)]
+[2026-06-09 00:28:56.430 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 5201, #cached-token: 43409, token usage: 0.51, #running-req: 2, #queue-req: 0, cuda graph: True, input throughput (token/s): 7516.47
+[2026-06-09 00:28:57.439 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2616, #cached-token: 23004, token usage: 0.52, #running-req: 3, #queue-req: 0, cuda graph: True, input throughput (token/s): 7203.81
+[2026-06-09 00:28:59.566 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 160727, token usage: 0.91, cuda graph: True, gen throughput (token/s): 236.40, #queue-req: 7
+[2026-06-09 00:28:59.587 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 109.04859690507874), ('normal_advance_wall', 51.20266411290504), ('normal_get_next', 48.31616737053264), ('decode_check_mem', 42.60405224352144), ('normal_process_last', 5.841202095034532), ('normal_run_batch', 3.639824314159341)]
+[2026-06-09 00:29:02.246 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 91995, token usage: 0.52, cuda graph: True, gen throughput (token/s): 268.96, #queue-req: 0
+[2026-06-09 00:29:02.261 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 111.72512463363819), ('normal_advance_wall', 64.71871983690653), ('normal_get_next', 33.73461049830075), ('decode_check_mem', 26.55295604642015), ('normal_process_last', 8.085657600546256), ('normal_run_batch', 5.1333737703971565)]
+[2026-06-09 00:29:03.605 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 160927, token usage: 0.91, cuda graph: True, gen throughput (token/s): 236.19, #queue-req: 7
+[2026-06-09 00:29:03.626 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 113.08565778378397), ('normal_advance_wall', 52.0528070878936), ('normal_get_next', 51.49278488627169), ('decode_check_mem', 45.778703343938105), ('normal_process_last', 5.844750637654215), ('normal_run_batch', 3.64565160672646)]
+[2026-06-09 00:29:06.118 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=7-t2 output_tokens=256 finish_time=1780936146.050
+[2026-06-09 00:29:06.119 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:06.123 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=14-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:29:06.179 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=32-t2 output_tokens=256 finish_time=1780936146.050
+[2026-06-09 00:29:06.179 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:06.184 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=19-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:29:06.224 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=17-t1 output_tokens=256 finish_time=1780936146.050
+[2026-06-09 00:29:06.224 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:06.229 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=17-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:29:06.250 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=18-t0 output_tokens=256 finish_time=1780936146.050
+[2026-06-09 00:29:06.250 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:06.255 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=18-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:29:06.291 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=4
+[2026-06-09 00:29:06.311 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=31-t2 output_tokens=256 finish_time=1780936146.050
+[2026-06-09 00:29:06.311 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:06.316 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=28-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:29:06.419 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 3, token usage: 0.18, #running-req: 0, #queue-req: 6, cuda graph: True, input throughput (token/s): 13106.79
+[2026-06-09 00:29:06.430 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 4277, token usage: 0.59, #running-req: 4, #queue-req: 0, cuda graph: True, input throughput (token/s): 11130.93
+[2026-06-09 00:29:07.045 | 2026-06-09 00:27:00.348 DP0] Received 3 request(s), waiting=6 running=0
+[2026-06-09 00:29:07.396 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2335, #cached-token: 12469, token usage: 0.61, #running-req: 4, #queue-req: 0, cuda graph: True, input throughput (token/s): 9334.65
+[2026-06-09 00:29:07.931 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 33791, token usage: 0.37, #running-req: 0, #queue-req: 8, cuda graph: True, input throughput (token/s): 9435.41
+[2026-06-09 00:29:08.467 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 106962, token usage: 0.61, cuda graph: True, gen throughput (token/s): 276.20, #queue-req: 0
+[2026-06-09 00:29:08.484 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 117.94662960548885), ('normal_advance_wall', 66.3093677245779), ('normal_get_next', 37.97982152167242), ('decode_check_mem', 30.747795165865682), ('normal_process_last', 8.220871637226082), ('normal_run_batch', 5.382142521208152)]
+[2026-06-09 00:29:08.800 | 2026-06-09 00:27:00.348 DP0] Received 1 request(s), waiting=8 running=0
+[2026-06-09 00:29:09.534 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 52768, token usage: 0.56, #running-req: 1, #queue-req: 8, cuda graph: True, input throughput (token/s): 6672.68
+[2026-06-09 00:29:11.646 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 75824, token usage: 0.75, #running-req: 1, #queue-req: 7, cuda graph: True, input throughput (token/s): 7058.89
+[2026-06-09 00:29:13.385 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 107162, token usage: 0.61, cuda graph: True, gen throughput (token/s): 290.44, #queue-req: 0
+[2026-06-09 00:29:13.403 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 122.86372697365005), ('normal_advance_wall', 67.00135488039814), ('normal_get_next', 42.19543001393322), ('decode_check_mem', 34.96114637737628), ('normal_process_last', 8.224379709921777), ('normal_run_batch', 5.38725580717437)]
+[2026-06-09 00:29:13.627 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 32998, token usage: 0.80, #running-req: 2, #queue-req: 7, cuda graph: True, input throughput (token/s): 7832.76
+[2026-06-09 00:29:13.798 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=3-t0 output_tokens=256 finish_time=1780936153.768
+[2026-06-09 00:29:13.799 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:13.803 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=3-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:29:14.037 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=4
+[2026-06-09 00:29:14.212 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14874, token usage: 0.65, #running-req: 4, #queue-req: 0, cuda graph: True, input throughput (token/s): 8217.17
+[2026-06-09 00:29:15.050 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 11727, token usage: 0.85, #running-req: 2, #queue-req: 7, cuda graph: True, input throughput (token/s): 11137.77
+[2026-06-09 00:29:15.524 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2609, #cached-token: 23066, token usage: 0.67, #running-req: 4, #queue-req: 0, cuda graph: True, input throughput (token/s): 7181.40
+[2026-06-09 00:29:16.129 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 11721, token usage: 0.89, #running-req: 2, #queue-req: 7, cuda graph: True, input throughput (token/s): 11136.29
+[2026-06-09 00:29:17.448 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 19-t0: extend=5117 retries=1 available_tokens=5117 evictable=1971 before_available=0 before_evictable=4013 error=insufficient L1 KV cache pages
+[2026-06-09 00:29:17.624 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 154152, token usage: 0.88, cuda graph: True, gen throughput (token/s): 222.57, #queue-req: 9
+[2026-06-09 00:29:17.635 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 127.09294725081418), ('normal_advance_wall', 59.13791351893451), ('normal_get_next', 54.86787726718467), ('decode_check_mem', 47.68354585196357), ('normal_process_last', 7.650850364123471), ('normal_run_batch', 5.3829801108222455)]
+[2026-06-09 00:29:18.070 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 154232, token usage: 0.88, cuda graph: True, gen throughput (token/s): 183.28, #queue-req: 9
+[2026-06-09 00:29:18.082 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 127.53807920217514), ('normal_advance_wall', 59.57745687325951), ('normal_get_next', 54.86893130640965), ('decode_check_mem', 47.683645056560636), ('normal_process_last', 7.65245375118684), ('normal_run_batch', 5.385293923667632)]
+[2026-06-09 00:29:18.517 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 154312, token usage: 0.88, cuda graph: True, gen throughput (token/s): 183.17, #queue-req: 9
+[2026-06-09 00:29:18.528 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 127.98330943891779), ('normal_advance_wall', 60.017217515967786), ('normal_get_next', 54.86996193649247), ('decode_check_mem', 47.68374172714539), ('normal_process_last', 7.654053958016448), ('normal_run_batch', 5.387510550674051)]
+[2026-06-09 00:29:18.963 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 154392, token usage: 0.88, cuda graph: True, gen throughput (token/s): 183.07, #queue-req: 9
+[2026-06-09 00:29:18.974 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 128.42884786787909), ('normal_advance_wall', 60.45724154962227), ('normal_get_next', 54.870985034736805), ('decode_check_mem', 47.68383663438726), ('normal_process_last', 7.655650262022391), ('normal_run_batch', 5.3897896418347955)]
+[2026-06-09 00:29:19.410 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 154472, token usage: 0.88, cuda graph: True, gen throughput (token/s): 182.96, #queue-req: 9
+[2026-06-09 00:29:19.421 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 128.87472488358617), ('normal_advance_wall', 60.89751530496869), ('normal_get_next', 54.87203127541579), ('decode_check_mem', 47.683935303008184), ('normal_process_last', 7.657311471994035), ('normal_run_batch', 5.392061254242435)]
+[2026-06-09 00:29:19.857 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 154552, token usage: 0.88, cuda graph: True, gen throughput (token/s): 182.85, #queue-req: 9
+[2026-06-09 00:29:19.868 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 129.32075291860383), ('normal_advance_wall', 61.338025860372), ('normal_get_next', 54.87306334904861), ('decode_check_mem', 47.684031853917986), ('normal_process_last', 7.658911415026523), ('normal_run_batch', 5.394330369308591)]
+[2026-06-09 00:29:20.306 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 154632, token usage: 0.88, cuda graph: True, gen throughput (token/s): 182.75, #queue-req: 9
+[2026-06-09 00:29:20.317 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 129.7682028367417), ('normal_advance_wall', 61.778816568199545), ('normal_get_next', 54.87410216173157), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 7.660553303780034), ('normal_run_batch', 5.397687723860145)]
+[2026-06-09 00:29:20.353 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=15-t0 output_tokens=256 finish_time=1780936160.317
+[2026-06-09 00:29:20.353 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:20.357 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=15-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:29:20.370 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 117905, token usage: 0.67, cuda graph: True, gen throughput (token/s): 275.92, #queue-req: 0
+[2026-06-09 00:29:20.389 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 129.84776486747433), ('normal_advance_wall', 69.08270106848795), ('normal_get_next', 46.601900651003234), ('decode_check_mem', 39.25501094304491), ('normal_process_last', 8.47167528315913), ('normal_run_batch', 5.634058467345312)]
+[2026-06-09 00:29:20.393 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=8-t1 output_tokens=256 finish_time=1780936160.317
+[2026-06-09 00:29:20.393 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:20.399 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=8-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:29:20.550 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14880, token usage: 0.78, #running-req: 0, #queue-req: 8, cuda graph: True, input throughput (token/s): 8215.71
+[2026-06-09 00:29:21.547 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 130.9984138017753), ('normal_advance_wall', 62.77599152212497), ('normal_get_next', 54.925083015696146), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 7.726902977796271), ('normal_run_batch', 5.513374133850448)]
+[2026-06-09 00:29:21.549 | 2026-06-09 00:27:00.348 DP0] Received 2 request(s), waiting=8 running=0
+[2026-06-09 00:29:22.085 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 27419, token usage: 0.85, #running-req: 0, #queue-req: 9, cuda graph: True, input throughput (token/s): 9883.13
+[2026-06-09 00:29:22.914 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 132.3648750007851), ('normal_advance_wall', 63.60493536910508), ('normal_get_next', 55.135560429655015), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 7.831566550768912), ('normal_run_batch', 5.733884745859541)]
+[2026-06-09 00:29:23.786 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2603, #cached-token: 9936, token usage: 0.98, #running-req: 1, #queue-req: 9, cuda graph: True, input throughput (token/s): 9997.52
+[2026-06-09 00:29:24.047 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 133.49757146369666), ('normal_advance_wall', 63.865376986097544), ('normal_get_next', 55.39831734064501), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 8.32936661678832), ('normal_run_batch', 5.845556750893593)]
+[2026-06-09 00:29:24.672 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 17-t2: extend=5811 retries=1 available_tokens=5811 evictable=16013 before_available=1 before_evictable=554 error=insufficient L1 KV cache pages
+[2026-06-09 00:29:24.675 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 38115, token usage: 0.88, #running-req: 1, #queue-req: 9, cuda graph: True, input throughput (token/s): 32049.85
+[2026-06-09 00:29:24.931 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 134.38157748873346), ('normal_advance_wall', 64.12105503503699), ('normal_get_next', 55.512400420731865), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 8.400164198712446), ('normal_run_batch', 6.288979676901363)]
+[2026-06-09 00:29:25.396 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 118105, token usage: 0.67, cuda graph: True, gen throughput (token/s): 274.62, #queue-req: 0
+[2026-06-09 00:29:25.414 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 134.8716539250454), ('normal_advance_wall', 69.8142725470243), ('normal_get_next', 50.88475305272732), ('decode_check_mem', 43.535634816857055), ('normal_process_last', 8.475213883910328), ('normal_run_batch', 5.639106670045294)]
+[2026-06-09 00:29:25.505 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 97294, token usage: 0.92, #running-req: 2, #queue-req: 6, cuda graph: True, input throughput (token/s): 6057.61
+[2026-06-09 00:29:26.858 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 136.30813240876887), ('normal_advance_wall', 65.4734434200218), ('normal_get_next', 55.81663180573378), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 8.455342722707428), ('normal_run_batch', 6.503706177929416)]
+[2026-06-09 00:29:27.865 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 4, #new-token: 8192, #cached-token: 67746, token usage: 0.99, #running-req: 3, #queue-req: 4, cuda graph: True, input throughput (token/s): 9223.45
+[2026-06-09 00:29:28.754 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 138.20428680384066), ('normal_advance_wall', 66.3616709660273), ('normal_get_next', 56.11216032865923), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 8.737492745742202), ('normal_run_batch', 6.9339252799982205)]
+[2026-06-09 00:29:29.141 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 1240, #cached-token: 9872, token usage: 0.99, #running-req: 6, #queue-req: 4, cuda graph: True, input throughput (token/s): 9999.79
+[2026-06-09 00:29:29.265 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 138.71508841379546), ('normal_advance_wall', 66.48575381806586), ('normal_get_next', 56.16042586858384), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 8.960257774684578), ('normal_run_batch', 7.049585543922149)]
+[2026-06-09 00:29:29.459 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 987, #cached-token: 11112, token usage: 1.00, #running-req: 6, #queue-req: 4, cuda graph: True, input throughput (token/s): 9571.98
+[2026-06-09 00:29:29.563 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 139.0126997088082), ('normal_advance_wall', 66.58894894912373), ('normal_get_next', 56.21020394959487), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 8.991088099661283), ('normal_run_batch', 7.163368619978428)]
+[2026-06-09 00:29:29.976 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 19-t0: extend=2740 retries=1 available_tokens=2740 evictable=5186 before_available=1 before_evictable=137 error=insufficient L1 KV cache pages
+[2026-06-09 00:29:29.976 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 139.42584045580588), ('normal_advance_wall', 66.58895078115165), ('normal_get_next', 56.26307406963315), ('decode_check_mem', 47.684129740460776), ('normal_process_last', 9.02158979664091), ('normal_run_batch', 7.493112443946302)]
+[2026-06-09 00:29:30.454 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 118305, token usage: 0.67, cuda graph: True, gen throughput (token/s): 274.35, #queue-req: 0
+[2026-06-09 00:29:30.473 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 139.9285454156343), ('normal_advance_wall', 70.54658478626516), ('normal_get_next', 55.19952061958611), ('decode_check_mem', 47.8481240097899), ('normal_process_last', 8.4789880879689), ('normal_run_batch', 5.644259259919636)]
+[2026-06-09 00:29:30.852 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 168399, token usage: 0.96, cuda graph: True, gen throughput (token/s): 270.78, #queue-req: 5
+[2026-06-09 00:29:30.875 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 140.32358957303222), ('normal_advance_wall', 67.47825412044767), ('normal_get_next', 56.26430236175656), ('decode_check_mem', 47.68423368327785), ('normal_process_last', 9.02385151234921), ('normal_run_batch', 7.4974623376037925)]
+[2026-06-09 00:29:31.750 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 168639, token usage: 0.96, cuda graph: True, gen throughput (token/s): 270.48, #queue-req: 5
+[2026-06-09 00:29:31.772 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 141.22017609502655), ('normal_advance_wall', 68.36851764947642), ('normal_get_next', 56.26548082998488), ('decode_check_mem', 47.6843275395222), ('normal_process_last', 9.026137448847294), ('normal_run_batch', 7.4997286456637084)]
+[2026-06-09 00:29:32.648 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 168879, token usage: 0.96, cuda graph: True, gen throughput (token/s): 270.18, #queue-req: 5
+[2026-06-09 00:29:32.671 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 142.11778006900568), ('normal_advance_wall', 69.25976628938224), ('normal_get_next', 56.26664334279485), ('decode_check_mem', 47.68442008655984), ('normal_process_last', 9.028457333915867), ('normal_run_batch', 7.50200052629225)]
+[2026-06-09 00:29:32.939 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=5-t1 output_tokens=256 finish_time=1780936172.882
+[2026-06-09 00:29:32.939 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:32.944 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=5-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:29:32.979 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=30-t1 output_tokens=256 finish_time=1780936172.882
+[2026-06-09 00:29:32.979 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:32.984 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=30-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:29:33.026 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=23-t1 output_tokens=256 finish_time=1780936172.882
+[2026-06-09 00:29:33.026 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:33.030 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=23-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:29:33.147 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=2
+[2026-06-09 00:29:33.371 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25620, token usage: 0.42, #running-req: 2, #queue-req: 0, cuda graph: True, input throughput (token/s): 6411.03
+[2026-06-09 00:29:33.548 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 169119, token usage: 0.96, cuda graph: True, gen throughput (token/s): 269.89, #queue-req: 5
+[2026-06-09 00:29:33.571 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 143.01653007802088), ('normal_advance_wall', 70.15199184929952), ('normal_get_next', 56.26783814863302), ('decode_check_mem', 47.68451490381267), ('normal_process_last', 9.030846967943944), ('normal_run_batch', 7.504338752361946)]
+[2026-06-09 00:29:34.449 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 169359, token usage: 0.96, cuda graph: True, gen throughput (token/s): 269.59, #queue-req: 5
+[2026-06-09 00:29:34.471 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 143.91628019185737), ('normal_advance_wall', 71.04526749101933), ('normal_get_next', 56.26903858513106), ('decode_check_mem', 47.68460995377973), ('normal_process_last', 9.03321246651467), ('normal_run_batch', 7.506640123436227)]
+[2026-06-09 00:29:34.651 | 2026-06-09 00:27:00.348 DP1] Received 2 request(s), waiting=0 running=2
+[2026-06-09 00:29:35.352 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 6, #token: 169599, token usage: 0.96, cuda graph: True, gen throughput (token/s): 269.30, #queue-req: 5
+[2026-06-09 00:29:35.374 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 144.81826092174742), ('normal_advance_wall', 71.93945938709658), ('normal_get_next', 56.270201762905344), ('decode_check_mem', 47.68470373551827), ('normal_process_last', 9.035570670617744), ('normal_run_batch', 7.5102967065759)]
+[2026-06-09 00:29:35.593 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 59418, token usage: 0.62, #running-req: 2, #queue-req: 1, cuda graph: True, input throughput (token/s): 6443.50
+[2026-06-09 00:29:35.788 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=18-t1 output_tokens=256 finish_time=1780936175.735
+[2026-06-09 00:29:35.788 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:35.793 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=18-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:29:35.818 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=28-t0 output_tokens=256 finish_time=1780936175.735
+[2026-06-09 00:29:35.818 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:35.827 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=28-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:29:35.877 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=20-t2 output_tokens=256 finish_time=1780936175.735
+[2026-06-09 00:29:35.878 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:35.882 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=16-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:29:35.940 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=1-t2 output_tokens=256 finish_time=1780936175.735
+[2026-06-09 00:29:35.941 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:35.945 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=4-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:29:35.970 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=22-t0 output_tokens=256 finish_time=1780936175.735
+[2026-06-09 00:29:35.970 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:35.976 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=22-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:29:35.991 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=2-t0 output_tokens=256 finish_time=1780936175.735
+[2026-06-09 00:29:35.991 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:35.996 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=2-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:29:36.343 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14827, token usage: 0.32, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 8228.83
+[2026-06-09 00:29:36.865 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=1 running=2
+[2026-06-09 00:29:37.340 | 2026-06-09 00:27:00.348 DP0] Received 2 request(s), waiting=4 running=0
+[2026-06-09 00:29:37.489 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 56832, token usage: 0.81, #running-req: 3, #queue-req: 1, cuda graph: True, input throughput (token/s): 6680.00
+[2026-06-09 00:29:38.126 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 48646, token usage: 0.51, #running-req: 0, #queue-req: 5, cuda graph: True, input throughput (token/s): 7020.28
+[2026-06-09 00:29:39.261 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35543, token usage: 0.85, #running-req: 3, #queue-req: 1, cuda graph: True, input throughput (token/s): 9241.47
+[2026-06-09 00:29:39.299 | 2026-06-09 00:27:00.348 DP0] Received 2 request(s), waiting=5 running=0
+[2026-06-09 00:29:40.910 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 3, #new-token: 7852, #cached-token: 77533, token usage: 0.90, #running-req: 3, #queue-req: 0, cuda graph: True, input throughput (token/s): 6991.12
+[2026-06-09 00:29:40.911 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 90542, token usage: 0.71, #running-req: 1, #queue-req: 5, cuda graph: True, input throughput (token/s): 6588.23
+[2026-06-09 00:29:42.156 | 2026-06-09 00:27:00.348 DP0] Received 1 request(s), waiting=5 running=1
+[2026-06-09 00:29:42.495 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2326, #cached-token: 12509, token usage: 0.91, #running-req: 5, #queue-req: 0, cuda graph: True, input throughput (token/s): 9324.96
+[2026-06-09 00:29:43.192 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 51646, token usage: 0.82, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 10125.37
+[2026-06-09 00:29:44.720 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 24951, token usage: 0.95, #running-req: 2, #queue-req: 6, cuda graph: True, input throughput (token/s): 9017.27
+[2026-06-09 00:29:45.643 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 160700, token usage: 0.91, cuda graph: True, gen throughput (token/s): 256.81, #queue-req: 0
+[2026-06-09 00:29:45.668 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 155.12138469261117), ('normal_advance_wall', 77.42993290070444), ('normal_get_next', 60.54758791823406), ('decode_check_mem', 52.385222728597), ('normal_process_last', 10.021187642589211), ('normal_run_batch', 7.058153940481134)]
+[2026-06-09 00:29:46.023 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2465, #cached-token: 20647, token usage: 0.97, #running-req: 2, #queue-req: 7, cuda graph: True, input throughput (token/s): 7606.85
+[2026-06-09 00:29:46.650 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2542, #cached-token: 23112, token usage: 0.98, #running-req: 2, #queue-req: 7, cuda graph: True, input throughput (token/s): 7198.39
+[2026-06-09 00:29:50.529 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 172877, token usage: 0.98, cuda graph: True, gen throughput (token/s): 239.17, #queue-req: 7
+[2026-06-09 00:29:50.544 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 159.98604601691477), ('normal_advance_wall', 78.4462169817416), ('normal_get_next', 61.33988035400398), ('decode_check_mem', 50.74655407946557), ('normal_process_last', 10.9297975897789), ('normal_run_batch', 9.198001431650482)]
+[2026-06-09 00:29:51.386 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 160940, token usage: 0.91, cuda graph: True, gen throughput (token/s): 245.96, #queue-req: 0
+[2026-06-09 00:29:51.410 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 160.86225754744373), ('normal_advance_wall', 78.40907527424861), ('normal_get_next', 65.29946896561887), ('decode_check_mem', 57.13474619970657), ('normal_process_last', 10.025047342758626), ('normal_run_batch', 7.063274561543949)]
+[2026-06-09 00:29:52.852 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=14-t0 output_tokens=256 finish_time=1780936192.816
+[2026-06-09 00:29:52.852 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:29:52.860 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=14-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:29:53.133 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=5
+[2026-06-09 00:29:53.325 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14804, token usage: 0.96, #running-req: 5, #queue-req: 0, cuda graph: True, input throughput (token/s): 8234.73
+[2026-06-09 00:29:54.627 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2610, #cached-token: 22996, token usage: 0.97, #running-req: 5, #queue-req: 0, cuda graph: True, input throughput (token/s): 7207.93
+[2026-06-09 00:29:56.050 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 172997, token usage: 0.98, cuda graph: True, gen throughput (token/s): 208.19, #queue-req: 7
+[2026-06-09 00:29:56.064 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 165.50468517071567), ('normal_advance_wall', 79.0260395607911), ('normal_get_next', 66.26884765469003), ('decode_check_mem', 55.67360878258478), ('normal_process_last', 10.932874199002981), ('normal_run_batch', 9.20381398871541)]
+[2026-06-09 00:29:59.129 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 171724, token usage: 0.98, cuda graph: True, gen throughput (token/s): 237.97, #queue-req: 0
+[2026-06-09 00:29:59.154 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 168.6046422922518), ('normal_advance_wall', 80.76964955346193), ('normal_get_next', 70.18391744431574), ('decode_check_mem', 61.90523825050332), ('normal_process_last', 10.25258007075172), ('normal_run_batch', 7.331087330821902)]
+[2026-06-09 00:30:01.579 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 173117, token usage: 0.98, cuda graph: True, gen throughput (token/s): 208.05, #queue-req: 7
+[2026-06-09 00:30:01.593 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 171.03181765426416), ('normal_advance_wall', 79.60621370829176), ('normal_get_next', 71.20560879888944), ('decode_check_mem', 60.608491446240805), ('normal_process_last', 10.936045962618664), ('normal_run_batch', 9.209877174696885)]
+[2026-06-09 00:30:02.360 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=3-t1 output_tokens=256 finish_time=1780936202.312
+[2026-06-09 00:30:02.360 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:02.368 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=3-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:30:02.643 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=5
+[2026-06-09 00:30:03.133 | 2026-06-09 00:27:00.348 DP1] Prefill extend blocked for 3-t2: extend=8192 retries=1 available_tokens=8192 evictable=17647 before_available=0 before_evictable=4481 error=insufficient L1 KV cache pages
+[2026-06-09 00:30:03.476 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 150331, token usage: 0.85, cuda graph: True, gen throughput (token/s): 235.82, #queue-req: 1
+[2026-06-09 00:30:03.497 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 172.9456987840822), ('normal_advance_wall', 81.71009309426881), ('normal_get_next', 73.14086762059014), ('decode_check_mem', 64.7628471525386), ('normal_process_last', 10.297906391555443), ('normal_run_batch', 7.727285354631022)]
+[2026-06-09 00:30:04.332 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 150531, token usage: 0.85, cuda graph: True, gen throughput (token/s): 236.45, #queue-req: 1
+[2026-06-09 00:30:04.353 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 173.8007603189908), ('normal_advance_wall', 82.55892713053618), ('normal_get_next', 73.14196691301186), ('decode_check_mem', 64.76294467342086), ('normal_process_last', 10.300139847793616), ('normal_run_batch', 7.729576276382431)]
+[2026-06-09 00:30:05.189 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 5, #token: 150731, token usage: 0.86, cuda graph: True, gen throughput (token/s): 236.25, #queue-req: 1
+[2026-06-09 00:30:05.210 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 174.65673093788791), ('normal_advance_wall', 83.40853480645455), ('normal_get_next', 73.1430817968212), ('decode_check_mem', 64.76304357417393), ('normal_process_last', 10.302411681506783), ('normal_run_batch', 7.731934219249524)]
+[2026-06-09 00:30:06.057 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=5-t2 output_tokens=256 finish_time=1780936205.982
+[2026-06-09 00:30:06.057 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:06.063 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=12-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:30:06.118 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=30-t2 output_tokens=256 finish_time=1780936205.982
+[2026-06-09 00:30:06.118 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:06.124 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=26-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:30:06.178 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=23-t2 output_tokens=256 finish_time=1780936205.982
+[2026-06-09 00:30:06.179 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:06.184 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=6-t0 turns=1 max_completion_tokens=256
+[2026-06-09 00:30:06.207 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=4-t0 output_tokens=256 finish_time=1780936205.982
+[2026-06-09 00:30:06.207 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:06.214 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=4-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:30:06.216 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=1 running=1
+[2026-06-09 00:30:06.227 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=2 running=1
+[2026-06-09 00:30:06.237 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 1, #token: 25794, token usage: 0.15, cuda graph: True, gen throughput (token/s): 229.64, #queue-req: 3
+[2026-06-09 00:30:06.246 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 175.69198651402257), ('normal_advance_wall', 84.2127676900709), ('normal_get_next', 73.14460169197991), ('decode_check_mem', 64.76314445876051), ('normal_process_last', 10.525966130080633), ('normal_run_batch', 7.736266493215226)]
+[2026-06-09 00:30:06.326 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=3 running=1
+[2026-06-09 00:30:06.445 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=4 running=1
+[2026-06-09 00:30:06.633 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 1, #token: 25834, token usage: 0.15, cuda graph: True, gen throughput (token/s): 103.25, #queue-req: 5
+[2026-06-09 00:30:06.643 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 176.08751294994727), ('normal_advance_wall', 84.60292159719393), ('normal_get_next', 73.14538728725165), ('decode_check_mem', 64.76322990900371), ('normal_process_last', 10.527045054128394), ('normal_run_batch', 7.738019865239039)]
+[2026-06-09 00:30:06.972 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=14-t1 output_tokens=256 finish_time=1780936206.921
+[2026-06-09 00:30:06.972 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:06.977 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=14-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:30:07.092 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 173237, token usage: 0.98, cuda graph: True, gen throughput (token/s): 207.92, #queue-req: 7
+[2026-06-09 00:30:07.107 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 176.54325683927163), ('normal_advance_wall', 80.18672890251037), ('normal_get_next', 76.1269305307651), ('decode_check_mem', 65.52798664860893), ('normal_process_last', 10.939155277446844), ('normal_run_batch', 9.215428118477575)]
+[2026-06-09 00:30:07.363 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 25678, token usage: 0.19, #running-req: 0, #queue-req: 3, cuda graph: True, input throughput (token/s): 9222.51
+[2026-06-09 00:30:08.252 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=3 running=0
+[2026-06-09 00:30:09.264 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 8444, token usage: 0.26, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 12067.35
+[2026-06-09 00:30:10.404 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 12725, token usage: 0.33, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 11137.26
+[2026-06-09 00:30:11.620 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 23215, token usage: 0.44, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 9538.44
+[2026-06-09 00:30:12.609 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 173357, token usage: 0.98, cuda graph: True, gen throughput (token/s): 207.79, #queue-req: 7
+[2026-06-09 00:30:12.624 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 182.05837767850608), ('normal_get_next', 81.05114732962102), ('normal_advance_wall', 80.76762277132366), ('decode_check_mem', 70.45030370913446), ('normal_process_last', 10.942333708051592), ('normal_run_batch', 9.221313911257312)]
+[2026-06-09 00:30:13.045 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 44537, token usage: 0.63, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 7431.75
+[2026-06-09 00:30:14.813 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 59473, token usage: 0.68, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 6285.07
+[2026-06-09 00:30:16.746 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 41993, token usage: 0.73, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 8454.72
+[2026-06-09 00:30:18.073 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 173477, token usage: 0.99, cuda graph: True, gen throughput (token/s): 207.66, #queue-req: 7
+[2026-06-09 00:30:18.088 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 187.52061474358197), ('normal_get_next', 85.91979310067836), ('normal_advance_wall', 81.34888845530804), ('decode_check_mem', 75.31703192810528), ('normal_process_last', 10.945505738025531), ('normal_run_batch', 9.229513290338218)]
+[2026-06-09 00:30:18.661 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 4, #new-token: 8192, #cached-token: 61833, token usage: 0.77, #running-req: 1, #queue-req: 1, cuda graph: True, input throughput (token/s): 8709.74
+[2026-06-09 00:30:20.767 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 2673, #cached-token: 59362, token usage: 0.79, #running-req: 4, #queue-req: 0, cuda graph: True, input throughput (token/s): 6038.03
+[2026-06-09 00:30:22.520 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=15-t1 output_tokens=256 finish_time=1780936222.458
+[2026-06-09 00:30:22.521 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:22.528 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=15-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:30:22.581 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=21-t2 output_tokens=256 finish_time=1780936222.458
+[2026-06-09 00:30:22.581 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:22.629 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=28-t1 output_tokens=256 finish_time=1780936222.458
+[2026-06-09 00:30:22.629 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:22.638 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=28-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:30:23.091 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25675, token usage: 0.68, #running-req: 0, #queue-req: 6, cuda graph: True, input throughput (token/s): 6397.58
+[2026-06-09 00:30:23.288 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 138700, token usage: 0.79, cuda graph: True, gen throughput (token/s): 186.22, #queue-req: 0
+[2026-06-09 00:30:23.310 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 192.75333036109805), ('normal_advance_wall', 93.06306945730466), ('normal_get_next', 76.01776928675827), ('decode_check_mem', 66.44680193718523), ('normal_process_last', 12.995732556213625), ('normal_run_batch', 10.600391682935879)]
+[2026-06-09 00:30:24.374 | 2026-06-09 00:27:00.348 DP0] Received 2 request(s), waiting=6 running=0
+[2026-06-09 00:30:25.611 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 48695, token usage: 0.81, #running-req: 0, #queue-req: 7, cuda graph: True, input throughput (token/s): 7627.22
+[2026-06-09 00:30:27.590 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35259, token usage: 0.94, #running-req: 1, #queue-req: 6, cuda graph: True, input throughput (token/s): 8349.53
+[2026-06-09 00:30:29.411 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 83922, token usage: 0.98, #running-req: 1, #queue-req: 5, cuda graph: True, input throughput (token/s): 6726.47
+[2026-06-09 00:30:29.798 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 138940, token usage: 0.79, cuda graph: True, gen throughput (token/s): 270.77, #queue-req: 0
+[2026-06-09 00:30:29.821 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 199.26234364020638), ('normal_advance_wall', 93.95281030551996), ('normal_get_next', 81.62739897123538), ('decode_check_mem', 72.05407940514851), ('normal_process_last', 12.99945849541109), ('normal_run_batch', 10.605425709625706)]
+[2026-06-09 00:30:31.186 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 1118, #cached-token: 32650, token usage: 0.99, #running-req: 2, #queue-req: 6, cuda graph: True, input throughput (token/s): 5880.55
+[2026-06-09 00:30:31.694 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 1653, #cached-token: 33768, token usage: 1.00, #running-req: 2, #queue-req: 6, cuda graph: True, input throughput (token/s): 5599.58
+[2026-06-09 00:30:32.643 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 17-t2: extend=972 retries=1 available_tokens=972 evictable=30188 before_available=1 before_evictable=45 error=insufficient L1 KV cache pages
+[2026-06-09 00:30:32.742 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 144941, token usage: 0.82, cuda graph: True, gen throughput (token/s): 196.40, #queue-req: 7
+[2026-06-09 00:30:32.756 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 202.18635633483063), ('normal_get_next', 91.86301530140918), ('normal_advance_wall', 86.96170852833893), ('decode_check_mem', 79.21109779621474), ('normal_process_last', 12.093690593494102), ('normal_run_batch', 11.187379347742535)]
+[2026-06-09 00:30:33.290 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 145021, token usage: 0.82, cuda graph: True, gen throughput (token/s): 148.52, #queue-req: 7
+[2026-06-09 00:30:33.304 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 202.73333761352114), ('normal_get_next', 91.86402952380013), ('normal_advance_wall', 87.50333724170923), ('decode_check_mem', 79.21119502116926), ('normal_process_last', 12.095233848434873), ('normal_run_batch', 11.18958102457691)]
+[2026-06-09 00:30:33.838 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 145101, token usage: 0.82, cuda graph: True, gen throughput (token/s): 148.45, #queue-req: 7
+[2026-06-09 00:30:33.852 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 203.2806131816469), ('normal_get_next', 91.8650386222871), ('normal_advance_wall', 88.04522336588707), ('decode_check_mem', 79.21129119314719), ('normal_process_last', 12.09680835553445), ('normal_run_batch', 11.19178771355655)]
+[2026-06-09 00:30:34.387 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 145181, token usage: 0.82, cuda graph: True, gen throughput (token/s): 148.38, #queue-req: 7
+[2026-06-09 00:30:34.401 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 203.82815237133764), ('normal_get_next', 91.86605168215465), ('normal_advance_wall', 88.58736972999759), ('decode_check_mem', 79.21138689457439), ('normal_process_last', 12.098392547224648), ('normal_run_batch', 11.193985929014161)]
+[2026-06-09 00:30:34.937 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 145261, token usage: 0.82, cuda graph: True, gen throughput (token/s): 148.31, #queue-req: 7
+[2026-06-09 00:30:34.951 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 204.37698463292327), ('normal_get_next', 91.8670462097507), ('normal_advance_wall', 89.12974735163152), ('decode_check_mem', 79.2114823134616), ('normal_process_last', 12.099972864729352), ('normal_run_batch', 11.197266378323548)]
+[2026-06-09 00:30:35.486 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 145341, token usage: 0.83, cuda graph: True, gen throughput (token/s): 148.24, #queue-req: 7
+[2026-06-09 00:30:35.500 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 204.92497223766986), ('normal_get_next', 91.86803275742568), ('normal_advance_wall', 89.67237946414389), ('decode_check_mem', 79.21157683269121), ('normal_process_last', 12.101552531588823), ('normal_run_batch', 11.199457944487222)]
+[2026-06-09 00:30:36.035 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 2, #token: 145421, token usage: 0.83, cuda graph: True, gen throughput (token/s): 148.17, #queue-req: 7
+[2026-06-09 00:30:36.049 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 205.47320285765454), ('normal_get_next', 91.86901662801392), ('normal_advance_wall', 90.21528473298531), ('decode_check_mem', 79.21167646977119), ('normal_process_last', 12.103121688240208), ('normal_run_batch', 11.201637812540866)]
+[2026-06-09 00:30:36.236 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=18-t2 output_tokens=256 finish_time=1780936236.159
+[2026-06-09 00:30:36.237 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:36.302 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=8-t2 output_tokens=256 finish_time=1780936236.159
+[2026-06-09 00:30:36.302 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:36.315 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 139180, token usage: 0.79, cuda graph: True, gen throughput (token/s): 270.47, #queue-req: 0
+[2026-06-09 00:30:36.337 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 205.77718262991402), ('normal_advance_wall', 94.84349884151015), ('normal_get_next', 87.24178913293872), ('decode_check_mem', 77.66610693885013), ('normal_process_last', 13.003290232387371), ('normal_run_batch', 10.610452217399143)]
+[2026-06-09 00:30:37.249 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 51641, token usage: 0.58, #running-req: 0, #queue-req: 4, cuda graph: True, input throughput (token/s): 7823.63
+[2026-06-09 00:30:39.289 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 55818, token usage: 0.77, #running-req: 2, #queue-req: 3, cuda graph: True, input throughput (token/s): 6650.24
+[2026-06-09 00:30:41.422 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 76217, token usage: 0.82, #running-req: 2, #queue-req: 2, cuda graph: True, input throughput (token/s): 6913.68
+[2026-06-09 00:30:42.788 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 139420, token usage: 0.79, cuda graph: True, gen throughput (token/s): 270.17, #queue-req: 0
+[2026-06-09 00:30:42.810 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 212.24827334319707), ('normal_advance_wall', 95.73515504971147), ('normal_get_next', 92.81152144889347), ('decode_check_mem', 83.23353214981034), ('normal_process_last', 13.007168965530582), ('normal_run_batch', 10.615409285528585)]
+[2026-06-09 00:30:43.937 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 25004, token usage: 0.86, #running-req: 3, #queue-req: 2, cuda graph: True, input throughput (token/s): 9339.85
+[2026-06-09 00:30:45.623 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 5912, #cached-token: 75239, token usage: 0.90, #running-req: 4, #queue-req: 0, cuda graph: True, input throughput (token/s): 6287.97
+[2026-06-09 00:30:47.082 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 8195, token usage: 0.94, #running-req: 6, #queue-req: 0, cuda graph: True, input throughput (token/s): 9878.01
+[2026-06-09 00:30:48.184 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 16387, token usage: 0.99, #running-req: 6, #queue-req: 0, cuda graph: True, input throughput (token/s): 7972.49
+[2026-06-09 00:30:49.273 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 139660, token usage: 0.79, cuda graph: True, gen throughput (token/s): 269.88, #queue-req: 0
+[2026-06-09 00:30:49.296 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 218.73197430407163), ('normal_get_next', 98.3924934057286), ('normal_advance_wall', 96.62783100944944), ('decode_check_mem', 88.8121618560981), ('normal_process_last', 13.011032487498596), ('normal_run_batch', 10.620722605963238)]
+[2026-06-09 00:30:49.495 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 1829, #cached-token: 24579, token usage: 1.00, #running-req: 6, #queue-req: 0, cuda graph: True, input throughput (token/s): 6891.21
+[2026-06-09 00:30:50.354 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 17-t2: extend=6363 retries=1 available_tokens=6363 evictable=20180 before_available=1 before_evictable=137 error=insufficient L1 KV cache pages
+[2026-06-09 00:30:51.103 | 2026-06-09 00:27:00.348 DP0] KV cache pool is full. Retract requests. #retracted_reqs: 1, #aborted_reqs: 0, #new_tokens_gained: 36511, #new_token_ratio: 0.0910 -> 0.0781
+[2026-06-09 00:30:51.418 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 11308, token usage: 0.75, #running-req: 5, #queue-req: 1, cuda graph: True, input throughput (token/s): 8989.63
+[2026-06-09 00:30:53.169 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 17-t2: extend=8192 retries=1 available_tokens=8192 evictable=18342 before_available=0 before_evictable=7037 error=insufficient L1 KV cache pages
+[2026-06-09 00:30:53.723 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 113191, token usage: 0.64, cuda graph: True, gen throughput (token/s): 255.47, #queue-req: 2
+[2026-06-09 00:30:53.741 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 223.1643666420132), ('normal_advance_wall', 99.22239925386384), ('normal_get_next', 95.04348084970843), ('decode_check_mem', 79.48853888863232), ('normal_run_batch', 14.83257476403378), ('normal_process_last', 13.980832498986274)]
+[2026-06-09 00:30:54.472 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 113391, token usage: 0.64, cuda graph: True, gen throughput (token/s): 275.19, #queue-req: 2
+[2026-06-09 00:30:54.491 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 223.90020052494947), ('normal_advance_wall', 99.95213870680891), ('normal_get_next', 95.04460000689141), ('decode_check_mem', 79.48863365966827), ('normal_run_batch', 14.834807158564217), ('normal_process_last', 13.982976470375434)]
+[2026-06-09 00:30:55.211 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 113591, token usage: 0.65, cuda graph: True, gen throughput (token/s): 274.91, #queue-req: 2
+[2026-06-09 00:30:55.229 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 224.6380593253998), ('normal_advance_wall', 100.68261217034888), ('normal_get_next', 95.04569253593218), ('decode_check_mem', 79.48872856958769), ('normal_run_batch', 14.838281400385313), ('normal_process_last', 13.985194109845906)]
+[2026-06-09 00:30:55.775 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 139900, token usage: 0.79, cuda graph: True, gen throughput (token/s): 269.58, #queue-req: 0
+[2026-06-09 00:30:55.798 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 225.2323365462944), ('normal_get_next', 103.98937719059177), ('normal_advance_wall', 97.52155213372316), ('decode_check_mem', 94.4067462803796), ('normal_process_last', 13.014886154211126), ('normal_run_batch', 10.625734345871024)]
+[2026-06-09 00:30:55.949 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 113791, token usage: 0.65, cuda graph: True, gen throughput (token/s): 274.64, #queue-req: 2
+[2026-06-09 00:30:55.968 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 225.37546027300414), ('normal_advance_wall', 101.41382614523172), ('normal_get_next', 95.04680237476714), ('decode_check_mem', 79.4888250612421), ('normal_run_batch', 14.840534897753969), ('normal_process_last', 13.987408528686501)]
+[2026-06-09 00:30:56.688 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 113991, token usage: 0.65, cuda graph: True, gen throughput (token/s): 274.36, #queue-req: 2
+[2026-06-09 00:30:56.707 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 226.113606192288), ('normal_advance_wall', 102.14576520619448), ('normal_get_next', 95.04789559997153), ('decode_check_mem', 79.48892227560282), ('normal_run_batch', 14.84282627585344), ('normal_process_last', 13.98962224891875)]
+[2026-06-09 00:30:57.428 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 5, #token: 114191, token usage: 0.65, cuda graph: True, gen throughput (token/s): 274.09, #queue-req: 2
+[2026-06-09 00:30:57.447 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 226.85242266743444), ('normal_advance_wall', 102.87841066159308), ('normal_get_next', 95.04900322679896), ('decode_check_mem', 79.48901815083809), ('normal_run_batch', 14.845068554976024), ('normal_process_last', 13.991844590753317)]
+[2026-06-09 00:30:57.924 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=19-t0 output_tokens=256 finish_time=1780936257.891
+[2026-06-09 00:30:57.924 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:57.931 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=19-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:30:57.958 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=16-t0 output_tokens=256 finish_time=1780936257.891
+[2026-06-09 00:30:57.958 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:57.964 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=16-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:30:58.009 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=22-t1 output_tokens=256 finish_time=1780936257.891
+[2026-06-09 00:30:58.009 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:58.015 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=22-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:30:58.059 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=2-t1 output_tokens=256 finish_time=1780936257.891
+[2026-06-09 00:30:58.059 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:58.066 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=2-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:30:58.140 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=15-t2 output_tokens=256 finish_time=1780936257.891
+[2026-06-09 00:30:58.140 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:30:59.106 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 973, #cached-token: 71934, token usage: 0.41, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 5511.89
+[2026-06-09 00:30:59.289 | 2026-06-09 00:27:00.348 DP0] Received 4 request(s), waiting=0 running=0
+[2026-06-09 00:31:00.074 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14839, token usage: 0.54, #running-req: 2, #queue-req: 3, cuda graph: True, input throughput (token/s): 8225.79
+[2026-06-09 00:31:01.695 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 37861, token usage: 0.68, #running-req: 2, #queue-req: 2, cuda graph: True, input throughput (token/s): 8206.36
+[2026-06-09 00:31:02.315 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 6, #token: 140140, token usage: 0.80, cuda graph: True, gen throughput (token/s): 269.28, #queue-req: 0
+[2026-06-09 00:31:02.338 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 231.7707266662037), ('normal_get_next', 109.6212262500776), ('decode_check_mem', 100.0362537157489), ('normal_advance_wall', 98.41621658927761), ('normal_process_last', 13.018878920353018), ('normal_run_batch', 10.632739475462586)]
+[2026-06-09 00:31:03.052 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=14-t2 output_tokens=256 finish_time=1780936262.982
+[2026-06-09 00:31:03.053 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:03.093 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=12-t0 output_tokens=256 finish_time=1780936262.982
+[2026-06-09 00:31:03.093 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:03.098 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=12-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:31:03.119 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=26-t0 output_tokens=256 finish_time=1780936262.982
+[2026-06-09 00:31:03.119 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:03.124 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=26-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:31:03.149 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=6-t0 output_tokens=256 finish_time=1780936262.982
+[2026-06-09 00:31:03.149 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:03.155 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=6-t1 turns=3 max_completion_tokens=256
+[2026-06-09 00:31:03.201 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=4-t1 output_tokens=256 finish_time=1780936262.982
+[2026-06-09 00:31:03.201 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:03.206 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=4-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:31:03.270 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=3-t2 output_tokens=256 finish_time=1780936262.982
+[2026-06-09 00:31:03.270 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:03.277 | 2026-06-09 00:27:00.348 DP1] Received 2 request(s), waiting=0 running=0
+[2026-06-09 00:31:03.371 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 46029, token usage: 0.87, #running-req: 3, #queue-req: 1, cuda graph: True, input throughput (token/s): 7100.06
+[2026-06-09 00:31:03.513 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 14895, token usage: 0.13, #running-req: 0, #queue-req: 1, cuda graph: True, input throughput (token/s): 8212.11
+[2026-06-09 00:31:04.512 | 2026-06-09 00:27:00.348 DP1] Received 2 request(s), waiting=1 running=0
+[2026-06-09 00:31:05.104 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 37976, token usage: 0.26, #running-req: 0, #queue-req: 2, cuda graph: True, input throughput (token/s): 8191.36
+[2026-06-09 00:31:05.574 | 2026-06-09 00:27:00.348 DP0] Prefill extend blocked for 22-t2: extend=2555 retries=1 available_tokens=2555 evictable=28641 before_available=0 before_evictable=0 error=insufficient L1 KV cache pages
+[2026-06-09 00:31:05.822 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 121554, token usage: 0.69, cuda graph: True, gen throughput (token/s): 246.44, #queue-req: 3
+[2026-06-09 00:31:05.838 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 235.24190809717402), ('normal_advance_wall', 106.88789659470785), ('normal_get_next', 96.63651914161164), ('decode_check_mem', 79.48911917861551), ('normal_run_batch', 16.62450280599296), ('normal_process_last', 14.996488540899009)]
+[2026-06-09 00:31:06.441 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 121674, token usage: 0.69, cuda graph: True, gen throughput (token/s): 197.00, #queue-req: 3
+[2026-06-09 00:31:06.457 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 235.8600709963357), ('normal_advance_wall', 107.50009884685278), ('normal_get_next', 96.63760570646264), ('decode_check_mem', 79.48922015994322), ('normal_run_batch', 16.626880397554487), ('normal_process_last', 14.99835168151185)]
+[2026-06-09 00:31:06.701 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 35267, token usage: 0.39, #running-req: 1, #queue-req: 1, cuda graph: True, input throughput (token/s): 8362.66
+[2026-06-09 00:31:07.061 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 121794, token usage: 0.69, cuda graph: True, gen throughput (token/s): 196.88, #queue-req: 3
+[2026-06-09 00:31:07.076 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 236.47855061502196), ('normal_advance_wall', 108.11262653197628), ('normal_get_next', 96.63867913221475), ('decode_check_mem', 79.4893266618019), ('normal_run_batch', 16.629228252451867), ('normal_process_last', 15.000252907746471)]
+[2026-06-09 00:31:07.681 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 121914, token usage: 0.69, cuda graph: True, gen throughput (token/s): 196.77, #queue-req: 3
+[2026-06-09 00:31:07.696 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 237.0972779240692), ('normal_advance_wall', 108.72551766142715), ('normal_get_next', 96.63969885220286), ('decode_check_mem', 79.48942339385394), ('normal_run_batch', 16.631540422327816), ('normal_process_last', 15.002131587825716)]
+[2026-06-09 00:31:08.301 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 122034, token usage: 0.69, cuda graph: True, gen throughput (token/s): 196.65, #queue-req: 3
+[2026-06-09 00:31:08.312 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 45974, token usage: 0.58, #running-req: 1, #queue-req: 1, cuda graph: True, input throughput (token/s): 7102.33
+[2026-06-09 00:31:08.317 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 237.71651928231586), ('normal_advance_wall', 109.33877729810774), ('normal_get_next', 96.64074159692973), ('decode_check_mem', 79.48952067375649), ('normal_run_batch', 16.63397962448653), ('normal_process_last', 15.004009781172499)]
+[2026-06-09 00:31:08.923 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 122154, token usage: 0.69, cuda graph: True, gen throughput (token/s): 196.53, #queue-req: 3
+[2026-06-09 00:31:08.938 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 238.3371230182238), ('normal_advance_wall', 109.95238478621468), ('normal_get_next', 96.64175563445315), ('decode_check_mem', 79.48961511463858), ('normal_run_batch', 16.63745938090142), ('normal_process_last', 15.005883941310458)]
+[2026-06-09 00:31:09.544 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 3, #token: 122274, token usage: 0.69, cuda graph: True, gen throughput (token/s): 196.42, #queue-req: 3
+[2026-06-09 00:31:09.559 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 238.95701013237704), ('normal_advance_wall', 110.56639181543142), ('normal_get_next', 96.64278791157994), ('decode_check_mem', 79.4897184233414), ('normal_run_batch', 16.639797424781136), ('normal_process_last', 15.007763311965391)]
+[2026-06-09 00:31:09.638 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=28-t2 output_tokens=256 finish_time=1780936269.559
+[2026-06-09 00:31:09.638 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:09.708 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=17-t2 output_tokens=256 finish_time=1780936269.559
+[2026-06-09 00:31:09.708 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:09.759 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=19-t1 output_tokens=256 finish_time=1780936269.559
+[2026-06-09 00:31:09.759 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:09.764 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=19-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:31:10.023 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 21100, token usage: 0.30, #running-req: 0, #queue-req: 2, cuda graph: True, input throughput (token/s): 7139.71
+[2026-06-09 00:31:10.361 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 3, #new-token: 7771, #cached-token: 77247, token usage: 0.63, #running-req: 1, #queue-req: 0, cuda graph: True, input throughput (token/s): 7016.04
+[2026-06-09 00:31:11.171 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 240.5683754083002), ('normal_advance_wall', 111.71382290543988), ('normal_get_next', 96.72861886851024), ('decode_check_mem', 79.4897184233414), ('normal_run_batch', 16.82337825873401), ('normal_process_last', 15.202265847008675)]
+[2026-06-09 00:31:11.172 | 2026-06-09 00:27:00.348 DP0] Received 1 request(s), waiting=2 running=0
+[2026-06-09 00:31:11.835 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 52314, token usage: 0.34, #running-req: 0, #queue-req: 2, cuda graph: True, input throughput (token/s): 6411.08
+[2026-06-09 00:31:11.995 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2581, #cached-token: 33788, token usage: 0.64, #running-req: 3, #queue-req: 0, cuda graph: True, input throughput (token/s): 5603.72
+[2026-06-09 00:31:13.113 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 242.51040306827053), ('normal_advance_wall', 112.99165493040346), ('normal_get_next', 96.90980495756958), ('decode_check_mem', 79.4897184233414), ('normal_run_batch', 17.1923768207198), ('normal_process_last', 15.315063975052908)]
+[2026-06-09 00:31:14.960 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 3, #new-token: 8192, #cached-token: 80854, token usage: 0.71, #running-req: 1, #queue-req: 0, cuda graph: True, input throughput (token/s): 6782.03
+[2026-06-09 00:31:16.168 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 245.56525955325924), ('normal_advance_wall', 114.19960990047548), ('normal_get_next', 97.43713469663635), ('decode_check_mem', 79.4897184233414), ('normal_run_batch', 17.694520673714578), ('normal_process_last', 16.132449620054103)]
+[2026-06-09 00:31:16.988 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 2, #new-token: 6817, #cached-token: 63429, token usage: 0.75, #running-req: 2, #queue-req: 0, cuda graph: True, input throughput (token/s): 5998.73
+[2026-06-09 00:31:18.125 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 247.5219402143266), ('normal_advance_wall', 115.33606823848095), ('normal_get_next', 97.624426163733), ('decode_check_mem', 79.4897184233414), ('normal_run_batch', 18.038982238736935), ('normal_process_last', 16.420879362151027)]
+[2026-06-09 00:31:18.615 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2636, #cached-token: 33778, token usage: 0.77, #running-req: 3, #queue-req: 0, cuda graph: True, input throughput (token/s): 5575.31
+[2026-06-09 00:31:18.651 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 113381, token usage: 0.64, cuda graph: True, gen throughput (token/s): 249.61, #queue-req: 0
+[2026-06-09 00:31:18.667 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 248.08807925670408), ('normal_get_next', 116.43937114311848), ('decode_check_mem', 106.09962201176677), ('normal_advance_wall', 104.79191245441325), ('normal_process_last', 14.3582813864341), ('normal_run_batch', 12.412310063489713)]
+[2026-06-09 00:31:19.088 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 248.48466853040736), ('normal_advance_wall', 115.80893868848216), ('normal_get_next', 97.71811043366324), ('decode_check_mem', 79.4897184233414), ('normal_run_batch', 18.211470457841642), ('normal_process_last', 16.644532602163963)]
+[2026-06-09 00:31:25.420 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 113541, token usage: 0.64, cuda graph: True, gen throughput (token/s): 246.46, #queue-req: 0
+[2026-06-09 00:31:25.436 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 254.85563936841208), ('normal_get_next', 122.54497431218624), ('decode_check_mem', 112.20307213207707), ('normal_advance_wall', 105.44445641164202), ('normal_process_last', 14.361415107152425), ('normal_run_batch', 12.417723948718049)]
+[2026-06-09 00:31:26.624 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 4, #token: 135087, token usage: 0.77, cuda graph: True, gen throughput (token/s): 224.35, #queue-req: 0
+[2026-06-09 00:31:26.642 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 256.03673300216906), ('normal_advance_wall', 116.52571371244267), ('normal_get_next', 104.4359532899689), ('decode_check_mem', 86.2049122460885), ('normal_run_batch', 18.220842799986713), ('normal_process_last', 16.751530947862193)]
+[2026-06-09 00:31:32.206 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 113701, token usage: 0.65, cuda graph: True, gen throughput (token/s): 246.28, #queue-req: 0
+[2026-06-09 00:31:32.222 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 261.6396237065783), ('normal_get_next', 128.66555993200745), ('decode_check_mem', 118.32154374034144), ('normal_advance_wall', 106.0974703108659), ('normal_process_last', 14.364579089684412), ('normal_run_batch', 12.424095764290541)]
+[2026-06-09 00:31:33.969 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 4, #token: 135247, token usage: 0.77, cuda graph: True, gen throughput (token/s): 224.20, #queue-req: 0
+[2026-06-09 00:31:33.987 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 263.3798218256561), ('normal_advance_wall', 117.24291361426003), ('normal_get_next', 111.04819017893169), ('decode_check_mem', 92.81453446100932), ('normal_run_batch', 18.229782410082407), ('normal_process_last', 16.755216718185693)]
+[2026-06-09 00:31:39.027 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 113861, token usage: 0.65, cuda graph: True, gen throughput (token/s): 246.10, #queue-req: 0
+[2026-06-09 00:31:39.044 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 268.45976523368154), ('normal_get_next', 134.8227385811042), ('decode_check_mem', 124.47657422011252), ('normal_advance_wall', 106.75097022717819), ('normal_process_last', 14.367838238133118), ('normal_run_batch', 12.429410659475252)]
+[2026-06-09 00:31:41.438 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 4, #token: 135407, token usage: 0.77, cuda graph: True, gen throughput (token/s): 224.05, #queue-req: 0
+[2026-06-09 00:31:41.457 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 270.8474370253971), ('normal_advance_wall', 117.960489311954), ('normal_get_next', 117.78725029982161), ('decode_check_mem', 99.55111534008756), ('normal_run_batch', 18.23617063986603), ('normal_process_last', 16.758817028603517)]
+[2026-06-09 00:31:45.847 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 114021, token usage: 0.65, cuda graph: True, gen throughput (token/s): 245.92, #queue-req: 0
+[2026-06-09 00:31:45.864 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 275.2778732695151), ('normal_get_next', 140.97760816221125), ('decode_check_mem', 130.62928372167516), ('normal_advance_wall', 107.40495632519014), ('normal_process_last', 14.371089611784555), ('normal_run_batch', 12.434529525693506)]
+[2026-06-09 00:31:48.926 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 4, #token: 135567, token usage: 0.77, cuda graph: True, gen throughput (token/s): 223.90, #queue-req: 0
+[2026-06-09 00:31:48.944 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 278.33286896685604), ('normal_get_next', 124.5438930002274), ('normal_advance_wall', 118.67851159989368), ('decode_check_mem', 106.30535361438524), ('normal_run_batch', 18.242442637798376), ('normal_process_last', 16.76232857524883)]
+[2026-06-09 00:31:52.699 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 4, #token: 114181, token usage: 0.65, cuda graph: True, gen throughput (token/s): 245.74, #queue-req: 0
+[2026-06-09 00:31:52.716 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 282.1283852473134), ('normal_get_next', 147.1642916451674), ('decode_check_mem', 136.81379935564473), ('normal_advance_wall', 108.05941212305333), ('normal_process_last', 14.374370713252574), ('normal_run_batch', 12.439735202118754)]
+[2026-06-09 00:31:56.215 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=12-t1 output_tokens=256 finish_time=1780936316.152
+[2026-06-09 00:31:56.216 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:56.223 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=12-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:31:56.266 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=26-t1 output_tokens=256 finish_time=1780936316.152
+[2026-06-09 00:31:56.266 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:56.272 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=26-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:31:56.318 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=6-t1 output_tokens=256 finish_time=1780936316.152
+[2026-06-09 00:31:56.318 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:56.323 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=6-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:31:56.389 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=4-t2 output_tokens=256 finish_time=1780936316.152
+[2026-06-09 00:31:56.389 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:31:56.398 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 4, #token: 135727, token usage: 0.77, cuda graph: True, gen throughput (token/s): 223.75, #queue-req: 0
+[2026-06-09 00:31:56.414 | 2026-06-09 00:27:00.348 DP1] Received 1 request(s), waiting=0 running=0
+[2026-06-09 00:31:56.416 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 285.80278406245634), ('normal_get_next', 131.28468667529523), ('normal_advance_wall', 119.3970141466707), ('decode_check_mem', 113.04378195141908), ('normal_run_batch', 18.2485499168979), ('normal_process_last', 16.76586184510961)]
+[2026-06-09 00:31:56.722 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25647, token usage: 0.19, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 6404.38
+[2026-06-09 00:31:58.003 | 2026-06-09 00:27:00.348 DP1] Received 2 request(s), waiting=0 running=0
+[2026-06-09 00:31:58.711 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 59498, token usage: 0.38, #running-req: 0, #queue-req: 1, cuda graph: True, input throughput (token/s): 6431.86
+[2026-06-09 00:32:01.256 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 8192, #cached-token: 56827, token usage: 0.58, #running-req: 1, #queue-req: 0, cuda graph: True, input throughput (token/s): 6682.04
+[2026-06-09 00:32:03.224 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 2, #new-token: 5196, #cached-token: 65019, token usage: 0.61, #running-req: 1, #queue-req: 0, cuda graph: True, input throughput (token/s): 5863.40
+[2026-06-09 00:32:03.874 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 4, #token: 135887, token usage: 0.77, cuda graph: True, gen throughput (token/s): 223.60, #queue-req: 0
+[2026-06-09 00:32:03.892 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 293.2772214496508), ('normal_get_next', 138.02931054355577), ('normal_advance_wall', 120.11605341697577), ('decode_check_mem', 119.78601716866251), ('normal_run_batch', 18.254796757129952), ('normal_process_last', 16.769399345037527)]
+[2026-06-09 00:32:04.566 | 2026-06-09 00:27:00.348 DP1] Prefill batch, #new-seq: 1, #new-token: 2614, #cached-token: 33763, token usage: 0.62, #running-req: 2, #queue-req: 0, cuda graph: True, input throughput (token/s): 5589.76
+[2026-06-09 00:32:06.966 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=2-t2 output_tokens=256 finish_time=1780936326.881
+[2026-06-09 00:32:06.966 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:32:07.017 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=16-t1 output_tokens=256 finish_time=1780936326.881
+[2026-06-09 00:32:07.017 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:32:07.022 | 2026-06-09 00:27:00.348] POST /v1/chat/completions rid=16-t2 turns=5 max_completion_tokens=256
+[2026-06-09 00:32:07.087 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=22-t2 output_tokens=256 finish_time=1780936326.881
+[2026-06-09 00:32:07.087 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:32:07.158 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=19-t2 output_tokens=256 finish_time=1780936326.881
+[2026-06-09 00:32:07.158 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:32:07.206 | 2026-06-09 00:27:00.348 DP0] Received 1 request(s), waiting=0 running=0
+[2026-06-09 00:32:07.507 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 8192, #cached-token: 25617, token usage: 0.19, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 6411.77
+[2026-06-09 00:32:08.700 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 3, #token: 109317, token usage: 0.62, cuda graph: True, gen throughput (token/s): 216.55, #queue-req: 0
+[2026-06-09 00:32:08.717 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 298.0969883315265), ('normal_get_next', 154.2849021430593), ('decode_check_mem', 143.1671202214202), ('normal_advance_wall', 113.84225306287408), ('normal_process_last', 16.0640045334585), ('normal_run_batch', 13.81066465715412)]
+[2026-06-09 00:32:09.220 | 2026-06-09 00:27:00.348 DP0] Prefill batch, #new-seq: 1, #new-token: 2673, #cached-token: 33809, token usage: 0.21, #running-req: 0, #queue-req: 0, cuda graph: True, input throughput (token/s): 5543.55
+[2026-06-09 00:32:14.170 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 1, #token: 36506, token usage: 0.21, cuda graph: True, gen throughput (token/s): 162.61, #queue-req: 0
+[2026-06-09 00:32:14.181 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 303.51290003571194), ('normal_get_next', 145.03076938982122), ('decode_check_mem', 126.59001407457981), ('normal_advance_wall', 122.420642170473), ('normal_run_batch', 18.642910142312758), ('normal_process_last', 17.30850563524291)]
+[2026-06-09 00:32:15.886 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 3, #token: 109437, token usage: 0.62, cuda graph: True, gen throughput (token/s): 186.97, #queue-req: 0
+[2026-06-09 00:32:15.902 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 305.2809593806742), ('normal_get_next', 160.81491923436988), ('decode_check_mem', 149.69508555857465), ('normal_advance_wall', 114.48736159526743), ('normal_process_last', 16.066890826565214), ('normal_run_batch', 13.815756175899878)]
+[2026-06-09 00:32:21.738 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 1, #token: 36546, token usage: 0.21, cuda graph: True, gen throughput (token/s): 94.16, #queue-req: 0
+[2026-06-09 00:32:21.748 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 311.0788188322913), ('normal_get_next', 152.15903775615152), ('decode_check_mem', 133.71621525892988), ('normal_advance_wall', 122.84883882571012), ('normal_run_batch', 18.649087037309073), ('normal_process_last', 17.310796580160968)]
+[2026-06-09 00:32:23.029 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 3, #token: 109557, token usage: 0.62, cuda graph: True, gen throughput (token/s): 186.87, #queue-req: 0
+[2026-06-09 00:32:23.045 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 312.42223257385194), ('normal_get_next', 167.30178769107442), ('decode_check_mem', 156.1798791170586), ('normal_advance_wall', 115.13290919933934), ('normal_process_last', 16.06980109261349), ('normal_run_batch', 13.820846550050192)]
+[2026-06-09 00:32:29.331 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 1, #token: 36586, token usage: 0.21, cuda graph: True, gen throughput (token/s): 94.13, #queue-req: 0
+[2026-06-09 00:32:29.342 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 318.670438586385), ('normal_get_next', 159.31249689904507), ('decode_check_mem', 140.86757129488979), ('normal_advance_wall', 123.27723845327273), ('normal_run_batch', 18.655461179325357), ('normal_process_last', 17.3131932571996)]
+[2026-06-09 00:32:30.180 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 3, #token: 109677, token usage: 0.62, cuda graph: True, gen throughput (token/s): 186.76, #queue-req: 0
+[2026-06-09 00:32:30.196 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 319.57156020007096), ('normal_get_next', 173.79629243770614), ('decode_check_mem', 162.67231929895934), ('normal_advance_wall', 115.77879377244972), ('normal_process_last', 16.07279078499414), ('normal_run_batch', 13.825936169014312)]
+[2026-06-09 00:32:36.896 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 1, #token: 36626, token usage: 0.21, cuda graph: True, gen throughput (token/s): 94.10, #queue-req: 0
+[2026-06-09 00:32:36.907 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 326.23309891321696), ('normal_get_next', 166.43546538474038), ('decode_check_mem', 147.98847223364282), ('normal_advance_wall', 123.7057727050269), ('normal_run_batch', 18.66319692938123), ('normal_process_last', 17.315635332954116)]
+[2026-06-09 00:32:37.359 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 3, #token: 109797, token usage: 0.62, cuda graph: True, gen throughput (token/s): 186.66, #queue-req: 0
+[2026-06-09 00:32:37.376 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 326.7491465975763), ('normal_get_next', 180.3186679618666), ('decode_check_mem', 169.19263010204304), ('normal_advance_wall', 116.42503983469214), ('normal_process_last', 16.075753055280074), ('normal_run_batch', 13.831061308737844)]
+[2026-06-09 00:32:44.369 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 1, #token: 36666, token usage: 0.21, cuda graph: True, gen throughput (token/s): 94.07, #queue-req: 0
+[2026-06-09 00:32:44.380 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 333.7047002520412), ('normal_get_next', 173.46896742586978), ('decode_check_mem', 155.01995238719974), ('normal_advance_wall', 124.13439448818099), ('normal_run_batch', 18.66934260679409), ('normal_process_last', 17.31799811311066)]
+[2026-06-09 00:32:44.566 | 2026-06-09 00:27:00.348 DP1] Decode batch, #running-req: 3, #token: 109917, token usage: 0.62, cuda graph: True, gen throughput (token/s): 186.55, #queue-req: 0
+[2026-06-09 00:32:44.582 | 2026-06-09 00:27:00.348 DP1] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 333.9540338249644), ('normal_get_next', 186.8661874284735), ('decode_check_mem', 175.73803807038348), ('normal_advance_wall', 117.0716593596153), ('normal_process_last', 16.078727856394835), ('normal_run_batch', 13.837953698006459)]
+[2026-06-09 00:32:51.220 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=12-t2 output_tokens=256 finish_time=1780936371.139
+[2026-06-09 00:32:51.220 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:32:51.290 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=26-t2 output_tokens=256 finish_time=1780936371.139
+[2026-06-09 00:32:51.290 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:32:51.351 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=6-t2 output_tokens=256 finish_time=1780936371.139
+[2026-06-09 00:32:51.352 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-06-09 00:32:51.708 | 2026-06-09 00:27:00.348 DP0] Decode batch, #running-req: 1, #token: 36706, token usage: 0.21, cuda graph: True, gen throughput (token/s): 94.04, #queue-req: 0
+[2026-06-09 00:32:51.718 | 2026-06-09 00:27:00.348 DP0] SGLSIM_PROFILE_SCHEDULER [('event_loop_step', 341.0410272498848), ('normal_get_next', 180.36729108251166), ('decode_check_mem', 161.91626497043762), ('normal_advance_wall', 124.56313055707142), ('normal_run_batch', 18.67532793164719), ('normal_process_last', 17.320311256102286)]
+[2026-06-09 00:32:57.677 | 2026-06-09 00:27:00.348] Completed /v1/chat/completions rid=16-t2 output_tokens=256 finish_time=1780936377.602
+[2026-06-09 00:32:57.677 | 2026-06-09 00:27:00.348] INFO:     127.0.0.1:31082 - "POST /v1/chat/completions HTTP/1.1" 200 OK

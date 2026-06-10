@@ -1,0 +1,50 @@
+[2026-06-07 14:01:06.052 DP0] Prefill extend blocked for 11-t1: extend=2304 retries=1 available_tokens=2304 evictable=22616
+[2026-06-07 14:01:07.533 DP0] Prefill extend blocked for 32-t1: extend=5824 retries=1 available_tokens=5824 evictable=8536
+[2026-06-07 14:01:08.765 DP0] Scheduler subprocess dp_rank=0 crashed
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 924, in run_batch
+    self.cache.extend_prefill(req, extend_tokens)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/kv_cache_pool.py", line 187, in extend_prefill
+    kv_len, protected, last_node_id = self._cache.extend_prefill(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 340, in extend_prefill
+    logical_end, protected, node_id, updated_ids = self.extend_prefill_alloc_only(
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 170, in extend_prefill_alloc_only
+    allocated_pages = self._alloc_device_pages(num_pages, owner=req_id)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 960, in _alloc_device_pages
+    raise RuntimeError("insufficient L1 KV cache pages")
+RuntimeError: insufficient L1 KV cache pages
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1466, in run_scheduler_process
+    scheduler.run_event_loop_until_stop(cmd_queue=cmd_queue)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1345, in run_event_loop_until_stop
+    if self.event_loop_step():
+       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1268, in event_loop_step
+    progressed = self._event_loop_step_overlap()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1236, in _event_loop_step_overlap
+    self.run_batch(batch)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 926, in run_batch
+    self._handle_prefill_extend_blocked(req, extend_tokens=extend_tokens)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 600, in _handle_prefill_extend_blocked
+    self.cache.release_prefill_lock(req)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/kv_cache_pool.py", line 215, in release_prefill_lock
+    released = self._cache.release_lock_ref(req.last_node_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 319, in release_lock_ref
+    return self.tree.dec_lock_ref(node)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/radix_cache.py", line 277, in dec_lock_ref
+    raise RuntimeError("Lock reference counter is already zero.")
+RuntimeError: Lock reference counter is already zero.
+[2026-06-07 14:01:08.824] DP scheduler worker 0 exited with code 1
+[2026-06-07 14:01:08.824] DP scheduler worker 0 exited with code 1
+[2026-06-07 14:01:08.825] DP scheduler worker 0 exited with code 1
+[2026-06-07 14:01:08.825] DP scheduler worker 0 exited with code 1
+[2026-06-07 14:01:08.825] DP scheduler worker 0 exited with code 1

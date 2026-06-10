@@ -1,0 +1,77 @@
+[2026-06-07 13:56:12,842] ERROR Experiment failed: 403 Forbidden
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpcore/_sync/http_proxy.py", line 297, in handle_request
+    raise ProxyError(msg)
+httpcore.ProxyError: 403 Forbidden
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/run.py", line 177, in main
+    run_experiment(
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/run.py", line 86, in run_experiment
+    prepared = build_prepared_requests(client_cfg, server_cfg)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/client.py", line 146, in build_prepared_requests
+    workload = generate_shared_prefix_workload(client, server, logger=logger)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/utils.py", line 369, in generate_shared_prefix_workload
+    tokenizer = None if mock else get_tokenizer(model_path)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/utils.py", line 331, in get_tokenizer
+    return ensure_loaded(model_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/utils/tokenizer_runtime.py", line 53, in ensure_loaded
+    tokenizer = AutoTokenizer.from_pretrained(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/transformers/models/auto/tokenization_auto.py", line 815, in from_pretrained
+    return tokenizer_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 1672, in from_pretrained
+    for template in list_repo_templates(
+                    ^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/transformers/utils/hub.py", line 134, in list_repo_templates
+    for entry in list_repo_tree(
+                 ^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/huggingface_hub/hf_api.py", line 3851, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/huggingface_hub/utils/_pagination.py", line 35, in paginate
+    r = session.get(path, params=params, headers=headers)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1053, in get
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ProxyError: 403 Forbidden

@@ -1,0 +1,1142 @@
+Process Process-1:
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 924, in run_batch
+    self.cache.extend_prefill(req, extend_tokens)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/kv_cache_pool.py", line 187, in extend_prefill
+    kv_len, protected, last_node_id = self._cache.extend_prefill(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 340, in extend_prefill
+    logical_end, protected, node_id, updated_ids = self.extend_prefill_alloc_only(
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 170, in extend_prefill_alloc_only
+    allocated_pages = self._alloc_device_pages(num_pages, owner=req_id)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 960, in _alloc_device_pages
+    raise RuntimeError("insufficient L1 KV cache pages")
+RuntimeError: insufficient L1 KV cache pages
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/home/comp/zhanzhao/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1466, in run_scheduler_process
+    scheduler.run_event_loop_until_stop(cmd_queue=cmd_queue)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1345, in run_event_loop_until_stop
+    if self.event_loop_step():
+       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1268, in event_loop_step
+    progressed = self._event_loop_step_overlap()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1236, in _event_loop_step_overlap
+    self.run_batch(batch)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 926, in run_batch
+    self._handle_prefill_extend_blocked(req, extend_tokens=extend_tokens)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 600, in _handle_prefill_extend_blocked
+    self.cache.release_prefill_lock(req)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/kv_cache_pool.py", line 215, in release_prefill_lock
+    released = self._cache.release_lock_ref(req.last_node_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 319, in release_lock_ref
+    return self.tree.dec_lock_ref(node)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/radix_cache.py", line 277, in dec_lock_ref
+    raise RuntimeError("Lock reference counter is already zero.")
+RuntimeError: Lock reference counter is already zero.
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 200, in chat_completions
+    result = _completion_from_generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/http_server.py", line 64, in _completion_from_generate
+    stats, text = engine.generate_from_http(gen)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 357, in generate_from_http
+    stats = self.wait_for_rid(req.rid)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 315, in wait_for_rid
+    self._check_scheduler_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/entrypoints/engine.py", line 303, in _check_scheduler_workers_alive
+    self._dp_controller.ensure_workers_alive()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/data_parallel_controller.py", line 97, in ensure_workers_alive
+    raise SchedulerWorkerDiedError(
+sglsim.srt.managers.data_parallel_controller.SchedulerWorkerDiedError: DP scheduler worker(s) died (ranks=[0])

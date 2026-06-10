@@ -1,0 +1,30 @@
+[2026-06-07 14:45:24.870 DP0] Prefill extend blocked for 13-t1: extend=5832 retries=1 available_tokens=5832 evictable=10940
+[2026-06-07 14:45:25.790] Skip release_lock_ref for node=178024: stale lock chain (lock_ref=0)
+[2026-06-07 14:45:25.791 DP1] Prefill extend blocked for 27-t1: extend=2072 retries=1 available_tokens=2072 evictable=18951
+[2026-06-07 14:45:25.810 DP0] Prefill extend blocked for 13-t1: extend=2261 retries=1 available_tokens=2261 evictable=14511
+[2026-06-07 14:45:32.558 DP1] Scheduler subprocess dp_rank=1 crashed
+Traceback (most recent call last):
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1466, in run_scheduler_process
+    scheduler.run_event_loop_until_stop(cmd_queue=cmd_queue)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1345, in run_event_loop_until_stop
+    if self.event_loop_step():
+       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1268, in event_loop_step
+    progressed = self._event_loop_step_overlap()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1251, in _event_loop_step_overlap
+    self._drain_one_result()
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 451, in _drain_one_result
+    self.process_batch_result(pending)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/managers/scheduler.py", line 1041, in process_batch_result
+    self.cache.cache_unfinished_req(
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/kv_cache_pool.py", line 222, in cache_unfinished_req
+    kv_len, protected, last_node_id = self._cache.cache_unfinished_req(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/hiradix_cache.py", line 261, in cache_unfinished_req
+    self.tree.dec_lock_ref(old_node)
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/mem_cache/radix_cache.py", line 277, in dec_lock_ref
+    raise RuntimeError("Lock reference counter is already zero.")
+RuntimeError: Lock reference counter is already zero.
+[2026-06-07 14:45:32.615] DP scheduler worker 1 exited with code 1
+[2026-06-07 14:45:32.615] DP scheduler worker 1 exited with code 1

@@ -1,0 +1,19 @@
+[2026-06-07 13:47:02,192] ERROR Experiment failed: unsupported operand type(s) for |: 'type' and 'NoneType'
+Traceback (most recent call last):
+  File "benchmark/synthesis_requests/run.py", line 177, in main
+    run_experiment(
+  File "benchmark/synthesis_requests/run.py", line 72, in run_experiment
+    sim_config_path = write_simulator_config(
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/utils.py", line 263, in write_simulator_config
+    payload["communication"] = materialize_communication_section(server.raw)
+  File "/home/comp/zhanzhao/sglsim/benchmark/synthesis_requests/utils.py", line 206, in materialize_communication_section
+    from sglsim.srt.communication.kv_bytes import resolve_kv_byte_info
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/communication/kv_bytes.py", line 6, in <module>
+    from sglsim.srt.simulation.manager.cache_config import _kv_bytes_per_token, _model_dims
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/simulation/manager/cache_config.py", line 6, in <module>
+    from sglsim.srt.config import CacheConfig
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/config.py", line 12, in <module>
+    class SchedulerConfig:
+  File "/home/comp/zhanzhao/sglsim/python/sglsim/srt/config.py", line 15, in SchedulerConfig
+    chunked_prefill_size: int | None = None
+TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'
