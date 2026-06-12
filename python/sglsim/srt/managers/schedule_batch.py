@@ -63,13 +63,6 @@ class Req:
     kv_released: bool = False
     original_prompt_len: int | None = None
     original_max_new_tokens: int | None = None
-    failover_prefix_ids: list[int] | None = None
-    pre_failover_output_tokens: int = 0
-    pre_failover_backed_up_tokens: int = 0
-    failover_source_dp_rank: int | None = None
-    is_failover_retried: bool = False
-    failover_recompute_tokens: int = 0
-    peer_backed_up_tokens: int = 0
 
     @property
     def fill_ids(self) -> list[int]:
@@ -113,7 +106,7 @@ class Req:
 
     @property
     def total_generated_tokens(self) -> int:
-        return self.pre_failover_output_tokens + self.decode_length
+        return self.decode_length
 
     @property
     def extend_length(self) -> int:

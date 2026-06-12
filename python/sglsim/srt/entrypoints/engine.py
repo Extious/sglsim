@@ -13,12 +13,7 @@ from sglsim.srt.managers.data_parallel_controller import (
     launch_scheduler_processes,
 )
 from sglsim.srt.managers.detokenizer_manager import run_detokenizer_process
-from sglsim.srt.managers.io_struct import (
-    FailoverBatchReqInput,
-    GenerateReqInput,
-    SimulateGpuFailureReqInput,
-    SimulateGpuRecoveryReqInput,
-)
+from sglsim.srt.managers.io_struct import GenerateReqInput
 from sglsim.srt.managers.scheduler import REQUEST_STATS, Scheduler
 from sglsim.srt.managers.tokenizer_manager import TokenizerManager, resolve_dp_size
 from sglsim.srt.server_args import PortArgs, ServerArgs
@@ -212,17 +207,6 @@ class Engine:
             return event
 
     def _apply_detokenizer_message(self, msg: dict) -> None:
-        if msg.get("op") == "failover_batch":
-            failover = msg.get("failover")
-            if isinstance(failover, FailoverBatchReqInput):
-                self.tokenizer_manager.handle_failover_batch(failover)
-            return
-        tokenizer_manager = getattr(self, "tokenizer_manager", None)
-        if (
-            tokenizer_manager is not None
-            and tokenizer_manager.is_stale_failover_output(msg)
-        ):
-            return
         rid = str(msg.get("rid", ""))
         if not rid:
             return
@@ -256,24 +240,6 @@ class Engine:
             stats.load_back_tokens = int(msg["load_back_tokens"])
         if "prefetch_complete_tokens" in msg:
             stats.prefetch_complete_tokens = int(msg["prefetch_complete_tokens"])
-        if "is_failover_retried" in msg:
-            stats.is_failover_retried = bool(msg["is_failover_retried"])
-        if "failed_dp_rank" in msg:
-            stats.failed_dp_rank = int(msg["failed_dp_rank"])
-        if "pre_failover_output_tokens" in msg:
-            stats.pre_failover_output_tokens = int(msg["pre_failover_output_tokens"])
-        if "pre_failover_backed_up_tokens" in msg:
-            stats.pre_failover_backed_up_tokens = int(
-                msg["pre_failover_backed_up_tokens"]
-            )
-        if "recompute_tokens" in msg:
-            stats.recompute_tokens = int(msg["recompute_tokens"])
-        if "failover_overhead_s" in msg:
-            stats.failover_overhead_s = float(msg["failover_overhead_s"])
-        if "failover_injected_time" in msg:
-            stats.failover_injected_time = float(msg["failover_injected_time"])
-        if "failover_retry_time" in msg:
-            stats.failover_retry_time = float(msg["failover_retry_time"])
         if "agent_id" in msg:
             stats.agent_id = str(msg["agent_id"])
         if "critical_agent" in msg:
@@ -283,8 +249,6 @@ class Engine:
         if msg.get("finished"):
             if stats.status != "aborted":
                 stats.status = "completed"
-            if tokenizer_manager is not None:
-                tokenizer_manager.mark_request_completed(rid)
             with self._completion_lock:
                 event = self._completion_events.get(rid)
                 if event is not None:
@@ -376,16 +340,6 @@ class Engine:
         self.tokenizer_manager.generate_request(req)
         stats = self.wait_for_rid(req.rid)
         return stats, self.completion_text(req.rid)
-
-    def simulate_gpu_failure(self, dp_rank: int = 0) -> None:
-        self.tokenizer_manager.simulate_gpu_failure(
-            SimulateGpuFailureReqInput(dp_rank=int(dp_rank))
-        )
-
-    def simulate_gpu_recovery(self, dp_rank: int = 0) -> None:
-        self.tokenizer_manager.simulate_gpu_recovery(
-            SimulateGpuRecoveryReqInput(dp_rank=int(dp_rank))
-        )
 
     def _cache_metrics(self) -> dict:
         comm = ConfigManager.get_communication_config()

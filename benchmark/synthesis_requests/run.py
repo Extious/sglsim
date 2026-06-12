@@ -5,9 +5,6 @@ import signal
 import subprocess
 import sys
 import threading
-import time
-import json
-import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -43,93 +40,6 @@ from benchmark.synthesis_requests.utils import (  # noqa: E402
 )
 
 _SERVER_READY_TIMEOUT_S = 300.0
-
-
-def _post_fault_control(host: str, port: int, path: str, dp_rank: int) -> None:
-    url = f"http://{host}:{int(port)}{path}"
-    body = json.dumps({"dp_rank": int(dp_rank)}).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=body,
-        method="POST",
-        headers={"Content-Type": "application/json"},
-    )
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    with opener.open(req, timeout=30) as resp:
-        if resp.status >= 400:
-            raise RuntimeError(f"{path} failed with status={resp.status}")
-
-
-def _completed_count(host: str, port: int) -> int:
-    url = f"http://{host}:{int(port)}/metrics"
-    req = urllib.request.Request(url, method="GET")
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    with opener.open(req, timeout=10) as resp:
-        raw = json.loads(resp.read().decode("utf-8"))
-    return int(raw.get("completed", 0) or 0)
-
-
-def _start_fault_trigger_thread(
-    *,
-    server_cfg,
-    runner_log,
-    stop_event: threading.Event,
-) -> threading.Thread | None:
-    raw = server_cfg.raw.get("fault_injection")
-    if not isinstance(raw, dict):
-        ft = server_cfg.raw.get("fault_tolerance", {})
-        raw = ft.get("trigger") if isinstance(ft, dict) else None
-    if not isinstance(raw, dict) or not raw.get("enabled", False):
-        return None
-
-    dp_rank = int(raw.get("fault_dp_rank", raw.get("dp_rank", 0)))
-    inject_after_completed = raw.get("inject_after_completed")
-    inject_after_s = raw.get("inject_after_s")
-    recover_after_s = raw.get("recover_after_s")
-
-    def _run() -> None:
-        start = time.monotonic()
-        injected = False
-        try:
-            while not stop_event.is_set() and not injected:
-                if inject_after_completed is not None:
-                    completed = _completed_count(server_cfg.host, server_cfg.port)
-                    if completed >= int(inject_after_completed):
-                        injected = True
-                elif inject_after_s is not None:
-                    injected = time.monotonic() - start >= float(inject_after_s)
-                else:
-                    injected = True
-                if not injected:
-                    stop_event.wait(timeout=0.25)
-            if stop_event.is_set() or not injected:
-                return
-            runner_log.info("Injecting GPU failure dp_rank=%d", dp_rank)
-            _post_fault_control(
-                server_cfg.host,
-                server_cfg.port,
-                "/simulate_gpu_failure",
-                dp_rank,
-            )
-            if recover_after_s is not None:
-                if not stop_event.wait(timeout=float(recover_after_s)):
-                    runner_log.info("Recovering GPU dp_rank=%d", dp_rank)
-                    _post_fault_control(
-                        server_cfg.host,
-                        server_cfg.port,
-                        "/simulate_gpu_recovery",
-                        dp_rank,
-                    )
-        except Exception as exc:
-            runner_log.exception("Fault trigger failed: %s", exc)
-
-    thread = threading.Thread(
-        target=_run,
-        name="synthesis-fault-trigger",
-        daemon=True,
-    )
-    thread.start()
-    return thread
 
 
 def run_experiment(
@@ -178,8 +88,6 @@ def run_experiment(
     runner_log.info("Prepared %d requests", len(prepared))
 
     process_holder: list[subprocess.Popen | None] = [None]
-    trigger_stop = threading.Event()
-    trigger_thread: threading.Thread | None = None
     sigint_count = 0
 
     def _sigint_cleanup(signum: int, frame: object) -> None:
@@ -216,11 +124,6 @@ def run_experiment(
             process=process,
             log_path=run_server_log_path,
         )
-        trigger_thread = _start_fault_trigger_thread(
-            server_cfg=server_cfg,
-            runner_log=runner_log,
-            stop_event=trigger_stop,
-        )
         rows = run_client(
             server_cfg.host,
             server_cfg.port,
@@ -233,9 +136,6 @@ def run_experiment(
         runner_log.info("results_dir=%s", run_dir)
         return run_dir
     finally:
-        trigger_stop.set()
-        if trigger_thread is not None:
-            trigger_thread.join(timeout=2)
         proc = process_holder[0]
         if proc is not None and proc.poll() is None:
             stop_server(proc, run_server_log_path, force=True)

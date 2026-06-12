@@ -27,12 +27,6 @@ class TokenizedGenerateReqInput:
     routing_key: str | None = None
     original_prompt_len: int | None = None
     original_max_new_tokens: int | None = None
-    failover_prefix_ids: list[int] | None = None
-    pre_failover_output_tokens: int = 0
-    pre_failover_backed_up_tokens: int = 0
-    failed_dp_rank: int | None = None
-    is_failover_retry: bool = False
-    failover_recompute_tokens: int = 0
 
     @classmethod
     def from_generate(cls, req: GenerateReqInput) -> TokenizedGenerateReqInput:
@@ -77,16 +71,6 @@ class TokenizedGenerateReqInput:
                 if self.original_max_new_tokens is not None
                 else self.sampling_params.max_new_tokens
             ),
-            failover_prefix_ids=(
-                list(self.failover_prefix_ids)
-                if self.failover_prefix_ids is not None
-                else None
-            ),
-            pre_failover_output_tokens=int(self.pre_failover_output_tokens),
-            pre_failover_backed_up_tokens=int(self.pre_failover_backed_up_tokens),
-            failover_source_dp_rank=self.failed_dp_rank,
-            is_failover_retried=bool(self.is_failover_retry),
-            failover_recompute_tokens=int(self.failover_recompute_tokens),
         )
 
 
@@ -95,32 +79,3 @@ class BatchTokenOutput:
     rid: str
     output_ids: list[int]
     finished: bool
-
-
-@dataclass
-class SimulateGpuFailureReqInput:
-    dp_rank: int = 0
-
-
-@dataclass
-class SimulateGpuRecoveryReqInput:
-    dp_rank: int = 0
-
-
-@dataclass
-class ReqSnapshot:
-    rid: str
-    output_ids: list[int]
-    backed_up_tokens: int = 0
-    origin_input_ids: list[int] = field(default_factory=list)
-    origin_input_token_count: int | None = None
-    sampling_params: SamplingParams | None = None
-    original_max_new_tokens: int | None = None
-    simulation: dict[str, Any] = field(default_factory=dict)
-    routing_key: str | None = None
-
-
-@dataclass
-class FailoverBatchReqInput:
-    failed_dp_rank: int = 0
-    snapshots: list[ReqSnapshot] = field(default_factory=list)

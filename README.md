@@ -150,8 +150,9 @@ Synthesis benchmark: `benchmark/synthesis_requests/run.py`. Sim JSON (`--sim-con
 ## Not Supported
 
 - Real GPU inference, CUDA, NCCL
-- Failure injection (separate branch)
 - Full OpenAI API surface
+
+Fault tolerance simulation lives on the `fault-tolerance` branch (offline strategies, GPU failure injection, multi-agent benchmarks).
 
 Docs: [docs/README.md](docs/README.md).
 

@@ -1,0 +1,93 @@
+{
+  "experiment_name": "parity-full-a100-dp2-hicache-fa3-overlap",
+  "model_path": "Qwen/Qwen3-8B",
+  "host": "127.0.0.1",
+  "port": 30000,
+  "platform": {
+    "accelerator": {
+      "name": "a100_sxm",
+      "hbm_capacity_gb": 80
+    },
+    "disk_read_bandwidth_gb": 8,
+    "disk_write_bandwidth_gb": 8,
+    "memory_read_bandwidth_gb": 64,
+    "memory_write_bandwidth_gb": 64,
+    "num_device_per_node": 8
+  },
+  "cache": {
+    "page_size": 1,
+    "enable_hierarchical_cache": true,
+    "l1_capacity_pages": 368088,
+    "hicache_ratio": 2.0,
+    "hicache_size_gb": 0,
+    "l3_capacity_pages": 0,
+    "kv_capacity_scale_factor": 1.002,
+    "hicache_write_policy": "write_through"
+  },
+  "predictor": {
+    "name": "aiconfigurator",
+    "database_mode": "SILICON",
+    "prefill_scale_factor": 1.05,
+    "decode_scale_factor": 0.9,
+    "decode_scale_hicache": 0.64,
+    "hicache_decode_speedup_ratio": 1.543,
+    "forward_scale": 1.0
+  },
+  "scheduler": {
+    "tp_size": 1,
+    "pp_size": 1,
+    "dp_size": 2,
+    "max_running_requests": null,
+    "load_balance_method": "round_robin",
+    "enable_routing_key_affinity": true,
+    "decode_log_interval": 40,
+    "backend_name": "sglang",
+    "backend_version": "0.5.10",
+    "mem_fraction_static": 0.836,
+    "init_new_token_ratio": 0.65,
+    "disable_overlap_schedule": false
+  },
+  "communication": {
+    "mode": "alpha_beta",
+    "kv_bytes_per_token": 147456,
+    "num_hidden_layers": 36,
+    "alpha_beta": {
+      "h2d": {
+        "alpha_us": 2.2,
+        "efficiency": 0.85
+      },
+      "d2h": {
+        "alpha_us": 4.0,
+        "efficiency": 0.85
+      },
+      "disk_write": {
+        "alpha_us": 30.0,
+        "efficiency": 0.85
+      }
+    }
+  },
+  "experiment": {
+    "timestamp": "20260612_015837",
+    "name": "parity-full-a100-dp2-hicache-fa3-overlap"
+  },
+  "workload": {
+    "dataset_name": "generated-shared-prefix",
+    "seed": 1,
+    "request_rate": "inf",
+    "max_concurrency": 30,
+    "gsp_num_groups": 30,
+    "gsp_prompts_per_group": 2,
+    "gsp_system_prompt_len": 4096,
+    "gsp_question_len": 10000,
+    "gsp_output_len": 256,
+    "gsp_range_ratio": 1.0,
+    "gsp_fast_prepare": false,
+    "gsp_send_routing_key": true,
+    "gsp_num_turns": 3,
+    "gsp_ordered": false,
+    "num_prompts": null,
+    "gsp_critical_agent_ids": [],
+    "gsp_critical_agent_ratio": 0.0,
+    "num_requests": 60
+  }
+}

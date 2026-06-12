@@ -53,9 +53,6 @@ def _handle_message(
     simulate_detokenizer_time: bool = False,
 ) -> None:
     op = msg.get("op", "update")
-    if op == "failover_batch":
-        send_to_tokenizer.send_pyobj(msg)
-        return
     rid = str(msg.get("rid", ""))
     if not rid:
         return

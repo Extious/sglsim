@@ -56,6 +56,11 @@ Vidur / Opal-sim / sglang-simulator 是单进程、离线、逻辑时间 DES（t
 uv run --extra test pytest test/unit test/integration -q
 ```
 
+## 分支
+
+- `main`：在线 serving 模拟器（parity / HiCache / Pipeline v2）；发布 tag `v0.1.0` 起不含 fault tolerance。
+- `fault-tolerance`：在 `main` 基础上增加故障注入、离线策略模拟、multi-agent benchmark 等（见该分支 README）。
+
 ## 在线 benchmark
 
 - **Synthesis**（`benchmark/synthesis_requests/run.py`）：HTTP 服务 + `--streaming-arrival`、`SimulationMode.STREAMING`；client worker 调用 `POST /v1/completions`，由 `max_concurrency` 限流（`request_rate=inf`）。

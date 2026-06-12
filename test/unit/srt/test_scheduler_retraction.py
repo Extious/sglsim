@@ -528,14 +528,13 @@ def test_stale_decode_result_does_not_exceed_max_new_tokens():
     assert batch.reqs == []
 
 
-def test_original_max_new_tokens_caps_retry_decode_progress():
+def test_original_max_new_tokens_caps_decode_progress():
     req = Req("r_retry", [1, 2, 3], SamplingParams(max_new_tokens=10_000))
     req.original_max_new_tokens = 256
-    req.pre_failover_output_tokens = 200
     req.output_ids = [0] * 56
 
-    assert req.remaining_decode_tokens == 0
-    assert req.reached_decode_limit() is True
+    assert req.remaining_decode_tokens == 200
+    assert req.reached_decode_limit() is False
     assert req.finished() is False
 
 

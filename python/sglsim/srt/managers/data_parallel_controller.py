@@ -7,11 +7,7 @@ import multiprocessing as mp
 import zlib
 from enum import Enum, auto
 
-from sglsim.srt.managers.io_struct import (
-    SimulateGpuFailureReqInput,
-    SimulateGpuRecoveryReqInput,
-    TokenizedGenerateReqInput,
-)
+from sglsim.srt.managers.io_struct import TokenizedGenerateReqInput
 from sglsim.srt.server_args import PortArgs, ServerArgs
 from sglsim.srt.simulation.manager.config import ConfigManager
 from sglsim.srt.utils.network import SimZmqContext, SimZmqSocket, get_zmq_socket
@@ -112,27 +108,6 @@ class DataParallelController:
         self._record_assigned_rank(req, dp_rank)
         self.workers[dp_rank].send_pyobj(req)
         return True
-
-    def handle_simulate_gpu_failure(self, req: SimulateGpuFailureReqInput) -> None:
-        dp_rank = int(req.dp_rank)
-        if dp_rank < 0 or dp_rank >= len(self.workers):
-            raise ValueError(f"Invalid dp_rank={dp_rank}")
-        self.workers[dp_rank].send_pyobj(req)
-        self.status[dp_rank] = False
-        stale_keys = [
-            key for key, rank in self.routing_key_to_rank.items() if rank == dp_rank
-        ]
-        for key in stale_keys:
-            self.routing_key_to_rank.pop(key, None)
-        logger.warning("Simulated GPU failure on dp_rank=%d", dp_rank)
-
-    def handle_simulate_gpu_recovery(self, req: SimulateGpuRecoveryReqInput) -> None:
-        dp_rank = int(req.dp_rank)
-        if dp_rank < 0 or dp_rank >= len(self.workers):
-            raise ValueError(f"Invalid dp_rank={dp_rank}")
-        self.workers[dp_rank].send_pyobj(req)
-        self.status[dp_rank] = True
-        logger.warning("Simulated GPU recovery on dp_rank=%d", dp_rank)
 
     def round_robin_scheduler(self, req: TokenizedGenerateReqInput) -> int | None:
         for _ in range(len(self.workers)):

@@ -5,13 +5,7 @@ import time
 from collections import deque
 
 from sglsim.srt.managers.chunked_prefill import split_prefill_length
-from sglsim.srt.managers.io_struct import (
-    FailoverBatchReqInput,
-    ReqSnapshot,
-    SimulateGpuFailureReqInput,
-    SimulateGpuRecoveryReqInput,
-    TokenizedGenerateReqInput,
-)
+from sglsim.srt.managers.io_struct import TokenizedGenerateReqInput
 from sglsim.srt.managers.prefill_adder import AddReqResult, PrefillAdder
 from sglsim.srt.managers.schedule_batch import ForwardMode, Req, RequestStatus, ScheduleBatch
 from sglsim.srt.managers.schedule_policy import SchedulePolicy
@@ -87,9 +81,6 @@ class Scheduler(SchedulerMetricsMixin):
         self.cache = KVCachePool(
             ConfigManager.get_cache_config(server_args.model_path)
         )
-        self.ft_config = ConfigManager.get_fault_tolerance_config()
-        self._gpu_failed = False
-        self._failure_injected_time = 0.0
         self.waiting_queue: deque[Req] = deque()
         self.running_batch = self._new_running_batch()
         self.last_batch: ScheduleBatch | None = None
@@ -146,12 +137,6 @@ class Scheduler(SchedulerMetricsMixin):
         try:
             while True:
                 obj = self.recv_from_tokenizer.recv_pyobj(flags=1)
-                if isinstance(obj, SimulateGpuFailureReqInput):
-                    self.handle_simulate_gpu_failure(obj)
-                    continue
-                if isinstance(obj, SimulateGpuRecoveryReqInput):
-                    self.handle_simulate_gpu_recovery(obj)
-                    continue
                 recv_reqs.append(obj)
         except Exception:
             pass
@@ -171,49 +156,18 @@ class Scheduler(SchedulerMetricsMixin):
     def _register_incoming_request(
         self, tok_req: TokenizedGenerateReqInput, *, now: float
     ) -> None:
-        if self._gpu_failed:
-            self.logger.warning(
-                "Dropping request %s on failed dp_rank=%d",
-                tok_req.rid,
-                self.dp_rank,
-            )
-            return
         req = tok_req.to_req()
         if req.rid not in REQUEST_STATS:
             REQUEST_STATS[req.rid] = RequestStats(rid=req.rid)
         stats = REQUEST_STATS[req.rid]
-        if req.is_failover_retried and req.pre_failover_backed_up_tokens > 0:
-            backed = min(req.pre_failover_backed_up_tokens, req.prefill_length)
-            req.cached_length = backed
-            req.kv_committed_length = backed
-            req.cache_protected_len = backed
         stats.input_length = req.prefill_length
         stats.output_length = req.original_max_new_tokens or req.sampling_params.max_new_tokens
         stats.generated_tokens = req.total_generated_tokens
         sim = tok_req.sampling_params.custom_params.get("simulation", {})
-        if not req.is_failover_retried or stats.created_time < 0:
-            stats.created_time = float(sim.get("server_created_time", now))
-            stats.last_event_time = stats.created_time
+        stats.created_time = float(sim.get("server_created_time", now))
+        stats.last_event_time = stats.created_time
         stats.queue_start = now
         stats.status = "running"
-        stats.is_failover_retried = bool(req.is_failover_retried)
-        stats.failed_dp_rank = (
-            int(req.failover_source_dp_rank)
-            if req.failover_source_dp_rank is not None
-            else -1
-        )
-        stats.pre_failover_output_tokens = int(req.pre_failover_output_tokens)
-        stats.pre_failover_backed_up_tokens = int(req.pre_failover_backed_up_tokens)
-        stats.recompute_tokens = int(req.failover_recompute_tokens)
-        if req.is_failover_retried:
-            stats.failover_injected_time = float(
-                sim.get("failover_injected_time", stats.failover_injected_time)
-            )
-            stats.failover_retry_time = float(sim.get("failover_retry_time", now))
-        else:
-            stats.failover_retry_time = 0.0
-        if req.is_failover_retried and stats.failover_injected_time > 0:
-            stats.failover_overhead_s = max(now - stats.failover_injected_time, 0.0)
         stats.agent_id = str(sim.get("agent_id", sim.get("worker_id", "")))
         stats.critical_agent = bool(sim.get("critical_agent", False))
         if self.cache.config.l3_capacity_pages > 0:
@@ -240,14 +194,6 @@ class Scheduler(SchedulerMetricsMixin):
             "cache_hit_tokens": stats.cache_hit_tokens,
             "load_back_tokens": stats.load_back_tokens,
             "prefetch_complete_tokens": stats.prefetch_complete_tokens,
-            "is_failover_retried": stats.is_failover_retried,
-            "failed_dp_rank": stats.failed_dp_rank,
-            "pre_failover_output_tokens": stats.pre_failover_output_tokens,
-            "pre_failover_backed_up_tokens": stats.pre_failover_backed_up_tokens,
-            "recompute_tokens": stats.recompute_tokens,
-            "failover_overhead_s": stats.failover_overhead_s,
-            "failover_injected_time": stats.failover_injected_time,
-            "failover_retry_time": stats.failover_retry_time,
             "agent_id": stats.agent_id,
             "critical_agent": stats.critical_agent,
         }
@@ -416,135 +362,6 @@ class Scheduler(SchedulerMetricsMixin):
         if self.cache.hierarchical_enabled:
             self._waiting_plan_dirty = True
         self.waiting_queue.append(req)
-
-    def _gpu_backup_enabled(self) -> bool:
-        return (
-            self.ft_config.enabled
-            and self.ft_config.strategy == "gpu_backup"
-            and not self.cache.hierarchical_enabled
-        )
-
-    def _req_gpu_backup_enabled(self, req: Req) -> bool:
-        if not self._gpu_backup_enabled():
-            return False
-        if self.ft_config.backup_policy != "critical_agents":
-            return True
-        sim = req.sampling_params.custom_params.get("simulation", {})
-        return bool(sim.get("critical_agent", False) or sim.get("backup_kv", False))
-
-    def _update_peer_backup_after_prefill(self, req: Req) -> None:
-        if not self._req_gpu_backup_enabled(req):
-            return
-        prompt_len = req.original_prompt_len or req.prefill_length
-        if self.ft_config.backup_prefill_tokens == "all":
-            req.peer_backed_up_tokens = max(req.peer_backed_up_tokens, prompt_len)
-
-    def _update_peer_backup_after_decode(self, req: Req) -> None:
-        if not self._req_gpu_backup_enabled(req) or not self.ft_config.backup_decode:
-            return
-        lag = self.ft_config.peer_backup_lag_tokens
-        durable_decode = max(req.total_generated_tokens - lag, 0)
-        prompt_len = req.original_prompt_len or (
-            req.input_token_count if req.input_token_count is not None else len(req.input_ids)
-        )
-        req.peer_backed_up_tokens = max(
-            req.peer_backed_up_tokens,
-            prompt_len + durable_decode,
-        )
-
-    def _backed_up_tokens_for_snapshot(self, req: Req) -> int:
-        if self._req_gpu_backup_enabled(req):
-            return max(int(req.peer_backed_up_tokens), 0)
-        return 0
-
-    def _collect_failover_reqs(self) -> list[Req]:
-        reqs: list[Req] = []
-        seen: set[str] = set()
-
-        def add(req: Req | None) -> None:
-            if req is None:
-                return
-            if req.rid in seen:
-                return
-            seen.add(req.rid)
-            if req.status != RequestStatus.COMPLETED:
-                reqs.append(req)
-
-        for req in self.waiting_queue:
-            add(req)
-        add(self.chunked_req)
-        for batch in (self.running_batch, self.last_batch):
-            if batch is None:
-                continue
-            for req in batch.reqs:
-                add(req)
-        for batch in self._result_queue:
-            for req in batch.reqs:
-                add(req)
-        return reqs
-
-    def _snapshot_req(self, req: Req) -> ReqSnapshot:
-        sim = dict(req.sampling_params.custom_params.get("simulation", {}))
-        return ReqSnapshot(
-            rid=req.rid,
-            output_ids=list(req.output_ids),
-            backed_up_tokens=self._backed_up_tokens_for_snapshot(req),
-            origin_input_ids=list(req.input_ids[: req.original_prompt_len or len(req.input_ids)]),
-            origin_input_token_count=req.original_prompt_len or req.input_token_count,
-            sampling_params=req.sampling_params,
-            original_max_new_tokens=req.original_max_new_tokens
-            or req.sampling_params.max_new_tokens,
-            simulation=sim,
-            routing_key=req.routing_key,
-        )
-
-    def _clear_failed_rank_scheduler_state(self) -> None:
-        for req in self._collect_failover_reqs():
-            self.cache.release_request(req)
-        self.waiting_queue.clear()
-        self.chunked_req = None
-        self.running_batch = self._new_running_batch()
-        self.last_batch = None
-        self._result_queue.clear()
-        self.cache = KVCachePool(ConfigManager.get_cache_config(self.server_args.model_path))
-        self.new_token_ratio = self.init_new_token_ratio
-        self._waiting_plan_dirty = False
-
-    def handle_simulate_gpu_failure(self, recv_req: SimulateGpuFailureReqInput) -> None:
-        if int(recv_req.dp_rank) != int(self.dp_rank):
-            return
-        now = time.time()
-        reqs = self._collect_failover_reqs()
-        snapshots = [self._snapshot_req(req) for req in reqs]
-        for snap in snapshots:
-            snap.simulation["failover_injected_time"] = now
-        for snap in snapshots:
-            stats = REQUEST_STATS.get(snap.rid)
-            if stats is not None:
-                stats.failover_injected_time = now
-        self._failure_injected_time = now
-        self._clear_failed_rank_scheduler_state()
-        self._gpu_failed = True
-        self.send_to_detokenizer.send_pyobj(
-            {
-                "op": "failover_batch",
-                "failover": FailoverBatchReqInput(
-                    failed_dp_rank=int(self.dp_rank),
-                    snapshots=snapshots,
-                ),
-            }
-        )
-        self.logger.warning(
-            "GPU failure simulated on dp_rank=%d snapshots=%d",
-            self.dp_rank,
-            len(snapshots),
-        )
-
-    def handle_simulate_gpu_recovery(self, recv_req: SimulateGpuRecoveryReqInput) -> None:
-        if int(recv_req.dp_rank) != int(self.dp_rank):
-            return
-        self._gpu_failed = False
-        self.logger.warning("GPU recovery simulated on dp_rank=%d", self.dp_rank)
 
     def _refresh_waiting_prefill_plans(self) -> None:
         """Recompute each fresh waiting request's chunk plan from a read-only prefix
@@ -1460,7 +1277,6 @@ class Scheduler(SchedulerMetricsMixin):
                     self.chunked_req = None
                 if self.cache.config.l3_capacity_pages > 0:
                     self.cache.write_to_l3(req)
-                self._update_peer_backup_after_prefill(req)
                 if req.mark_finished_length():
                     completed_reqs.append(req)
             else:
@@ -1475,7 +1291,6 @@ class Scheduler(SchedulerMetricsMixin):
                     continue
                 stats.service_time_s += max(batch.inference_dur_s, 0.0)
                 req.append_output_token(self._synthetic_output_token(req))
-                self._update_peer_backup_after_decode(req)
                 if req.mark_finished_length():
                     completed_reqs.append(req)
 
@@ -1728,11 +1543,6 @@ class Scheduler(SchedulerMetricsMixin):
 
     def event_loop_step(self) -> bool:
         t0 = time.perf_counter()
-        if self._gpu_failed:
-            self.recv_requests()
-            if self._gpu_failed:
-                self._profile_add("event_loop_step", time.perf_counter() - t0)
-                return False
         if self.enable_overlap:
             progressed = self._event_loop_step_overlap()
         else:

@@ -106,12 +106,6 @@ class RequestDetailRow:
     cache_hit_tokens: int
     load_back_tokens: int
     prefetch_complete_tokens: int
-    is_failover_retried: bool
-    failed_dp_rank: int
-    pre_failover_output_tokens: int
-    pre_failover_backed_up_tokens: int
-    recompute_tokens: int
-    failover_overhead_s: float
     agent_id: str
     critical_agent: bool
     e2e_latency_s: float
@@ -576,14 +570,6 @@ def sim_stats_to_detail_row(
         cache_hit_tokens=int(sim_stats.get("cache_hit_tokens", 0)),
         load_back_tokens=int(sim_stats.get("load_back_tokens", 0)),
         prefetch_complete_tokens=int(sim_stats.get("prefetch_complete_tokens", 0)),
-        is_failover_retried=bool(sim_stats.get("is_failover_retried", False)),
-        failed_dp_rank=int(sim_stats.get("failed_dp_rank", -1)),
-        pre_failover_output_tokens=int(sim_stats.get("pre_failover_output_tokens", 0)),
-        pre_failover_backed_up_tokens=int(
-            sim_stats.get("pre_failover_backed_up_tokens", 0)
-        ),
-        recompute_tokens=int(sim_stats.get("recompute_tokens", 0)),
-        failover_overhead_s=float(sim_stats.get("failover_overhead_s", 0.0)),
         agent_id=str(sim_stats.get("agent_id", "")),
         critical_agent=bool(sim_stats.get("critical_agent", False)),
         e2e_latency_s=e2e_latency_s,
@@ -620,27 +606,6 @@ def write_metrics_json(run_dir: Path, rows: list[RequestDetailRow]) -> Path:
         "p90_e2e_latency_ms": pct(0.9),
         "max_e2e_latency_ms": max(e2e) * 1000.0 if e2e else 0.0,
         "backend": "sglsim",
-        "failover_retried": sum(1 for r in rows if r.is_failover_retried),
-        "critical_failover_retried": sum(
-            1 for r in rows if r.is_failover_retried and r.critical_agent
-        ),
-        "noncritical_failover_retried": sum(
-            1 for r in rows if r.is_failover_retried and not r.critical_agent
-        ),
-        "failover_total_recompute_tokens": sum(
-            r.recompute_tokens for r in rows if r.is_failover_retried
-        ),
-        "failover_total_backed_up_tokens": sum(
-            r.pre_failover_backed_up_tokens for r in rows if r.is_failover_retried
-        ),
-        "mean_failover_overhead_ms": (
-            statistics.mean(
-                r.failover_overhead_s for r in rows if r.is_failover_retried
-            )
-            * 1000.0
-            if any(r.is_failover_retried for r in rows)
-            else 0.0
-        ),
     }
     path = run_dir / "metrics.json"
     path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
@@ -670,12 +635,6 @@ def write_request_details_csv(run_dir: Path, rows: list[RequestDetailRow]) -> Pa
         "cache_hit_tokens",
         "load_back_tokens",
         "prefetch_complete_tokens",
-        "is_failover_retried",
-        "failed_dp_rank",
-        "pre_failover_output_tokens",
-        "pre_failover_backed_up_tokens",
-        "recompute_tokens",
-        "failover_overhead_s",
         "agent_id",
         "critical_agent",
         "e2e_latency_s",

@@ -48,10 +48,6 @@ class ChatCompletionBody(BaseModel):
     simulation: dict[str, Any] = {}
 
 
-class SimulateGpuBody(BaseModel):
-    dp_rank: int = 0
-
-
 def _fixed_client_settings() -> dict[str, Any]:
     raw = ConfigManager._raw or {}
     fixed = raw.get("client", {}).get("fixed", {})
@@ -252,22 +248,6 @@ def create_app(engine: Engine) -> FastAPI:
         out = calc_bench_metrics(list(REQUEST_STATS.values()), duration)
         out.update(engine._cache_metrics())
         return out
-
-    @app.post("/simulate_gpu_failure")
-    def simulate_gpu_failure(body: SimulateGpuBody) -> dict[str, Any]:
-        engine.simulate_gpu_failure(body.dp_rank)
-        return {
-            "message": f"GPU failure simulated on dp_rank={int(body.dp_rank)}.",
-            "status": "ok",
-        }
-
-    @app.post("/simulate_gpu_recovery")
-    def simulate_gpu_recovery(body: SimulateGpuBody) -> dict[str, Any]:
-        engine.simulate_gpu_recovery(body.dp_rank)
-        return {
-            "message": f"GPU recovery applied on dp_rank={int(body.dp_rank)}.",
-            "status": "ok",
-        }
 
     return app
 

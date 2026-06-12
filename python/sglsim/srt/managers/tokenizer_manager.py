@@ -4,15 +4,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
-from sglsim.srt.managers.io_struct import (
-    FailoverBatchReqInput,
-    GenerateReqInput,
-    ReqSnapshot,
-    SimulateGpuFailureReqInput,
-    SimulateGpuRecoveryReqInput,
-    TokenizedGenerateReqInput,
-)
-from sglsim.srt.managers.schedule_batch import SamplingParams
+from sglsim.srt.managers.io_struct import GenerateReqInput, TokenizedGenerateReqInput
 from sglsim.srt.server_args import PortArgs, ServerArgs
 from sglsim.srt.simulation.manager.config import ConfigManager
 from sglsim.srt.utils.network import SimIpcRegistry, SimZmqContext, SimZmqSocket, get_zmq_socket
@@ -51,8 +43,6 @@ class TokenizerManager:
         self._control_queue = control_queue
         self._round_robin = 0
         self.rid_to_tokenized_state: dict[str, TokenizedGenerateReqInput] = {}
-        self.pending_failover_rids: set[str] = set()
-        self.failover_failed_dp_by_rid: dict[str, int] = {}
         ensure_loaded(server_args.model_path, logger=logger)
 
         ctx = SimZmqContext()
@@ -134,95 +124,3 @@ class TokenizerManager:
             self._dp_controller.dispatch(tok)
             return
         self.send_to_scheduler.send_pyobj(tok)
-
-    def simulate_gpu_failure(self, obj: SimulateGpuFailureReqInput) -> None:
-        if self._dp_controller is not None:
-            self._dp_controller.handle_simulate_gpu_failure(obj)
-            return
-        self.send_to_scheduler.send_pyobj(obj)
-
-    def simulate_gpu_recovery(self, obj: SimulateGpuRecoveryReqInput) -> None:
-        if self._dp_controller is not None:
-            self._dp_controller.handle_simulate_gpu_recovery(obj)
-            return
-        self.send_to_scheduler.send_pyobj(obj)
-
-    def _retry_snapshot(self, snap: ReqSnapshot, failed_dp_rank: int) -> None:
-        orig = self.rid_to_tokenized_state.get(snap.rid)
-        sampling_params = snap.sampling_params or (
-            orig.sampling_params if orig is not None else None
-        )
-        if sampling_params is None:
-            logger.warning("Skipping failover for rid=%s: missing sampling params", snap.rid)
-            return
-        original_max = (
-            snap.original_max_new_tokens
-            if snap.original_max_new_tokens is not None
-            else sampling_params.max_new_tokens
-        )
-        remaining = int(original_max) - len(snap.output_ids)
-        if remaining <= 0:
-            return
-        retry_sim = dict(snap.simulation)
-        retry_sim.setdefault("server_created_time", time.time())
-        retry_sim["failover_retry_time"] = time.time()
-        retry_sp = SamplingParams(
-            max_new_tokens=remaining,
-            temperature=sampling_params.temperature,
-            top_p=sampling_params.top_p,
-            top_k=sampling_params.top_k,
-            custom_params={
-                **dict(sampling_params.custom_params),
-                "simulation": retry_sim,
-            },
-        )
-        origin_ids = list(snap.origin_input_ids)
-        retry_input_ids = origin_ids + list(snap.output_ids)
-        origin_count = (
-            int(snap.origin_input_token_count)
-            if snap.origin_input_token_count is not None
-            else len(origin_ids)
-        )
-        retry_input_count = origin_count + len(snap.output_ids)
-        recompute = max(retry_input_count - int(snap.backed_up_tokens or 0), 0)
-        retried_req = TokenizedGenerateReqInput(
-            rid=snap.rid,
-            input_ids=retry_input_ids,
-            input_token_count=retry_input_count,
-            routing_key=snap.routing_key if snap.routing_key is not None else (orig.routing_key if orig else None),
-            sampling_params=retry_sp,
-            original_prompt_len=origin_count,
-            original_max_new_tokens=int(original_max),
-            failover_prefix_ids=list(snap.output_ids),
-            pre_failover_output_tokens=len(snap.output_ids),
-            pre_failover_backed_up_tokens=int(snap.backed_up_tokens or 0),
-            failed_dp_rank=int(failed_dp_rank),
-            is_failover_retry=True,
-            failover_recompute_tokens=recompute,
-        )
-        self.pending_failover_rids.add(snap.rid)
-        self.failover_failed_dp_by_rid[snap.rid] = int(failed_dp_rank)
-        self.dispatch_tokenized_request(retried_req)
-
-    def handle_failover_batch(self, failover: FailoverBatchReqInput) -> None:
-        logger.warning(
-            "Failover batch received: failed_dp_rank=%d snapshots=%d",
-            failover.failed_dp_rank,
-            len(failover.snapshots),
-        )
-        for snap in failover.snapshots:
-            self._retry_snapshot(snap, failover.failed_dp_rank)
-
-    def is_stale_failover_output(self, msg: dict[str, Any]) -> bool:
-        rid = str(msg.get("rid", ""))
-        if rid not in self.pending_failover_rids:
-            return False
-        failed = self.failover_failed_dp_by_rid.get(rid)
-        if failed is None:
-            return False
-        dp_rank = msg.get("dp_rank")
-        return dp_rank is not None and int(dp_rank) == int(failed)
-
-    def mark_request_completed(self, rid: str) -> None:
-        self.pending_failover_rids.discard(rid)
-        self.failover_failed_dp_by_rid.pop(rid, None)

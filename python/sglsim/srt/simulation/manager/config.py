@@ -33,16 +33,6 @@ from sglsim.srt.utils.prompt_builder import _MOCK_MODEL_PATHS
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class FaultToleranceConfig:
-    enabled: bool = False
-    strategy: str = "baseline"
-    peer_backup_lag_tokens: int = 8
-    backup_prefill_tokens: str = "all"
-    backup_decode: bool = True
-    backup_policy: str = "all"
-
-
 class ConfigManager:
     _raw: dict[str, Any] | None = None
     _model: ModelInfo | None = None
@@ -53,7 +43,6 @@ class ConfigManager:
     _predictor: InferTimePredictor | None = None
     _communication: CommunicationConfig | None = None
     _comm_predictor: Any | None = None
-    _fault_tolerance: FaultToleranceConfig | None = None
 
     @classmethod
     def apply_server_args_overrides(cls, server_args) -> None:
@@ -75,7 +64,6 @@ class ConfigManager:
         cls._cache = None
         cls._communication = None
         cls._comm_predictor = None
-        cls._fault_tolerance = None
 
     @classmethod
     def load(cls, path: str | None = None) -> None:
@@ -92,25 +80,6 @@ class ConfigManager:
         cls._predictor = None
         cls._communication = None
         cls._comm_predictor = None
-        cls._fault_tolerance = None
-
-    @classmethod
-    def get_fault_tolerance_config(cls) -> FaultToleranceConfig:
-        if cls._fault_tolerance is None:
-            raw = (cls._raw or {}).get("fault_tolerance", {})
-            if not isinstance(raw, dict):
-                raw = {}
-            cls._fault_tolerance = FaultToleranceConfig(
-                enabled=bool(raw.get("enabled", False)),
-                strategy=str(raw.get("strategy", "baseline")),
-                peer_backup_lag_tokens=max(
-                    int(raw.get("peer_backup_lag_tokens", 8)), 0
-                ),
-                backup_prefill_tokens=str(raw.get("backup_prefill_tokens", "all")),
-                backup_decode=bool(raw.get("backup_decode", True)),
-                backup_policy=str(raw.get("backup_policy", "all")),
-            )
-        return cls._fault_tolerance
 
     @classmethod
     def get_scheduler_config(cls) -> SchedulerSimConfig:
