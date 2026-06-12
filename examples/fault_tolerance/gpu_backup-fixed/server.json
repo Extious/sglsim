@@ -1,0 +1,18 @@
+{
+  "name": "gpu_backup-fixed",
+  "description": "Peer GPU KV backup (KevlarFlow-style)",
+  "platform": "a100",
+  "kv_backup": "gpu_backup",
+  "server": {
+    "dp_size": 2,
+    "enable_hicache": true,
+    "hicache_ratio": 2.0
+  },
+  "hicache_storage": {
+    "backend": "gpu_backup",
+    "prefetch_policy": "wait_complete"
+  },
+  "sim": {
+    "peer_backup_lag_tokens": 8
+  }
+}

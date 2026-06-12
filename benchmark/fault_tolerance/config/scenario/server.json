@@ -1,0 +1,22 @@
+{
+  "name": "fault-tolerance-offline",
+  "description": "Fixed-client offline fault-tolerance sweep",
+  "platform": "a100",
+  "kv_backup": "none",
+  "server": {
+    "dp_size": 2,
+    "pp_size": 1,
+    "tp_size": 1,
+    "enable_hicache": true,
+    "hicache_ratio": 2.0,
+    "context_length": 200000
+  },
+  "hicache_storage": {
+    "backend": "",
+    "prefetch_policy": "wait_complete"
+  },
+  "sim": {
+    "peer_backup_lag_tokens": 8,
+    "gpu_recovery_delay_s": 0.0
+  }
+}
