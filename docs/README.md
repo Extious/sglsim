@@ -5,7 +5,7 @@
 | [sglsim-srt-onboarding.md](sglsim-srt-onboarding.md) | CLI entrypoints, SGLang path mapping, simulation modes |
 | [sglsim-srt-contract.md](sglsim-srt-contract.md) | Included / excluded scope |
 
-**Branches:** `main` is the online parity simulator (tag `v0.1.0+`). Fault-tolerance work is on branch `fault-tolerance`.
+**Branches:** `main` is the online parity simulator (tag `v0.1.0+`). Fault-tolerance work is on branch `fault-tolerance` — see [fault-tolerance.md](fault-tolerance.md).
 
 ### Roadmap (`docs/todo/`)
 

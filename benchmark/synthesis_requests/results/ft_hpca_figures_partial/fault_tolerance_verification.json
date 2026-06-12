@@ -1,0 +1,33 @@
+{
+  "profile": "smoke",
+  "passed": false,
+  "failures": [
+    "critical_ratio points 0 < 1",
+    "failure_timing_s points 0 < 1"
+  ],
+  "axis_value_counts": {
+    "strategy": 2,
+    "backup_lag": 6
+  },
+  "point_counts": {
+    "strategy|baseline|baseline": 1,
+    "strategy|gpu_critical|gpu_critical": 1,
+    "backup_lag|0|lag_0": 1,
+    "backup_lag|1|lag_1": 1,
+    "backup_lag|4|lag_4": 1,
+    "backup_lag|8|lag_8": 1,
+    "backup_lag|16|lag_16": 1,
+    "backup_lag|32|lag_32": 1
+  },
+  "strategy_summary": {
+    "baseline_recompute_tokens": 86258.0,
+    "gpu_backup_recompute_tokens": 43051.0,
+    "recompute_reduction_pct": 50.0904263952329,
+    "critical_recompute_reduction_pct": 99.98147976664507,
+    "gpu_backup_reuse_rate_pct": 50.068429598700995,
+    "gpu_backup_backed_up_tokens": 43169.0,
+    "mean_overhead_change_pct": -10.410666316022823,
+    "output_throughput_change_pct": 10.01354083326495,
+    "mean_e2e_change_pct": -9.16131908532357
+  }
+}
