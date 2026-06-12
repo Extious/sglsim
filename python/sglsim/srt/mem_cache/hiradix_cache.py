@@ -99,7 +99,14 @@ class HiRadixCache:
         # hits are tracked separately and become prefix KV only after load_back
         # completes. Do not lock or return a host-only tail here.
         device_cached = min(match.device_length, len(token_ids))
-        new_cached = max(min(cached_length, device_cached), device_cached)
+        # Preserve a pre-set cached_length (e.g. from retract recovery) as long
+        # as at least one device-resident page remains — the gap can be filled
+        # via load_back.  If the entire prefix is host-only then cached_length
+        # must be 0 so the scheduler treats this as an uncached prefill.
+        if device_cached > 0:
+            new_cached = max(cached_length, device_cached)
+        else:
+            new_cached = 0
         if device_cached > 0:
             device_match = self.tree.match_prefix(token_ids[:device_cached])
             last_node = device_match.last_node or self.tree.root_node

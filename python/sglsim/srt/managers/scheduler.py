@@ -637,6 +637,16 @@ class Scheduler(SchedulerMetricsMixin):
             if matched >= req.prefill_length:
                 matched = max(req.prefill_length - 1, 0)
             req.cached_length = matched
+            # Record cache hit discovered by the radix refresh so the
+            # delta-based accounting in prepare_prefill does not zero it out.
+            if not req.cache_hit_recorded and matched > 0:
+                max_cached = max(req.prefill_length - 1, 0)
+                req.cache_hit_tokens = min(matched, max_cached)
+                req.cache_hit_log_pending = req.cache_hit_tokens
+                req.cache_hit_recorded = True
+                if hasattr(self.cache, "cache_prefix_tokens"):
+                    self.cache.cache_prefix_tokens += req.cache_hit_tokens
+                    self.cache.metrics["cache_prefix_tokens"] = self.cache.cache_prefix_tokens
             req.prefill_chunks_remaining = list(
                 split_prefill_length(
                     max(req.prefill_length - matched, 0),
@@ -1110,6 +1120,7 @@ class Scheduler(SchedulerMetricsMixin):
             new_token_ratio=self.new_token_ratio,
             prefill_max_requests=self.sched_cfg.prefill_max_requests,
             chunked_prefill_size=self.sched_cfg.chunked_prefill_size,
+            enable_overlap=self.enable_overlap,
         )
 
         running_bs = len(self.running_batch.reqs)

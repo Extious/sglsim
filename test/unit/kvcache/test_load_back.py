@@ -62,9 +62,11 @@ def test_load_back_restores_value_immediately_and_queues_h2d():
     host_hit = controller.init_load_back(req)
     # SGLang matches at most input_len - 1 in the extend path so logits for the
     # last input token are still computed.
-    assert host_hit == 15
-    assert controller.load_back(req) == 15
-    for node in controller.radix.collect_nodes_on_path(tokens[:-1]):
+    # init_load_back uses req.fill_ids directly (mirroring SGLang).
+    # With write_through, all 16 pages are host-backed including the last token.
+    assert host_hit == 16
+    assert controller.load_back(req) == 16
+    for node in controller.radix.collect_nodes_on_path(tokens):
         if node.host_value is not None:
             assert node.value is not None
 
@@ -83,9 +85,9 @@ def test_load_back_ongoing_lock_released_after_hicache_check():
     tokens = list(range(16))
     _seed_evicted_host_only(controller, tokens, "seed")
     req = Req("r-lock", tokens, SamplingParams(max_new_tokens=1))
-    assert controller.init_load_back(req) == 15
+    assert controller.init_load_back(req) == 16
     assert req.last_host_node_id is not None
-    assert controller.load_back(req) == 15
+    assert controller.load_back(req) == 16
     last_host = controller._cache.tree.get_node(req.last_host_node_id)
     assert last_host is not None
     assert last_host.lock_ref > 0

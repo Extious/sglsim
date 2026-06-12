@@ -141,9 +141,11 @@ class KVCachePool:
         return self._cache.match_prefix(self._prefill_match_ids(req)).device_length
 
     def init_load_back(self, req: Req, *, mem_quota: int | None = None) -> int:
-        token_ids = self._prefill_match_ids(req)
+        # Use full fill_ids (not _prefill_match_ids which excludes the last token)
+        # because host KV for the last prefill token can still be loaded back.
+        # Mirrors SGLang: init_load_back operates on req.fill_ids.
         host_hit, last_host = self._cache.init_load_back(
-            token_ids,
+            req.fill_ids,
             mem_quota=mem_quota,
         )
         req.host_hit_length = host_hit
@@ -177,14 +179,20 @@ class KVCachePool:
             min(req.cached_length, max_cached),
             last_node_id=req.last_node_id,
         )
+        prior_cached = req.cached_length
         new_cached = min(new_cached, max_cached)
         req.cached_length = new_cached
         req.cache_protected_len = new_cached
         if not req.cache_hit_recorded:
-            req.cache_hit_tokens = min(
-                max(req.cached_length, match.device_length),
-                max_cached,
+            # Record cache hit discovered at admission time.  When
+            # _refresh_req_next_round_input already recorded a hit the
+            # delta guards against double-counting (only additional tokens
+            # beyond the refresh-provided match are counted).
+            newly_matched = max(
+                0,
+                min(max(new_cached, match.device_length), max_cached) - prior_cached,
             )
+            req.cache_hit_tokens = newly_matched
             req.cache_hit_log_pending = req.cache_hit_tokens
             req.cache_hit_recorded = True
             self.cache_prefix_tokens += req.cache_hit_tokens

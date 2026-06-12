@@ -161,6 +161,12 @@ def resolve_cache_config(
 
     if explicit_l1 is not None:
         l1_pages = int(explicit_l1)
+        # kv_capacity_scale_factor compensates for page_size=1 in the
+        # simulator tracking every token as an exact page, while real GPU
+        # allocators carry internal fragmentation (alignment, page rounding)
+        # that implicitly absorbs the last ~0.3-0.5 % of capacity pressure.
+        l1_tokens_scaled = apply_kv_capacity_scale(l1_pages * page_size, raw)
+        l1_pages = _tokens_to_pages(l1_tokens_scaled, page_size)
     else:
         l1_tokens = infer_l1_max_tokens(
             model_path=model_path,

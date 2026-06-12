@@ -9,11 +9,15 @@ def test_overlap_hides_h2d_behind_prior_inference():
     stages = PipelineStages(h2d_s=3.0, forward_s=2.0, backup_pending_s=3.0)
     overlapped = compute_visible_gpu(stages, last_infer_s=5.0, overlap=True)
     serial = compute_visible_gpu(stages, last_infer_s=5.0, overlap=False)
-    assert overlapped.visible_gpu_s == 3.0
-    assert serial.visible_gpu_s == 8.0
+    assert overlapped.visible_gpu_s == 3.0  # H2D hidden, D2H overlapped
+    # Serial: H2D=3 + forward=2 + backup_remainder(3-min(3,2))=1 = 6
+    assert serial.visible_gpu_s == 6.0
     assert overlapped.visible_gpu_s < serial.visible_gpu_s
     assert overlapped.backup_remainder_s == 1.0
     assert overlapped.overlapped_backup_s == 2.0
+    # No-overlap still overlaps D2H with forward (copy engine):
+    assert serial.backup_remainder_s == 1.0
+    assert serial.overlapped_backup_s == 2.0
 
 
 def test_overlap_zero_h2d_when_last_infer_covers_load():
@@ -24,9 +28,11 @@ def test_overlap_zero_h2d_when_last_infer_covers_load():
 
 
 def test_serial_sums_all_stages():
+    """No-overlap: H2D is serial but D2H overlaps with forward (GPU copy engine)."""
     stages = PipelineStages(h2d_s=3.0, forward_s=2.0, backup_pending_s=1.0)
     result = compute_visible_gpu(stages, last_infer_s=5.0, overlap=False)
-    assert result.visible_gpu_s == 6.0
+    # backup_pending(1.0) <= forward(2.0) → fully overlapped → remainder 0
+    assert result.visible_gpu_s == 5.0  # 3.0 + 2.0 + 0.0
 
 
 def test_zero_last_infer_shows_full_h2d():
@@ -52,9 +58,11 @@ def test_pipeline_sleep_overlap_forward_only():
 
 
 def test_pipeline_sleep_no_overlap_sleeps_serial_transfer_and_forward():
+    """No-overlap: D2H overlaps with forward (GPU copy engine), H2D serial."""
     stages = PipelineStages(h2d_s=3.0, forward_s=2.0, backup_pending_s=1.0)
     result = compute_pipeline_sleep_s(stages, last_infer_s=5.0, overlap=False)
-    assert result.sleep_s == 6.0
-    assert result.diagnostic_visible_gpu_s == 6.0
+    # backup_pending(1.0) <= forward(2.0) → fully overlapped → remainder 0
+    assert result.sleep_s == 5.0  # 3.0 + max(2.0, 1.0-min(1.0,2.0))
+    assert result.diagnostic_visible_gpu_s == 5.0
     assert result.comm_h2d_visible_s == 3.0
-    assert result.comm_d2h_remainder_s == 1.0
+    assert result.comm_d2h_remainder_s == 0.0

@@ -45,6 +45,7 @@ class PrefillAdder:
     new_token_ratio: float = 1.0
     prefill_max_requests: int | None = None
     chunked_prefill_size: int | None = None
+    enable_overlap: bool = True
 
     rem_input_tokens: int = 0
     rem_total_token_offset: int = 0
@@ -251,6 +252,13 @@ class PrefillAdder:
         # budget against the actual device-resident prefix for this round.
         if self.cache.hierarchical_enabled:
             self._admit_kv_finalize(req)
+        # In no-overlap mode the serial event loop accumulates more waiting
+        # requests per step; a batch may admit several requests whose
+        # load_backs collectively consume pages that earlier per-request
+        # budget checks did not see.  Track load_back consumption so every
+        # subsequent check inside the same batch sees real remaining capacity.
+        if not self.enable_overlap and req.admit_load_back_tokens > 0:
+            self.rem_total_token_offset += req.admit_load_back_tokens
         extend_tokens = _full_extend_tokens(req)
         if extend_tokens <= 0:
             self.cache.prepare_prefill(req)

@@ -105,7 +105,8 @@ def test_advance_wall_clock_step_no_overlap_serializes_hicache_transfer():
             no_overlap_sleep = sleep_mock.call_args[0][0]
 
     assert overlap_sleep == 0.02
-    assert no_overlap_sleep == pytest.approx(0.06)
+    # No-overlap: D2H(0.01) <= forward(0.02) → fully overlapped → 0.03+0.02+0 = 0.05
+    assert no_overlap_sleep == pytest.approx(0.05)
 
 
 def test_advance_wall_clock_step_no_overlap_does_not_add_cpu_overflow():

@@ -12,7 +12,9 @@ def test_overlap_hides_h2d_behind_prior_inference():
     overlapped = compute_visible_gpu(stages, last_infer_s=5.0, overlap=True).visible_gpu_s
     serial = compute_visible_gpu(stages, last_infer_s=5.0, overlap=False).visible_gpu_s
     assert overlapped == 3.0
-    assert serial == 8.0
+    # No-overlap: D2H overlaps with forward (GPU copy engine).
+    # backup_pending(3) vs forward(2): remainder=1 → 3+2+1=6
+    assert serial == 6.0
     assert overlapped < serial
 
 

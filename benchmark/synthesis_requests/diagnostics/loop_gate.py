@@ -45,7 +45,7 @@ def _thrash_ok(sim_dir: Path) -> tuple[bool, str]:
         return False, "missing server.log"
     text = log.read_text(encoding="utf-8", errors="replace")
     retract = len(re.findall(r"Retract requests", text, re.I))
-    if retract > 2:
+    if retract > 0:
         return False, f"retract_events={retract}"
     if "Scheduler stalled" in text:
         return False, "scheduler_stalled"

@@ -37,10 +37,13 @@ def compute_pipeline_sleep_s(
 ) -> PipelineSleepResult:
     """Wall-clock sleep for one scheduler step (Pipeline v2).
 
-    With overlap enabled, dedicated copy streams hide HiCache transfer behind
-    forward work, so the step only sleeps for forward time. With overlap
-    disabled, the normal event loop observes the serial path: H2D, forward, and
-    pending backup all contribute to the wall clock for the step.
+    Overlap ON:  H2D hidden behind previous step's forward; D2H hidden
+                 behind current forward.  Sleep = forward time only.
+
+    Overlap OFF: H2D is on the critical path (previous batch drained before
+                 this one starts), but D2H still overlaps with forward via
+                 the GPU copy engine — a hardware fact that exists regardless
+                 of scheduler-level overlap.
     """
     diagnostic = compute_visible_gpu(stages, last_infer_s=last_infer_s, overlap=overlap)
     forward_s = diagnostic.forward_s
@@ -73,16 +76,24 @@ def compute_visible_gpu(
     backup_pending_s = max(stages.backup_pending_s, 0.0)
     last_infer_s = max(last_infer_s, 0.0)
 
+    # D2H runs on the GPU copy engine which operates concurrently with the
+    # compute engine (SM).  This hardware-level parallelism exists regardless
+    # of whether the *scheduler* overlaps prefill + decode in the event loop.
+    # `--disable-overlap-schedule` serialises the scheduler batches but does
+    # NOT disable the independent copy engine, so D2H always partially hides
+    # behind forward work.
+    overlapped_backup = min(backup_pending_s, forward_s)
+    backup_remainder = backup_pending_s - overlapped_backup
+
     if overlap:
+        # H2D is hidden behind the previous step's forward (overlap ON).
         load_visible = max(h2d_s - last_infer_s, 0.0)
-        overlapped_backup = min(backup_pending_s, forward_s)
-        backup_remainder = backup_pending_s - overlapped_backup
-        visible = load_visible + forward_s + backup_remainder
     else:
+        # H2D is on the critical path because the scheduler waits for the
+        # previous batch to fully drain before starting the next one.
         load_visible = h2d_s
-        overlapped_backup = 0.0
-        backup_remainder = backup_pending_s
-        visible = h2d_s + forward_s + backup_pending_s
+
+    visible = load_visible + forward_s + backup_remainder
 
     return PipelineStepResult(
         visible_gpu_s=visible,
