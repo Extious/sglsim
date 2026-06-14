@@ -35,8 +35,9 @@ def test_multi_agent_dry_run_lists_smoke_matrix():
     specs = json.loads(proc.stdout)
 
     assert len(specs) == 15
-    assert any(spec["strategy"] == "aegiskv_segment" for spec in specs)
-    assert any(spec["experiment"] == "budget" for spec in specs)
+    assert any(spec["strategy"] == "aegiskv" for spec in specs)
+    assert any(spec["experiment"] == "failure_site" for spec in specs)
+    assert not any(spec["strategy"] == "gpu_backup_agent" for spec in specs)
 
 
 def test_multi_agent_smoke_artifact_contract(tmp_path):
@@ -62,9 +63,17 @@ def test_multi_agent_smoke_artifact_contract(tmp_path):
         check=True,
     )
 
-    for name in ("runs.csv", "segments.csv", "recovery_paths.csv", "summary.json"):
+    for name in (
+        "runs.csv",
+        "segments.csv",
+        "recovery_paths.csv",
+        "workflows.csv",
+        "agent_timelines.csv",
+        "summary.json",
+    ):
         assert (out / name).is_file()
-    assert (out / "fig_strategy_recovery.png").stat().st_size > 0
+    assert (out / "fig_wct_cdf.png").stat().st_size > 0
+    assert (out / "fig_agent_timeline.png").stat().st_size > 0
     verification = json.loads((out / "artifact_verification.json").read_text())
     assert verification["passed"] is True
 
@@ -92,4 +101,4 @@ def test_multi_agent_online_dry_run_builds_online_pipeline_commands(tmp_path):
     assert len(specs) == 15
     assert all("benchmark/online/src/main.py" in " ".join(spec["command"]) for spec in specs)
     assert any("--client-mode" in spec["command"] for spec in specs)
-    assert any(spec["strategy"] == "aegiskv_segment" for spec in specs)
+    assert any(spec["strategy"] == "aegiskv" for spec in specs)

@@ -1,0 +1,37 @@
+{
+  "config_dir": "benchmark/fault_tolerance/multi_agent/config/aegiskv_coding",
+  "experiments": [
+    "strategy",
+    "failure_site",
+    "scale"
+  ],
+  "repeats": 5,
+  "smoke": false,
+  "mode": "model",
+  "strategies": [
+    "baseline",
+    "naive_backup",
+    "aegiskv"
+  ],
+  "semantics": "Offline policy simulator with per-workflow WCT and agent timelines; online mode optionally runs SGLSim but paper metrics come from simulator.",
+  "workflow_config": {
+    "num_workflows": 8,
+    "subagents_per_round": 3,
+    "workflow_start_stagger_s": 0.25,
+    "tool_blocked_duration_ms": 10000,
+    "system_prefix_tokens": 4096,
+    "tool_schema_tokens": 1024,
+    "task_plan_tokens": 2048,
+    "selected_context_tokens": 4096,
+    "branch_tail_tokens": 3072,
+    "tool_blocked_prefix_tokens": 6144,
+    "diagnosis_tokens": 4096,
+    "verifier_context_tokens": 5120,
+    "final_synthesis_tokens": 4096,
+    "output_tokens_default": 64,
+    "output_tokens_critical": 512,
+    "output_tokens_main": 256,
+    "output_tokens_per_invocation": 512
+  },
+  "num_runs": 165
+}

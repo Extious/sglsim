@@ -269,6 +269,7 @@ def main() -> int:
                     int(segment.tokens),
                     PromptBuilder(args.model_path, int(segment.tokens), args.seed + index),
                 )
+                segment_output_len = int(getattr(segment, "output_tokens", output_len) or output_len)
                 result = _run_segment_request(
                     endpoint=endpoint,
                     model_path=args.model_path,
@@ -276,7 +277,7 @@ def main() -> int:
                     workflow_id=workflow_id,
                     segment=segment,
                     request_index=index * 1000 + seg_index,
-                    output_len=output_len,
+                    output_len=segment_output_len,
                     ignore_eos=bool(args.ignore_eos),
                 )
                 local_segment = result["local_segment"]

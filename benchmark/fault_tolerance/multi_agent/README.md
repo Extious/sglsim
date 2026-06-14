@@ -1,155 +1,76 @@
-# Multi-Agent AegisKV Fault Tolerance Benchmark
+# Multi-Agent AegisKV 容错 Benchmark（三策略 v2）
 
-This benchmark implements the AegisKV system-design workload described in
-`05_system_design.md`: a two-round fan-out/fan-in coding workflow where workflow
-semantics decide which KV segments should be protected before failure.
+本 benchmark 在两轮 fan-out/fan-in coding workflow 上对比三种 **GPUReplica** 备份策略：
 
-The primary path is now **online**: `run.py --mode online` starts the SGLSim
-server, the online fault injector, and a multi-agent HTTP client that issues real
-`/v1/completions` requests for every workflow segment. The fast policy model is
-still available as `--mode model` for debugging and artifact generation.
+| 策略 | 行为 |
+|------|------|
+| `baseline` | 不备份 KV |
+| `naive_backup` | 备份所有 eligible segment 的 KV |
+| `aegiskv` | 仅备份 **Critical Agent**（O0 / S2 / S5）的 KV |
 
-The AegisKV comparison is metadata-level and uses `GPUReplica` as the first
-backup target. It does not implement Host sidecars, HiCache L2/L3 integration, or
-real KV block copy. Online artifacts record the actual server/client/fault
-injection logs; AegisKV segment-selection metrics are derived from those
-workflow traces.
+**Agent 拓扑**：主 agent `O0` + 6 个 subagent `S1`–`S6`（每轮 3 个并行）。`S2`、`S5` 为 heavy-decode critical subagent。主路径为 **offline policy simulator**，产出 per-workflow WCT 与 per-agent 时间线。
 
 ## Workflow
 
-The synthetic workflow is:
-
 ```text
-O0 -> E1/E2/E3 -> O0-J1 -> F1/F2/F3 -> O0-J2
+O0 -> S1/S2/S3 -> O0 -> S4/S5/S6 -> O0
 ```
 
-Important AegisKV segments:
+KV segment 使用 `P1`–`P8`（O0 各阶段）与 `S10`–`S24`（subagent 分支）等局部 ID，与 agent ID 区分。
 
-- `S1`: common system/tool prefix
-- `S6`: diagnosis summary after round-1 fan-in
-- `S15`: E2 tool-blocked test reproducer prefix
-- `S21`: F2 tool-blocked regression verifier prefix
-- `S8`: final synthesis prefix near the workflow sink
+## 实验组
 
-## Experiments
+- `strategy`：三策略 × S5_ToolBlocked（主结果）
+- `failure_site`：三策略 × 6 个 failure site
+- `scale`：三策略 × 并发 workflow {2,4,8,16}
 
-`run.py` supports five experiment groups:
+## 命令
 
-- `strategy`: baseline vs whole-agent GPU backup vs AegisKV segment backup
-- `failure_site`: sensitivity to failure location in the workflow
-- `budget`: backup budget ratio sweep
-- `lag`: peer backup lag sweep
-- `scale`: number of concurrent workflows
-
-## Commands
-
-Online smoke run:
+Smoke（model 模式）：
 
 ```bash
 uv run --extra test python benchmark/fault_tolerance/multi_agent/run.py \
   --config-dir benchmark/fault_tolerance/multi_agent/config/aegiskv_coding \
-  --output-dir /tmp/sglsim_aegiskv_ma_smoke \
-  --mode online \
-  --smoke
+  --output-dir /tmp/aegiskv_v2_smoke \
+  --mode model --smoke
 ```
 
-For staged validation without launching the whole matrix:
-
-```bash
-SGLSIM_VENV=/path/to/native-env \
-python benchmark/fault_tolerance/multi_agent/run.py \
-  --config-dir benchmark/fault_tolerance/multi_agent/config/aegiskv_coding \
-  --output-dir /tmp/sglsim_aegiskv_ma_online_smoke \
-  --mode online \
-  --smoke \
-  --experiments scale \
-  --max-runs 1
-```
-
-`SGLSIM_VENV` must point to an environment whose `bin/python` can import the
-native SGLSim runtime dependencies, including `torch` and `safetensors`. If this
-is not set, the benchmark uses the repository `.venv`.
-
-Online dry run, useful before launching the full matrix:
+完整 paper run：
 
 ```bash
 uv run --extra test python benchmark/fault_tolerance/multi_agent/run.py \
   --config-dir benchmark/fault_tolerance/multi_agent/config/aegiskv_coding \
-  --output-dir /tmp/sglsim_aegiskv_ma_online_plan \
-  --mode online \
-  --smoke \
-  --dry-run
+  --output-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_v2 \
+  --mode model --repeats 5 \
+  --experiments strategy,failure_site,scale
 ```
 
-Full online paper run:
-
-```bash
-uv run --extra test python benchmark/fault_tolerance/multi_agent/run.py \
-  --config-dir benchmark/fault_tolerance/multi_agent/config/aegiskv_coding \
-  --output-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_full \
-  --mode online \
-  --repeats 5 \
-  --experiments strategy,failure_site,budget,lag,scale
-```
-
-Fast model-only run:
-
-```bash
-uv run --extra test python benchmark/fault_tolerance/multi_agent/run.py \
-  --config-dir benchmark/fault_tolerance/multi_agent/config/aegiskv_coding \
-  --output-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_model \
-  --mode model \
-  --repeats 5 \
-  --experiments strategy,failure_site,budget,lag,scale
-```
-
-Plots:
+出图：
 
 ```bash
 uv run --extra test python benchmark/fault_tolerance/multi_agent/plot.py \
-  --results-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_full
+  --results-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_v2
 ```
 
-Paper tables:
+论文表与验证：
 
 ```bash
 uv run --extra test python benchmark/fault_tolerance/multi_agent/paper_tables.py \
-  --results-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_full
-```
-
-Verification:
-
-```bash
+  --results-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_v2
 uv run --extra test python benchmark/fault_tolerance/multi_agent/verify_artifacts.py \
-  --results-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_full \
-  --profile paper
+  --results-dir benchmark/fault_tolerance/multi_agent/results/aegiskv_v2 --profile paper
 ```
 
-## Outputs
+## 输出
 
-Each run directory contains:
+- `runs.csv` / `segments.csv` / `recovery_paths.csv`
+- **`workflows.csv`**：每个 workflow 的 `wct_s`、`impacted_by_failure`
+- **`agent_timelines.csv`**：每个 agent 的 `start_s`/`end_s`/`recovery_extra_s`/`is_failure_target`
+- 主图：`fig_wct_cdf`、`fig_agent_timeline`、`fig_agent_timeline_compare`、`fig_agent_duration_violin`
+- 辅图：`fig_strategy_recovery`、`fig_backup_cost`、`fig_recovery_vs_cost`、`fig_scale`
 
-- `manifest.json`
-- `summary.json`
-- `runs.csv`
-- `segments.csv`
-- `recovery_paths.csv`
-- `online_configs/` and `online_runs/` when `--mode online` is used
-- `paper_tables.{json,md,tex}`
-- `artifact_verification.json`
-- `fig_strategy_recovery.{png,pdf}`
-- `fig_wct_failure_site.{png,pdf}`
-- `fig_budget_efficiency.{png,pdf}`
-- `fig_backup_lag.{png,pdf}`
-- `fig_recovery_path_distribution.{png,pdf}`
-- `fig_scale.{png,pdf}`
+## 论文解读
 
-## Paper Interpretation
-
-Use `fig_strategy_recovery` as the primary result: AegisKV should reduce
-recompute by protecting only segments that matter for failure-time workflow
-recovery. Use `fig_budget_efficiency` to show that AegisKV spends the same
-GPUReplica budget more effectively than whole-agent backup. Use
-`fig_recovery_path_distribution` to explain where the benefit comes from:
-full segment restore or prefix restore plus suffix replay, rather than opaque
-retry behavior.
+- **WCT CDF**：AegisKV 与 NaiveBackup 曲线左移且接近，显著优于 Baseline tail
+- **Agent 时间线**：failure 仅拉长 S5（或对应 site）的 recovery 段；Aegis 与 Naive 在该段接近
+- **Backup 成本**：AegisKV backed-up tokens 远低于 NaiveBackup，买到相近 WCT

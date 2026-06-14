@@ -29,21 +29,17 @@ from sglsim.fault_tolerance.aegiskv_simulator import (  # noqa: E402
 )
 
 
-DEFAULT_FAILURE_SITES = (
-    "E2_ToolBlocked",
-    "O0_J1_Diagnosis",
-    "F2_ToolBlocked",
-    "O0_J2_Final",
-)
-STRATEGIES = ("baseline", "gpu_backup_agent", "aegiskv_segment")
+DEFAULT_PEER_BACKUP_LAG = 8
+STRATEGIES = ("baseline", "naive_backup", "aegiskv")
+PRIMARY_FAILURE_SITE = "S5_ToolBlocked"
 
 ONLINE_FAILURE_TARGETS = {
-    "E1_RepoMapper": ("S11", "repo_mapper"),
-    "E2_ToolBlocked": ("S15", "test_reproducer"),
-    "O0_J1_Diagnosis": ("S6", "main_diagnosis"),
-    "F1_Patch": ("S18", "patch_implementer"),
-    "F2_ToolBlocked": ("S21", "regression_verifier"),
-    "O0_J2_Final": ("S8", "main_final_resume"),
+    "S1_RepoMapper": ("S11", "repo_mapper"),
+    "S2_ToolBlocked": ("S15", "test_reproducer"),
+    "O0_Diagnosis": ("P6", "main_diagnosis"),
+    "S4_Patch": ("S18", "patch_implementer"),
+    "S5_ToolBlocked": ("S21", "regression_verifier"),
+    "O0_Final": ("P8", "main_final_resume"),
 }
 
 
@@ -73,7 +69,7 @@ def _strategy_kv_backup(strategy: str) -> str:
 def _spec_run_id(spec: RunSpec) -> str:
     return (
         f"{spec.experiment}__{spec.strategy}__{spec.failure_site}"
-        f"__b{spec.backup_budget_ratio:g}__lag{spec.peer_backup_lag_tokens}"
+        f"__lag{spec.peer_backup_lag_tokens}"
         f"__n{spec.num_workflows}__r{spec.repeat_idx}"
     )
 
@@ -104,7 +100,6 @@ def _materialize_online_config(
     aegiskv = server.setdefault("aegiskv", {})
     if isinstance(aegiskv, dict):
         aegiskv["policy"] = spec.strategy
-        aegiskv["backup_budget_ratio"] = spec.backup_budget_ratio
         aegiskv["peer_backup_lag_tokens"] = spec.peer_backup_lag_tokens
     server_part = server.setdefault("server", {})
     if isinstance(server_part, dict):
@@ -112,7 +107,6 @@ def _materialize_online_config(
         server_part["hicache_ratio"] = 0.0
 
     sim_aegis = sim.get("aegiskv", {}) if isinstance(sim.get("aegiskv", {}), dict) else {}
-    sim_aegis["backup_budget_ratio"] = spec.backup_budget_ratio
     sim_aegis["peer_backup_lag_tokens"] = spec.peer_backup_lag_tokens
     sim["aegiskv"] = sim_aegis
 
@@ -196,13 +190,11 @@ def build_specs(
     seed_base: int,
     smoke: bool,
     workflow_cfg: MultiAgentWorkflowConfig,
+    peer_backup_lag: int,
 ) -> list[RunSpec]:
     specs: list[RunSpec] = []
     repeat_range = range(1 if smoke else repeats)
-    strategy_sites = DEFAULT_FAILURE_SITES if not smoke else ("F2_ToolBlocked",)
-    failure_sites = FAILURE_SITES if not smoke else ("E2_ToolBlocked", "O0_J2_Final")
-    budget_values = (0.1, 0.25, 0.5, 0.75, 1.0) if not smoke else (0.25, 0.75)
-    lag_values = (0, 1, 4, 8, 16, 32) if not smoke else (0, 8)
+    failure_sites = FAILURE_SITES if not smoke else ("S2_ToolBlocked", "S5_ToolBlocked")
     scale_values = (2, 4, 8, 16) if not smoke else (2, 4)
 
     def add(
@@ -211,8 +203,6 @@ def build_specs(
         failure_site: str,
         repeat_idx: int,
         *,
-        budget: float = 0.5,
-        lag: int = 8,
         num_workflows: int | None = None,
     ) -> None:
         specs.append(
@@ -222,39 +212,28 @@ def build_specs(
                 failure_site=failure_site,
                 repeat_idx=repeat_idx,
                 seed=seed_base + repeat_idx,
-                backup_budget_ratio=float(budget),
-                peer_backup_lag_tokens=int(lag),
+                backup_budget_ratio=1.0,
+                peer_backup_lag_tokens=peer_backup_lag,
                 num_workflows=int(num_workflows or workflow_cfg.num_workflows),
             )
         )
 
     if "strategy" in experiments:
         for repeat_idx in repeat_range:
-            for site in strategy_sites:
-                for strategy in STRATEGIES:
-                    add("strategy", strategy, site, repeat_idx)
+            for strategy in STRATEGIES:
+                add("strategy", strategy, PRIMARY_FAILURE_SITE, repeat_idx)
 
     if "failure_site" in experiments:
         for repeat_idx in repeat_range:
             for site in failure_sites:
-                add("failure_site", "aegiskv_segment", site, repeat_idx)
-
-    if "budget" in experiments:
-        for repeat_idx in repeat_range:
-            for budget in budget_values:
-                for strategy in ("gpu_backup_agent", "aegiskv_segment"):
-                    add("budget", strategy, "F2_ToolBlocked", repeat_idx, budget=budget)
-
-    if "lag" in experiments:
-        for repeat_idx in repeat_range:
-            for lag in lag_values:
-                add("lag", "aegiskv_segment", "F2_ToolBlocked", repeat_idx, lag=lag)
+                for strategy in STRATEGIES:
+                    add("failure_site", strategy, site, repeat_idx)
 
     if "scale" in experiments:
         for repeat_idx in repeat_range:
             for scale in scale_values:
-                for strategy in ("baseline", "aegiskv_segment"):
-                    add("scale", strategy, "F2_ToolBlocked", repeat_idx, num_workflows=scale)
+                for strategy in STRATEGIES:
+                    add("scale", strategy, PRIMARY_FAILURE_SITE, repeat_idx, num_workflows=scale)
 
     return specs
 
@@ -267,28 +246,33 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed-base", type=int, default=100)
     parser.add_argument(
         "--experiments",
-        default="strategy,failure_site,budget,lag,scale",
-        help="Comma-separated subset: strategy,failure_site,budget,lag,scale",
+        default="strategy,failure_site,scale",
+        help="Comma-separated subset: strategy,failure_site,scale",
     )
     parser.add_argument(
         "--mode",
         choices=("online", "model"),
-        default="online",
-        help="online runs SGLSim server/client/fault-injector; model runs the fast policy model.",
+        default="model",
+        help="model runs the offline policy simulator; online runs SGLSim server/client.",
     )
-    parser.add_argument("--max-runs", type=int, default=0, help="Optional cap for staged online smoke runs.")
+    parser.add_argument("--max-runs", type=int, default=0, help="Optional cap for staged smoke runs.")
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
     experiments = [item.strip() for item in args.experiments.split(",") if item.strip()]
     workflow_cfg = _workflow_config(args.config_dir)
+    server_cfg = _read_json(args.config_dir / "server.json")
+    aegiskv_cfg = server_cfg.get("aegiskv", {}) if isinstance(server_cfg.get("aegiskv"), dict) else {}
+    peer_backup_lag = int(aegiskv_cfg.get("peer_backup_lag_tokens", DEFAULT_PEER_BACKUP_LAG))
+
     specs = build_specs(
         experiments=experiments,
         repeats=max(args.repeats, 1),
         seed_base=args.seed_base,
         smoke=args.smoke,
         workflow_cfg=workflow_cfg,
+        peer_backup_lag=peer_backup_lag,
     )
     if args.max_runs > 0:
         specs = specs[: args.max_runs]
@@ -321,6 +305,8 @@ def main(argv: list[str] | None = None) -> int:
     runs: list[dict[str, Any]] = []
     segments: list[dict[str, Any]] = []
     recovery_paths: list[dict[str, Any]] = []
+    workflows: list[dict[str, Any]] = []
+    agent_timelines: list[dict[str, Any]] = []
     manifest: list[dict[str, Any]] = []
     for index, spec in enumerate(specs):
         online_result_dir = ""
@@ -376,6 +362,8 @@ def main(argv: list[str] | None = None) -> int:
         runs.append(result.run)
         segments.extend(result.segments)
         recovery_paths.extend(result.recovery_paths)
+        workflows.extend(result.workflows)
+        agent_timelines.extend(result.agent_timelines)
         manifest.append(
             {
                 "index": index,
@@ -393,6 +381,8 @@ def main(argv: list[str] | None = None) -> int:
     write_rows_csv(output / "runs.csv", runs)
     write_rows_csv(output / "segments.csv", segments)
     write_rows_csv(output / "recovery_paths.csv", recovery_paths)
+    write_rows_csv(output / "workflows.csv", workflows)
+    write_rows_csv(output / "agent_timelines.csv", agent_timelines)
     write_json(
         output / "run_metadata.json",
         {
@@ -401,9 +391,10 @@ def main(argv: list[str] | None = None) -> int:
             "repeats": 1 if args.smoke else args.repeats,
             "smoke": bool(args.smoke),
             "mode": args.mode,
-            "online_semantics": (
-                "SGLSim online server/client/fault-injector execution; "
-                "AegisKV policy metrics are derived from online workflow traces."
+            "strategies": list(STRATEGIES),
+            "semantics": (
+                "Offline policy simulator with per-workflow WCT and agent timelines; "
+                "online mode optionally runs SGLSim but paper metrics come from simulator."
             ),
             "workflow_config": asdict(workflow_cfg),
             "num_runs": len(runs),

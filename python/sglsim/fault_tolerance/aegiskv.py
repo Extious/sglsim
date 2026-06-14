@@ -38,6 +38,13 @@ class BackupAction(str, Enum):
     RESTORE_BEFORE_REPLAY = "RestoreBeforeReplay"
 
 
+CRITICAL_AGENT_IDS: frozenset[str] = frozenset({"O0", "S2", "S5"})
+
+
+def is_critical_agent_id(agent_id: str) -> bool:
+    return agent_id in CRITICAL_AGENT_IDS
+
+
 @dataclass(frozen=True)
 class KVSegment:
     segment_id: str
@@ -50,6 +57,7 @@ class KVSegment:
     lifecycle_state: LifecycleState
     tokens: int
     sink_distance: int
+    output_tokens: int = 64
     fanout_degree: int = 1
     fanin_degree: int = 1
     blocked_duration_ms: int = 0
@@ -62,19 +70,16 @@ class KVSegment:
     def is_backed_up(self) -> bool:
         return self.backup_location == BackupLocation.GPU_REPLICA
 
+    @property
+    def is_critical_agent(self) -> bool:
+        return is_critical_agent_id(self.agent_id)
+
 
 @dataclass(frozen=True)
 class AegisKVPolicyConfig:
-    policy: str = "aegiskv_segment"
+    policy: str = "aegiskv"
     backup_target: str = "GPUReplica"
-    backup_budget_ratio: float = 0.5
     peer_backup_lag_tokens: int = 8
-    critical_roles: tuple[str, ...] = (
-        "test_reproducer",
-        "regression_verifier",
-        "main_diagnosis",
-        "main_final_resume",
-    )
 
 
 TYPE_WEIGHTS: dict[SegmentType, float] = {
@@ -91,6 +96,7 @@ TYPE_WEIGHTS: dict[SegmentType, float] = {
 
 
 def score_segment(segment: KVSegment) -> float:
+    """Diagnostic score only; not used for backup placement in v2 policies."""
     score = TYPE_WEIGHTS[segment.segment_type]
     if segment.lifecycle_state == LifecycleState.TOOL_BLOCKED:
         score += 34.0
@@ -123,28 +129,10 @@ def annotate_scores(segments: Iterable[KVSegment]) -> list[KVSegment]:
     ]
 
 
-def _choose_by_budget(
-    segments: list[KVSegment],
-    *,
-    budget_tokens: int,
-    use_density: bool,
-) -> set[str]:
-    if budget_tokens <= 0:
-        return set()
-
-    def key(segment: KVSegment) -> tuple[float, float, int]:
-        density = segment.criticality_score / max(segment.tokens, 1)
-        primary = density if use_density else segment.criticality_score
-        return (primary, segment.criticality_score, -segment.tokens)
-
-    chosen: set[str] = set()
-    used = 0
-    for segment in sorted(segments, key=key, reverse=True):
-        if used + segment.tokens > budget_tokens:
-            continue
-        chosen.add(segment.segment_id)
-        used += segment.tokens
-    return chosen
+def _eligible_for_backup(segment: KVSegment) -> bool:
+    if segment.lifecycle_state == LifecycleState.COMPLETED:
+        return False
+    return True
 
 
 def apply_backup_policy(
@@ -152,45 +140,22 @@ def apply_backup_policy(
     config: AegisKVPolicyConfig,
 ) -> list[KVSegment]:
     scored = annotate_scores(segments)
-    total_tokens = sum(segment.tokens for segment in scored)
-    budget_tokens = int(max(config.backup_budget_ratio, 0.0) * total_tokens)
     policy = config.policy
 
     if policy in {"baseline", "none"}:
         chosen: set[str] = set()
-    elif policy == "gpu_backup_agent":
-        groups: dict[str, list[KVSegment]] = {}
-        for segment in scored:
-            if segment.role not in set(config.critical_roles):
-                continue
-            if segment.lifecycle_state == LifecycleState.COMPLETED:
-                continue
-            groups.setdefault(segment.agent_id, []).append(segment)
-        group_rows = []
-        for agent_id, items in groups.items():
-            group_rows.append(
-                (
-                    max(item.criticality_score for item in items),
-                    sum(item.tokens for item in items),
-                    agent_id,
-                    items,
-                )
-            )
-        chosen = set()
-        used = 0
-        for _, group_tokens, _, items in sorted(group_rows, reverse=True):
-            if used + group_tokens > budget_tokens:
-                continue
-            used += group_tokens
-            chosen.update(item.segment_id for item in items)
-    elif policy == "aegiskv_segment":
-        eligible = [
-            segment
+    elif policy == "naive_backup":
+        chosen = {
+            segment.segment_id
             for segment in scored
-            if segment.lifecycle_state != LifecycleState.COMPLETED
-            and not (segment.summarized and segment.segment_type == SegmentType.BRANCH_TAIL)
-        ]
-        chosen = _choose_by_budget(eligible, budget_tokens=budget_tokens, use_density=False)
+            if _eligible_for_backup(segment)
+        }
+    elif policy == "aegiskv":
+        chosen = {
+            segment.segment_id
+            for segment in scored
+            if _eligible_for_backup(segment) and segment.is_critical_agent
+        }
     else:
         raise ValueError(f"unknown AegisKV policy: {policy}")
 

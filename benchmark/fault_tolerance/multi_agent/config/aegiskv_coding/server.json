@@ -1,6 +1,6 @@
 {
-  "name": "aegiskv-multi-agent-gpureplica",
-  "description": "Two-round multi-agent coding workflow with AegisKV segment-level GPUReplica protection",
+  "name": "aegiskv-multi-agent-gpureplica-v2",
+  "description": "Two-round multi-agent coding workflow with three-way GPUReplica backup comparison",
   "platform": "a100",
   "kv_backup": "gpu_backup",
   "server": {
@@ -13,16 +13,10 @@
   },
   "aegiskv": {
     "enabled": true,
-    "policy": "aegiskv_segment",
+    "policy": "aegiskv",
     "backup_target": "GPUReplica",
-    "backup_budget_ratio": 0.5,
     "peer_backup_lag_tokens": 8,
     "decode_epoch_tokens": 8,
-    "critical_roles": [
-      "test_reproducer",
-      "regression_verifier",
-      "main_diagnosis",
-      "main_final_resume"
-    ]
+    "critical_agents": ["O0", "S2", "S5"]
   }
 }

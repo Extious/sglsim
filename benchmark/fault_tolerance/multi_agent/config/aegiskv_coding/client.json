@@ -2,8 +2,9 @@
   "client_mode": "aegiskv_workflow",
   "aegiskv_workflow": {
     "num_workflows": 8,
+    "subagents_per_round": 3,
     "workflow_start_stagger_s": 0.25,
-    "tool_blocked_duration_ms": 180000,
+    "tool_blocked_duration_ms": 10000,
     "system_prefix_tokens": 4096,
     "tool_schema_tokens": 1024,
     "task_plan_tokens": 2048,
@@ -13,6 +14,9 @@
     "diagnosis_tokens": 4096,
     "verifier_context_tokens": 5120,
     "final_synthesis_tokens": 4096,
+    "output_tokens_default": 64,
+    "output_tokens_critical": 512,
+    "output_tokens_main": 256,
     "output_tokens_per_invocation": 512
   }
 }
