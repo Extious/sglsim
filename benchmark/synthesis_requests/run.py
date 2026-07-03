@@ -105,6 +105,10 @@ def run_experiment(
         raise KeyboardInterrupt
 
     old_sigint = signal.signal(signal.SIGINT, _sigint_cleanup)
+    server_extra_env: dict[str, str] = {}
+    if client_cfg.gsp_alpha_policy_path:
+        server_extra_env["SGLSIM_AEGIS_ALPHA_POLICY"] = client_cfg.gsp_alpha_policy_path
+
     process = start_server(
         build_server_command(
             server=server_cfg,
@@ -114,6 +118,7 @@ def run_experiment(
         ),
         run_server_log_path,
         stderr_path=run_server_stderr_log_path,
+        extra_env=server_extra_env,
     )
     process_holder[0] = process
     try:

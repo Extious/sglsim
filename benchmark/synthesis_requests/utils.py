@@ -41,13 +41,34 @@ class ClientConfig:
     gsp_send_routing_key: bool
     gsp_num_turns: int
     gsp_ordered: bool
+    gsp_workflow_shape: tuple[int, ...] = ()
+    gsp_stage_long_decode_agent_index: int = 0
+    gsp_long_decode_output_multiplier: float = 4.0
     num_prompts: int | None = None
     gsp_critical_agent_ids: tuple[str, ...] = ()
     gsp_critical_agent_ratio: float = 0.0
+    gsp_failover_replay: bool = False
+    gsp_failover_replay_critical_only: bool = True
+    gsp_failover_injection: str = "soft"
+    gsp_failover_retry_rank_offset: int = 1
+    gsp_failover_retry_policy: str = ""
+    gsp_aegis_policy: str = ""
+    gsp_aegis_ablation: str = ""
+    gsp_aegis_gpu_budget_fraction: float | None = None
+    gsp_aegis_critical_pressure: float | None = None
+    gsp_alpha_policy_path: str = ""
+    gsp_failure_rate_per_window: float | None = None
+    gsp_failure_after_output_tokens: int | None = None
+    gsp_backup_kv: bool | None = None
 
     @property
     def num_requests(self) -> int:
-        total = self.gsp_num_groups * self.gsp_prompts_per_group
+        agents_per_group = (
+            sum(self.gsp_workflow_shape)
+            if self.gsp_workflow_shape
+            else self.gsp_prompts_per_group
+        )
+        total = self.gsp_num_groups * agents_per_group
         if self.num_prompts is None:
             return total
         return min(self.num_prompts, total)
@@ -76,6 +97,12 @@ class WorkloadRequest:
     input_ids: list[int] | None = None
     agent_id: str = ""
     critical_agent: bool = False
+    workflow_id: str = ""
+    stage_id: int = -1
+    stage_width: int = 1
+    stage_local_agent_index: int = 0
+    decode_dominant: bool = False
+    workflow_shape: str = ""
 
     @property
     def first_turn_prompt(self) -> str:
@@ -106,11 +133,56 @@ class RequestDetailRow:
     cache_hit_tokens: int
     load_back_tokens: int
     prefetch_complete_tokens: int
+    workflow_id: str
+    stage_id: int
+    stage_width: int
+    stage_local_agent_index: int
+    decode_dominant: bool
     agent_id: str
     critical_agent: bool
     e2e_latency_s: float
     ttft_ms: float
     mean_tbt_ms: float
+    aegis_policy: str = ""
+    aegis_ablation: str = ""
+    aegis_gpu_budget_fraction: float = -1.0
+    aegis_failure_rate_per_window: float = -1.0
+    aegis_alpha_policy_source: str = ""
+    aegis_critical_pressure: float = -1.0
+    aegis_backup_kv: bool = False
+    aegis_worker_seq: int = 0
+    aegis_assigned_dp_rank: int = -1
+    aegis_host_visible_tokens: int = 0
+    aegis_gpu_replica_tokens: int = 0
+    aegis_safe_frontier_tokens: int = 0
+    aegis_recompute_tokens: int = 0
+    aegis_recovery_action: str = "none"
+    aegis_expected_recovery_ms: float = 0.0
+    aegis_candidate_retry: bool = False
+    aegis_candidate_failed_dp_rank: int = -1
+    aegis_candidate_pre_failure_output_tokens: int = 0
+    aegis_candidate_pre_failure_total_tokens: int = 0
+    aegis_candidate_backed_up_tokens: int = 0
+    aegis_candidate_recompute_tokens: int = 0
+    aegis_candidate_recovery_action: str = "none"
+    aegis_candidate_failover_overhead_s: float = 0.0
+    aegis_failover_replay: bool = False
+    aegis_failed_source_dp_rank: int = -1
+    aegis_replay_restored_tokens: int = 0
+    aegis_replay_restored_prefill_tokens: int = 0
+    aegis_replay_recompute_tokens: int = 0
+    aegis_replay_restore_action: str = "none"
+    aegis_replay_restore_overhead_s: float = 0.0
+    aegis_replay_restore_sleep_s: float = 0.0
+    aegis_replay_restore_data_plane: str = "none"
+    aegis_replay_restore_timing_source: str = "default_coefficients"
+    aegis_cross_rank_retry: bool = False
+    aegis_soft_failure_injected: bool = False
+    aegis_hard_failure_injected: bool = False
+    aegis_host_backup_lookup_hit: bool = False
+    aegis_host_backup_lookup_tokens: int = 0
+    aegis_peer_gpu_lookup_hit: bool = False
+    aegis_peer_gpu_lookup_tokens: int = 0
 
 
 def setup_file_logger(name: str, log_path: Path, log_level: str = "info") -> logging.Logger:
@@ -162,6 +234,15 @@ def load_client_config(path: Path) -> ClientConfig:
     raw = json.loads(path.read_text(encoding="utf-8"))
     request_rate = parse_request_rate(raw.get("request_rate", float("inf")))
     require_request_rate_inf(request_rate)
+    workflow_shape_raw = raw.get("gsp_workflow_shape", ())
+    if isinstance(workflow_shape_raw, str):
+        workflow_shape = tuple(
+            int(part)
+            for part in workflow_shape_raw.replace("-", ",").split(",")
+            if part.strip()
+        )
+    else:
+        workflow_shape = tuple(int(x) for x in (workflow_shape_raw or ()))
     return ClientConfig(
         dataset_name=str(raw.get("dataset_name", "generated-shared-prefix")),
         seed=int(raw.get("seed", 1)),
@@ -179,6 +260,13 @@ def load_client_config(path: Path) -> ClientConfig:
         gsp_send_routing_key=bool(raw.get("gsp_send_routing_key", False)),
         gsp_num_turns=int(raw.get("gsp_num_turns", 1)),
         gsp_ordered=bool(raw.get("gsp_ordered", False)),
+        gsp_workflow_shape=workflow_shape,
+        gsp_stage_long_decode_agent_index=int(
+            raw.get("gsp_stage_long_decode_agent_index", 0)
+        ),
+        gsp_long_decode_output_multiplier=float(
+            raw.get("gsp_long_decode_output_multiplier", 4.0)
+        ),
         num_prompts=(
             int(raw["num_prompts"]) if raw.get("num_prompts") is not None else None
         ),
@@ -186,6 +274,41 @@ def load_client_config(path: Path) -> ClientConfig:
             str(x) for x in raw.get("gsp_critical_agent_ids", [])
         ),
         gsp_critical_agent_ratio=float(raw.get("gsp_critical_agent_ratio", 0.0)),
+        gsp_failover_replay=bool(raw.get("gsp_failover_replay", False)),
+        gsp_failover_replay_critical_only=bool(
+            raw.get("gsp_failover_replay_critical_only", True)
+        ),
+        gsp_failover_injection=str(raw.get("gsp_failover_injection", "soft")),
+        gsp_failover_retry_rank_offset=int(
+            raw.get("gsp_failover_retry_rank_offset", 1)
+        ),
+        gsp_failover_retry_policy=str(raw.get("gsp_failover_retry_policy", "")),
+        gsp_aegis_policy=str(raw.get("gsp_aegis_policy", "")),
+        gsp_aegis_ablation=str(raw.get("gsp_aegis_ablation", "")),
+        gsp_aegis_gpu_budget_fraction=(
+            float(raw["gsp_aegis_gpu_budget_fraction"])
+            if "gsp_aegis_gpu_budget_fraction" in raw
+            else None
+        ),
+        gsp_aegis_critical_pressure=(
+            float(raw["gsp_aegis_critical_pressure"])
+            if "gsp_aegis_critical_pressure" in raw
+            else None
+        ),
+        gsp_alpha_policy_path=str(raw.get("gsp_alpha_policy_path", "")),
+        gsp_failure_rate_per_window=(
+            float(raw["gsp_failure_rate_per_window"])
+            if "gsp_failure_rate_per_window" in raw
+            else None
+        ),
+        gsp_failure_after_output_tokens=(
+            int(raw["gsp_failure_after_output_tokens"])
+            if "gsp_failure_after_output_tokens" in raw
+            else None
+        ),
+        gsp_backup_kv=(
+            bool(raw["gsp_backup_kv"]) if "gsp_backup_kv" in raw else None
+        ),
     )
 
 
@@ -379,6 +502,9 @@ def generate_shared_prefix_workload(
     np.random.seed(client.seed)
 
     tokenizer = None if mock else get_tokenizer(model_path)
+    staged_shape = tuple(int(x) for x in client.gsp_workflow_shape if int(x) > 0)
+    agents_per_group = sum(staged_shape) if staged_shape else client.gsp_prompts_per_group
+    workflow_shape_label = "-".join(str(x) for x in staged_shape)
 
     system_prompt_lens = compute_random_lens(
         client.gsp_system_prompt_len, client.gsp_range_ratio, client.gsp_num_groups
@@ -388,17 +514,17 @@ def generate_shared_prefix_workload(
             client.gsp_question_len,
             client.gsp_range_ratio,
             client.gsp_num_groups
-            * client.gsp_prompts_per_group
+            * agents_per_group
             * client.gsp_num_turns,
         )
-    ).reshape(client.gsp_num_groups, client.gsp_prompts_per_group, client.gsp_num_turns)
+    ).reshape(client.gsp_num_groups, agents_per_group, client.gsp_num_turns)
     output_lens = np.array(
         compute_random_lens(
             client.gsp_output_len,
             client.gsp_range_ratio,
-            client.gsp_num_groups * client.gsp_prompts_per_group,
+            client.gsp_num_groups * agents_per_group,
         )
-    ).reshape(client.gsp_num_groups, client.gsp_prompts_per_group)
+    ).reshape(client.gsp_num_groups, agents_per_group)
 
     system_prompts: list[str] = []
     if not client.gsp_fast_prepare:
@@ -414,7 +540,7 @@ def generate_shared_prefix_workload(
             ]
 
     questions: list[list[list[str]]] = [
-        [[""] * client.gsp_num_turns for _ in range(client.gsp_prompts_per_group)]
+        [[""] * client.gsp_num_turns for _ in range(agents_per_group)]
         for _ in range(client.gsp_num_groups)
     ]
     with tqdm_logging(logger):
@@ -424,7 +550,7 @@ def generate_shared_prefix_workload(
             desc="Generating questions",
             logger=logger,
         ):
-            for prompt_idx in range(client.gsp_prompts_per_group):
+            for prompt_idx in range(agents_per_group):
                 for turn_idx in range(client.gsp_num_turns):
                     questions[group_idx][prompt_idx][turn_idx] = gen_prompt(
                         tokenizer,
@@ -435,7 +561,24 @@ def generate_shared_prefix_workload(
     run_random_str = uuid.uuid4().hex[:8]
     run_start_timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-    draft_rows: list[tuple[int, int, str | list[str], int, int, str | None]] = []
+    draft_rows: list[
+        tuple[
+            int,
+            int,
+            str | list[str],
+            int,
+            int,
+            str | None,
+            str,
+            str,
+            int,
+            int,
+            int,
+            bool,
+            bool,
+            str,
+        ]
+    ] = []
     rid_counter = 0
     for group_idx in range(client.gsp_num_groups):
         routing_key = (
@@ -444,21 +587,59 @@ def generate_shared_prefix_workload(
             else None
         )
         system_prompt = system_prompts[group_idx] if system_prompts else ""
-        for prompt_idx in range(client.gsp_prompts_per_group):
+        workflow_id = f"wf-{group_idx}"
+        staged_slots: list[tuple[int, int, int]] = []
+        if staged_shape:
+            for stage_idx, stage_width in enumerate(staged_shape):
+                for stage_local_idx in range(stage_width):
+                    staged_slots.append((stage_idx, stage_width, stage_local_idx))
+        else:
+            staged_slots = [
+                (0, client.gsp_prompts_per_group, prompt_idx)
+                for prompt_idx in range(client.gsp_prompts_per_group)
+            ]
+        for prompt_idx, (stage_idx, stage_width, stage_local_idx) in enumerate(staged_slots):
             rid_counter += 1
             turn_questions = questions[group_idx][prompt_idx]
             turn_prompts = [f"{system_prompt}\n\n{turn_questions[0]}"] + turn_questions[1:]
             full_prompt = (
                 turn_prompts[0] if client.gsp_num_turns == 1 else turn_prompts
             )
+            decode_dominant = bool(
+                staged_shape
+                and stage_width > 1
+                and stage_local_idx == client.gsp_stage_long_decode_agent_index
+            )
+            output_len = int(output_lens[group_idx, prompt_idx])
+            if decode_dominant:
+                output_len = max(
+                    output_len + 1,
+                    int(round(output_len * client.gsp_long_decode_output_multiplier)),
+                )
+            stage_critical = bool(
+                staged_shape and (stage_width == 1 or decode_dominant)
+            )
+            agent_id = (
+                f"{workflow_id}-s{stage_idx}-a{stage_local_idx}"
+                if staged_shape
+                else str(rid_counter)
+            )
             draft_rows.append(
                 (
                     rid_counter,
                     group_idx,
                     full_prompt,
-                    int(output_lens[group_idx, prompt_idx]),
+                    output_len,
                     1 if client.gsp_fast_prepare else -1,
                     routing_key,
+                    workflow_id,
+                    agent_id,
+                    stage_idx,
+                    stage_width,
+                    stage_local_idx,
+                    decode_dominant,
+                    stage_critical,
+                    workflow_shape_label,
                 )
             )
 
@@ -471,43 +652,85 @@ def generate_shared_prefix_workload(
 
     requests: list[WorkloadRequest] = []
     if client.gsp_fast_prepare:
-        for rid, group_id, full_prompt, output_len, _, routing_key in draft_rows:
-            agent_id = str(rid)
+        for (
+            rid,
+            group_id,
+            full_prompt,
+            output_len,
+            _,
+            routing_key,
+            workflow_id,
+            agent_id,
+            stage_id,
+            stage_width,
+            stage_local_agent_index,
+            decode_dominant,
+            stage_critical,
+            row_workflow_shape,
+        ) in draft_rows:
+            rid_id = str(rid)
             requests.append(
                 WorkloadRequest(
-                    rid=agent_id,
+                    rid=rid_id,
                     prompt=full_prompt,
                     prompt_len=1,
                     output_len=output_len,
                     group_id=group_id,
                     routing_key=routing_key,
                     agent_id=agent_id,
-                    critical_agent=agent_id in critical_ids,
+                    critical_agent=stage_critical or rid_id in critical_ids or agent_id in critical_ids,
+                    workflow_id=workflow_id,
+                    stage_id=stage_id,
+                    stage_width=stage_width,
+                    stage_local_agent_index=stage_local_agent_index,
+                    decode_dominant=decode_dominant,
+                    workflow_shape=row_workflow_shape,
                 )
             )
     else:
         with tqdm_logging(logger):
-            for rid, group_id, full_prompt, output_len, _, routing_key in iter_with_progress(
+            for (
+                rid,
+                group_id,
+                full_prompt,
+                output_len,
+                _,
+                routing_key,
+                workflow_id,
+                agent_id,
+                stage_id,
+                stage_width,
+                stage_local_agent_index,
+                decode_dominant,
+                stage_critical,
+                row_workflow_shape,
+            ) in iter_with_progress(
                 draft_rows,
                 total=len(draft_rows),
                 desc="Computing prompt lengths",
                 logger=logger,
             ):
-                agent_id = str(rid)
+                rid_id = str(rid)
                 first_turn = (
                     full_prompt if isinstance(full_prompt, str) else full_prompt[0]
                 )
                 prompt_len = _encode_prompt_len(tokenizer, first_turn, mock=mock)
                 requests.append(
                     WorkloadRequest(
-                        rid=agent_id,
+                        rid=rid_id,
                         prompt=full_prompt,
                         prompt_len=prompt_len,
                         output_len=output_len,
                         group_id=group_id,
                         routing_key=routing_key,
                         agent_id=agent_id,
-                        critical_agent=agent_id in critical_ids,
+                        critical_agent=stage_critical or rid_id in critical_ids or agent_id in critical_ids,
+                        workflow_id=workflow_id,
+                        stage_id=stage_id,
+                        stage_width=stage_width,
+                        stage_local_agent_index=stage_local_agent_index,
+                        decode_dominant=decode_dominant,
+                        workflow_shape=row_workflow_shape,
                     )
                 )
 
@@ -570,11 +793,111 @@ def sim_stats_to_detail_row(
         cache_hit_tokens=int(sim_stats.get("cache_hit_tokens", 0)),
         load_back_tokens=int(sim_stats.get("load_back_tokens", 0)),
         prefetch_complete_tokens=int(sim_stats.get("prefetch_complete_tokens", 0)),
+        workflow_id=str(sim_stats.get("workflow_id", "")),
+        stage_id=int(sim_stats.get("stage_id", -1)),
+        stage_width=int(sim_stats.get("stage_width", 1)),
+        stage_local_agent_index=int(
+            sim_stats.get("stage_local_agent_index", 0)
+        ),
+        decode_dominant=bool(sim_stats.get("decode_dominant", False)),
         agent_id=str(sim_stats.get("agent_id", "")),
         critical_agent=bool(sim_stats.get("critical_agent", False)),
         e2e_latency_s=e2e_latency_s,
         ttft_ms=ttft_ms,
         mean_tbt_ms=mean_tbt_ms,
+        aegis_policy=str(sim_stats.get("aegis_policy", "")),
+        aegis_ablation=str(sim_stats.get("aegis_ablation", "")),
+        aegis_gpu_budget_fraction=float(
+            sim_stats.get("aegis_gpu_budget_fraction", -1.0)
+        ),
+        aegis_failure_rate_per_window=float(
+            sim_stats.get("aegis_failure_rate_per_window", -1.0)
+        ),
+        aegis_alpha_policy_source=str(sim_stats.get("aegis_alpha_policy_source", "")),
+        aegis_critical_pressure=float(sim_stats.get("aegis_critical_pressure", -1.0)),
+        aegis_backup_kv=bool(sim_stats.get("aegis_backup_kv", False)),
+        aegis_worker_seq=int(sim_stats.get("aegis_worker_seq", 0)),
+        aegis_assigned_dp_rank=int(sim_stats.get("aegis_assigned_dp_rank", -1)),
+        aegis_host_visible_tokens=int(sim_stats.get("aegis_host_visible_tokens", 0)),
+        aegis_gpu_replica_tokens=int(sim_stats.get("aegis_gpu_replica_tokens", 0)),
+        aegis_safe_frontier_tokens=int(sim_stats.get("aegis_safe_frontier_tokens", 0)),
+        aegis_recompute_tokens=int(sim_stats.get("aegis_recompute_tokens", 0)),
+        aegis_recovery_action=str(sim_stats.get("aegis_recovery_action", "none")),
+        aegis_expected_recovery_ms=float(
+            sim_stats.get("aegis_expected_recovery_ms", 0.0)
+        ),
+        aegis_candidate_retry=bool(sim_stats.get("aegis_candidate_retry", False)),
+        aegis_candidate_failed_dp_rank=int(
+            sim_stats.get("aegis_candidate_failed_dp_rank", -1)
+        ),
+        aegis_candidate_pre_failure_output_tokens=int(
+            sim_stats.get("aegis_candidate_pre_failure_output_tokens", 0)
+        ),
+        aegis_candidate_pre_failure_total_tokens=int(
+            sim_stats.get("aegis_candidate_pre_failure_total_tokens", 0)
+        ),
+        aegis_candidate_backed_up_tokens=int(
+            sim_stats.get("aegis_candidate_backed_up_tokens", 0)
+        ),
+        aegis_candidate_recompute_tokens=int(
+            sim_stats.get("aegis_candidate_recompute_tokens", 0)
+        ),
+        aegis_candidate_recovery_action=str(
+            sim_stats.get("aegis_candidate_recovery_action", "none")
+        ),
+        aegis_candidate_failover_overhead_s=float(
+            sim_stats.get("aegis_candidate_failover_overhead_s", 0.0)
+        ),
+        aegis_failover_replay=bool(sim_stats.get("aegis_failover_replay", False)),
+        aegis_failed_source_dp_rank=int(
+            sim_stats.get("aegis_failed_source_dp_rank", -1)
+        ),
+        aegis_replay_restored_tokens=int(
+            sim_stats.get("aegis_replay_restored_tokens", 0)
+        ),
+        aegis_replay_restored_prefill_tokens=int(
+            sim_stats.get("aegis_replay_restored_prefill_tokens", 0)
+        ),
+        aegis_replay_recompute_tokens=int(
+            sim_stats.get("aegis_replay_recompute_tokens", 0)
+        ),
+        aegis_replay_restore_action=str(
+            sim_stats.get("aegis_replay_restore_action", "none")
+        ),
+        aegis_replay_restore_overhead_s=float(
+            sim_stats.get("aegis_replay_restore_overhead_s", 0.0)
+        ),
+        aegis_replay_restore_sleep_s=float(
+            sim_stats.get("aegis_replay_restore_sleep_s", 0.0)
+        ),
+        aegis_replay_restore_data_plane=str(
+            sim_stats.get("aegis_replay_restore_data_plane", "none")
+        ),
+        aegis_replay_restore_timing_source=str(
+            sim_stats.get(
+                "aegis_replay_restore_timing_source",
+                "default_coefficients",
+            )
+        ),
+        aegis_cross_rank_retry=bool(sim_stats.get("aegis_cross_rank_retry", False)),
+        aegis_soft_failure_injected=bool(
+            sim_stats.get("aegis_soft_failure_injected", False)
+        ),
+        aegis_hard_failure_injected=bool(
+            sim_stats.get("aegis_hard_failure_injected", False)
+        ),
+        aegis_host_backup_lookup_hit=bool(
+            sim_stats.get("aegis_host_backup_lookup_hit", False)
+        ),
+        aegis_host_backup_lookup_tokens=int(
+            sim_stats.get("aegis_host_backup_lookup_tokens", 0)
+        ),
+        aegis_peer_gpu_lookup_hit=bool(
+            sim_stats.get("aegis_peer_gpu_lookup_hit", False)
+        ),
+        aegis_peer_gpu_lookup_tokens=int(
+            sim_stats.get("aegis_peer_gpu_lookup_tokens", 0)
+        ),
     )
 
 
@@ -583,6 +906,21 @@ def write_metrics_json(run_dir: Path, rows: list[RequestDetailRow]) -> Path:
     import statistics
 
     completed = [r for r in rows if r.status == "completed"]
+    candidate_retries = [r for r in completed if r.aegis_candidate_retry]
+    failover_replays = [r for r in completed if r.aegis_failover_replay]
+    cross_rank_replays = [r for r in failover_replays if r.aegis_cross_rank_retry]
+    soft_failure_injected = [
+        r for r in failover_replays if r.aegis_soft_failure_injected
+    ]
+    hard_failure_injected = [
+        r for r in failover_replays if r.aegis_hard_failure_injected
+    ]
+    host_backup_lookup_hits = [
+        r for r in failover_replays if r.aegis_host_backup_lookup_hit
+    ]
+    peer_gpu_lookup_hits = [
+        r for r in failover_replays if r.aegis_peer_gpu_lookup_hit
+    ]
     e2e = [r.e2e_latency_s for r in completed if r.e2e_latency_s > 0]
     created = [r.created_time_s for r in completed if r.created_time_s >= 0]
     finish = [r.finish_time_s for r in completed if r.finish_time_s > 0]
@@ -605,6 +943,48 @@ def write_metrics_json(run_dir: Path, rows: list[RequestDetailRow]) -> Path:
         "median_e2e_latency_ms": statistics.median(e2e) * 1000.0 if e2e else 0.0,
         "p90_e2e_latency_ms": pct(0.9),
         "max_e2e_latency_ms": max(e2e) * 1000.0 if e2e else 0.0,
+        "aegis_candidate_retries": len(candidate_retries),
+        "aegis_candidate_total_backed_up_tokens": sum(
+            r.aegis_candidate_backed_up_tokens for r in candidate_retries
+        ),
+        "aegis_candidate_total_recompute_tokens": sum(
+            r.aegis_candidate_recompute_tokens for r in candidate_retries
+        ),
+        "aegis_candidate_mean_failover_overhead_ms": (
+            statistics.mean(
+                r.aegis_candidate_failover_overhead_s for r in candidate_retries
+            )
+            * 1000.0
+            if candidate_retries
+            else 0.0
+        ),
+        "aegis_failover_replays": len(failover_replays),
+        "aegis_cross_rank_replays": len(cross_rank_replays),
+        "aegis_soft_failure_injected_replays": len(soft_failure_injected),
+        "aegis_hard_failure_injected_replays": len(hard_failure_injected),
+        "aegis_host_backup_lookup_hit_replays": len(host_backup_lookup_hits),
+        "aegis_host_backup_lookup_tokens": sum(
+            r.aegis_host_backup_lookup_tokens for r in failover_replays
+        ),
+        "aegis_peer_gpu_lookup_hit_replays": len(peer_gpu_lookup_hits),
+        "aegis_peer_gpu_lookup_tokens": sum(
+            r.aegis_peer_gpu_lookup_tokens for r in failover_replays
+        ),
+        "aegis_replay_total_restored_tokens": sum(
+            r.aegis_replay_restored_tokens for r in failover_replays
+        ),
+        "aegis_replay_total_restored_prefill_tokens": sum(
+            r.aegis_replay_restored_prefill_tokens for r in failover_replays
+        ),
+        "aegis_replay_total_recompute_tokens": sum(
+            r.aegis_replay_recompute_tokens for r in failover_replays
+        ),
+        "aegis_replay_mean_restore_sleep_ms": (
+            statistics.mean(r.aegis_replay_restore_sleep_s for r in failover_replays)
+            * 1000.0
+            if failover_replays
+            else 0.0
+        ),
         "backend": "sglsim",
     }
     path = run_dir / "metrics.json"
@@ -635,8 +1015,53 @@ def write_request_details_csv(run_dir: Path, rows: list[RequestDetailRow]) -> Pa
         "cache_hit_tokens",
         "load_back_tokens",
         "prefetch_complete_tokens",
+        "workflow_id",
+        "stage_id",
+        "stage_width",
+        "stage_local_agent_index",
+        "decode_dominant",
         "agent_id",
         "critical_agent",
+        "aegis_policy",
+        "aegis_ablation",
+        "aegis_gpu_budget_fraction",
+        "aegis_failure_rate_per_window",
+        "aegis_alpha_policy_source",
+        "aegis_critical_pressure",
+        "aegis_backup_kv",
+        "aegis_worker_seq",
+        "aegis_assigned_dp_rank",
+        "aegis_host_visible_tokens",
+        "aegis_gpu_replica_tokens",
+        "aegis_safe_frontier_tokens",
+        "aegis_recompute_tokens",
+        "aegis_recovery_action",
+        "aegis_expected_recovery_ms",
+        "aegis_candidate_retry",
+        "aegis_candidate_failed_dp_rank",
+        "aegis_candidate_pre_failure_output_tokens",
+        "aegis_candidate_pre_failure_total_tokens",
+        "aegis_candidate_backed_up_tokens",
+        "aegis_candidate_recompute_tokens",
+        "aegis_candidate_recovery_action",
+        "aegis_candidate_failover_overhead_s",
+        "aegis_failover_replay",
+        "aegis_failed_source_dp_rank",
+        "aegis_replay_restored_tokens",
+        "aegis_replay_restored_prefill_tokens",
+        "aegis_replay_recompute_tokens",
+        "aegis_replay_restore_action",
+        "aegis_replay_restore_overhead_s",
+        "aegis_replay_restore_sleep_s",
+        "aegis_replay_restore_data_plane",
+        "aegis_replay_restore_timing_source",
+        "aegis_cross_rank_retry",
+        "aegis_soft_failure_injected",
+        "aegis_hard_failure_injected",
+        "aegis_host_backup_lookup_hit",
+        "aegis_host_backup_lookup_tokens",
+        "aegis_peer_gpu_lookup_hit",
+        "aegis_peer_gpu_lookup_tokens",
         "e2e_latency_s",
         "ttft_ms",
         "mean_tbt_ms",

@@ -1,0 +1,350 @@
+[
+  {
+    "figure": "Fig. 1",
+    "stem": "fig_motivation_equal_size_loss",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLang/SGLSim failure injection",
+    "claim": "Equal-size KV loss has non-uniform WCT impact.",
+    "evidence_status": "trace-derived-preliminary",
+    "outputs": {
+      "png": "png/fig_motivation_equal_size_loss.png"
+    },
+    "template_data": "data/template/fig_motivation_equal_size_loss.csv",
+    "measured_data": "data/measured/fig_motivation_equal_size_loss.csv",
+    "evidence_tier": "sglsim-trace-derived-stagebarrier"
+  },
+  {
+    "figure": "Fig. 1b",
+    "stem": "fig_critical_backup_priority",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim staged 1-3-1-3-1 backup sweep",
+    "claim": "Critical-agent KV should be protected before non-critical KV.",
+    "evidence_status": "trace-derived-preliminary",
+    "outputs": {
+      "png": "png/fig_critical_backup_priority.png"
+    },
+    "template_data": "data/template/fig_critical_backup_priority.csv",
+    "measured_data": "data/measured/fig_critical_backup_priority.csv",
+    "evidence_tier": "sglsim-trace-derived"
+  },
+  {
+    "figure": "Fig. 1c",
+    "stem": "fig_critical_agent_profile",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim staged 1-3-1-3-1 stage-barrier trace",
+    "claim": "Long-decode fan-out agent is the Critical stage bottleneck.",
+    "evidence_status": "trace-derived-preliminary",
+    "outputs": {
+      "png": "png/fig_critical_agent_profile.png"
+    },
+    "template_data": "data/template/fig_critical_agent_profile.csv",
+    "measured_data": "data/measured/fig_critical_agent_profile.csv",
+    "evidence_tier": "sglsim-trace-derived-stagebarrier"
+  },
+  {
+    "figure": "Fig. 2",
+    "stem": "fig_restore_recompute_boundary",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim runtime replay calibrated",
+    "claim": "Restore/recompute lower envelope.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_restore_recompute_boundary.png"
+    },
+    "template_data": "data/template/fig_restore_recompute_boundary.csv",
+    "measured_data": "data/measured/fig_restore_recompute_boundary.csv",
+    "evidence_tier": "sglsim-runtime-replay-calibrated"
+  },
+  {
+    "figure": "Fig. 3",
+    "stem": "fig_static_gpu_replica_budget_gap",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim runtime replay calibrated",
+    "claim": "Static GPUReplica budget is regime-dependent.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_static_gpu_replica_budget_gap.png"
+    },
+    "template_data": "data/template/fig_static_gpu_replica_budget_gap.csv",
+    "measured_data": "data/measured/fig_static_gpu_replica_budget_gap.csv",
+    "evidence_tier": "sglsim-agentic-online-budget-sweep"
+  },
+  {
+    "figure": "Fig. 3b",
+    "stem": "fig_alpha_workload_failure_policy",
+    "kind": "result_template",
+    "source_needed_for_final": "offline MDP/policy sweep over staged workflow states",
+    "claim": "Backup ratio alpha responds to workload pressure and failure risk.",
+    "evidence_status": "model-based-preliminary",
+    "outputs": {
+      "png": "png/fig_alpha_workload_failure_policy.png"
+    },
+    "template_data": "data/template/fig_alpha_workload_failure_policy.csv",
+    "measured_data": "data/measured/fig_alpha_workload_failure_policy.csv",
+    "evidence_tier": "sglsim-model-policy-table"
+  },
+  {
+    "figure": "Fig. 3c",
+    "stem": "fig_online_alpha_adaptation",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim staged online adaptive-alpha sweep",
+    "claim": "Online controller adapts alpha to workload pressure and failure risk.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_online_alpha_adaptation.png"
+    },
+    "template_data": "data/template/fig_online_alpha_adaptation.csv",
+    "measured_data": "data/measured/fig_online_alpha_adaptation.csv",
+    "evidence_tier": "sglsim-agentic-online-alpha-sweep"
+  },
+  {
+    "figure": "Fig. 3d",
+    "stem": "fig_staged_alpha_risk_tradeoff",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim staged 1-3-1-3-1 alpha-risk counterfactual",
+    "claim": "Risk-adjusted alpha optimum shifts with failure rate on the staged workflow.",
+    "evidence_status": "trace-derived-preliminary",
+    "outputs": {
+      "png": "png/fig_staged_alpha_risk_tradeoff.png"
+    },
+    "template_data": "data/template/fig_staged_alpha_risk_tradeoff.csv",
+    "measured_data": "data/measured/fig_staged_alpha_risk_tradeoff.csv",
+    "evidence_tier": "sglsim-trace-derived"
+  },
+  {
+    "figure": "Fig. 4",
+    "stem": "fig_system_overview",
+    "kind": "mechanism_diagram",
+    "source_needed_for_final": "generated bitmap + prompt",
+    "claim": "AegisKV integrates with SGLang KV lifecycle.",
+    "evidence_status": "design-ready",
+    "outputs": {
+      "png": "png/fig_system_overview_generated_v2_tight.png",
+      "generated_prompt": "src/fig_system_overview_generated_v2.prompt.md"
+    }
+  },
+  {
+    "figure": "Fig. 8",
+    "stem": "fig_overall_wct",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim runtime replay mixed",
+    "claim": "Total WCT and failure-exposed recovery cost.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_overall_wct.png"
+    },
+    "template_data": "data/template/fig_overall_wct.csv",
+    "measured_data": "data/measured/fig_overall_wct.csv",
+    "evidence_tier": "sglsim-agentic-online-policy-sweep"
+  },
+  {
+    "figure": "Fig. 9",
+    "stem": "fig_recovery_latency",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLang small + SGLSim large",
+    "claim": "Retry and critical-agent latency.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_recovery_latency.png"
+    },
+    "template_data": "data/template/fig_recovery_latency.csv",
+    "measured_data": "data/measured/fig_recovery_latency.csv",
+    "evidence_tier": "sglsim-agentic-online-recovery-latency-sweep"
+  },
+  {
+    "figure": "Fig. 10",
+    "stem": "fig_recovery_path_breakdown",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim policy matrix",
+    "claim": "Recovery path mix.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_recovery_path_breakdown.png"
+    },
+    "template_data": "data/template/fig_recovery_path_breakdown.csv",
+    "measured_data": "data/measured/fig_recovery_path_breakdown.csv",
+    "evidence_tier": "sglsim-agentic-online-preliminary,sglsim-runtime-replay-calibrated"
+  },
+  {
+    "figure": "Fig. 10b",
+    "stem": "fig_shared_prefix_marginal",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim shared-prefix sweep",
+    "claim": "Marginal SafeCover reduces duplicate backup.",
+    "evidence_status": "final-measured",
+    "outputs": {
+      "png": "png/fig_shared_prefix_marginal.png"
+    },
+    "template_data": "data/template/fig_shared_prefix_marginal.csv",
+    "measured_data": "data/measured/fig_shared_prefix_marginal.csv",
+    "evidence_tier": "final"
+  },
+  {
+    "figure": "Fig. 11",
+    "stem": "fig_normal_path_overhead",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLang no-failure overhead",
+    "claim": "Normal-path overhead is bounded.",
+    "evidence_status": "model-based-preliminary",
+    "outputs": {
+      "png": "png/fig_normal_path_overhead.png"
+    },
+    "template_data": "data/template/fig_normal_path_overhead.csv",
+    "measured_data": "data/measured/fig_normal_path_overhead.csv",
+    "evidence_tier": "sglang-small-paired,sglsim-agentic-online-preliminary,sglsim-synthesis-derived"
+  },
+  {
+    "figure": "Fig. 11b",
+    "stem": "fig_hostbackup_visibility",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLang Host visible/invisible pair",
+    "claim": "Visibility adds recovery without changing fixed D2H.",
+    "evidence_status": "mixed-preliminary",
+    "outputs": {
+      "png": "png/fig_hostbackup_visibility.png"
+    },
+    "template_data": "data/template/fig_hostbackup_visibility.csv",
+    "measured_data": "data/measured/fig_hostbackup_visibility.csv",
+    "evidence_tier": "mixed-preliminary,sglang-small-paired-smoke"
+  },
+  {
+    "figure": "Fig. 12",
+    "stem": "fig_ablation",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim runtime replay calibrated",
+    "claim": "Policy signals matter.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_ablation.png"
+    },
+    "template_data": "data/template/fig_ablation.csv",
+    "measured_data": "data/measured/fig_ablation.csv",
+    "evidence_tier": "sglsim-agentic-online-ablation-sweep"
+  },
+  {
+    "figure": "Fig. 13",
+    "stem": "fig_budget_sensitivity",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim replay regime budget sweep",
+    "claim": "Budget optimum shifts.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_budget_sensitivity.png"
+    },
+    "template_data": "data/template/fig_budget_sensitivity.csv",
+    "measured_data": "data/measured/fig_budget_sensitivity.csv",
+    "evidence_tier": "sglsim-agentic-online-budget-timing-sweep"
+  },
+  {
+    "figure": "Fig. 14",
+    "stem": "fig_dp_scale",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim direct DP sweep",
+    "claim": "Peer availability improves then saturates.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_dp_scale.png"
+    },
+    "template_data": "data/template/fig_dp_scale.csv",
+    "measured_data": "data/measured/fig_dp_scale.csv",
+    "evidence_tier": "sglsim-agentic-online-preliminary,sglsim-runtime-replay-derived"
+  },
+  {
+    "figure": "Fig. 14b",
+    "stem": "fig_peer_rank_selection",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim peer-route replay",
+    "claim": "Retry locality makes peer KV usable.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_peer_rank_selection.png"
+    },
+    "template_data": "data/template/fig_peer_rank_selection.csv",
+    "measured_data": "data/measured/fig_peer_rank_selection.csv",
+    "evidence_tier": "sglsim-agentic-online-peer-route-sweep"
+  },
+  {
+    "figure": "Fig. 15",
+    "stem": "fig_simulator_calibration",
+    "kind": "result_template",
+    "source_needed_for_final": "paired SGLang/SGLSim runs",
+    "claim": "SGLang/SGLSim calibration anchors.",
+    "evidence_status": "mixed-preliminary",
+    "outputs": {
+      "png": "png/fig_simulator_calibration.png"
+    },
+    "template_data": "data/template/fig_simulator_calibration.csv",
+    "measured_data": "data/measured/fig_simulator_calibration.csv",
+    "evidence_tier": "mixed-preliminary"
+  },
+  {
+    "figure": "Fig. 15b",
+    "stem": "fig_physical_recovery_copy_calibration",
+    "kind": "result_template",
+    "source_needed_for_final": "torch/CUDA physical recovery-copy microbench",
+    "claim": "Physical copy timing calibrates recovery model.",
+    "evidence_status": "preliminary-measured",
+    "outputs": {
+      "png": "png/fig_physical_recovery_copy_calibration.png"
+    },
+    "template_data": "data/template/fig_physical_recovery_copy_calibration.csv",
+    "measured_data": "data/measured/fig_physical_recovery_copy_calibration.csv",
+    "evidence_tier": "sglang-small-physical-recovery-movement-smoke"
+  },
+  {
+    "figure": "Fig. 15c",
+    "stem": "fig_recovery_model_calibration_error",
+    "kind": "result_template",
+    "source_needed_for_final": "SGLSim recovery_model + torch/CUDA copy anchors",
+    "claim": "Recovery model copy component matches physical copy anchors.",
+    "evidence_status": "model-based-preliminary",
+    "outputs": {
+      "png": "png/fig_recovery_model_calibration_error.png"
+    },
+    "template_data": "data/template/fig_recovery_model_calibration_error.csv",
+    "measured_data": "data/measured/fig_recovery_model_calibration_error.csv",
+    "evidence_tier": "sglsim-model-physical-copy-calibration"
+  },
+  {
+    "figure": "Fig. 15d",
+    "stem": "fig_sglang_sglsim_accuracy",
+    "kind": "result_template",
+    "source_needed_for_final": "paired SGLang/SGLSim synthesis run",
+    "claim": "Real SGLang inference validates base SGLSim timing.",
+    "evidence_status": "mixed-preliminary",
+    "outputs": {
+      "png": "png/fig_sglang_sglsim_accuracy.png"
+    },
+    "template_data": "data/template/fig_sglang_sglsim_accuracy.csv",
+    "measured_data": "data/measured/fig_sglang_sglsim_accuracy.csv",
+    "evidence_tier": "sglang-sglsim-synthesis-parity"
+  },
+  {
+    "figure": "Fig. 15e",
+    "stem": "fig_p0_physical_bridge_coverage",
+    "kind": "result_template",
+    "source_needed_for_final": "P0 physical bridge coverage audit",
+    "claim": "Physical calibration bridge covers P0 restore rows while live-copy gate remains open.",
+    "evidence_status": "sglsim-preliminary",
+    "outputs": {
+      "png": "png/fig_p0_physical_bridge_coverage.png"
+    },
+    "template_data": "data/template/fig_p0_physical_bridge_coverage.csv",
+    "measured_data": "data/measured/fig_p0_physical_bridge_coverage.csv",
+    "evidence_tier": "sglsim-physical-bridge-coverage"
+  },
+  {
+    "figure": "Fig. 15f",
+    "stem": "fig_sglang_host_restore_materialization",
+    "kind": "result_template",
+    "source_needed_for_final": "real SGLang Host restore materialization parser",
+    "claim": "Real SGLang Host restore rows materialize retry KV while controls stay hidden.",
+    "evidence_status": "preliminary-measured",
+    "outputs": {
+      "png": "png/fig_sglang_host_restore_materialization.png"
+    },
+    "template_data": "data/template/fig_sglang_host_restore_materialization.csv",
+    "measured_data": "data/measured/fig_sglang_host_restore_materialization.csv",
+    "evidence_tier": "sglang-small-physical-restore-materialization"
+  }
+]

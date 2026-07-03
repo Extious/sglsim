@@ -97,6 +97,40 @@ def test_generate_shared_prefix_workload_mock():
     assert all(r.prompt_len > 0 for r in requests)
 
 
+def test_load_client_config_accepts_aegis_policy_fields(tmp_path: Path):
+    path = tmp_path / "client.json"
+    path.write_text(
+        json.dumps(
+            {
+                "dataset_name": "generated-shared-prefix",
+                "seed": 1,
+                "request_rate": "inf",
+                "gsp_num_groups": 1,
+                "gsp_prompts_per_group": 1,
+                "gsp_system_prompt_len": 16,
+                "gsp_question_len": 4,
+                "gsp_output_len": 2,
+                "gsp_failover_retry_policy": "random_healthy",
+                "gsp_aegis_policy": "host_only",
+                "gsp_aegis_ablation": "no_lifecycle",
+                "gsp_aegis_gpu_budget_fraction": 0.5,
+                "gsp_failure_after_output_tokens": 4,
+                "gsp_backup_kv": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    client = load_client_config(path)
+
+    assert client.gsp_aegis_policy == "host_only"
+    assert client.gsp_aegis_ablation == "no_lifecycle"
+    assert client.gsp_aegis_gpu_budget_fraction == 0.5
+    assert client.gsp_failure_after_output_tokens == 4
+    assert client.gsp_failover_retry_policy == "random_healthy"
+    assert client.gsp_backup_kv is True
+
+
 def test_gsp_fast_prepare_prompt_len_is_one():
     client = _client(gsp_fast_prepare=True)
     requests = generate_shared_prefix_workload(client, _server())
@@ -117,6 +151,51 @@ def test_num_prompts_truncates():
     client = _client(num_prompts=2)
     requests = generate_shared_prefix_workload(client, _server())
     assert len(requests) == 2
+
+
+def test_generate_staged_13131_workload_marks_critical_long_decode_agents():
+    client = _client(
+        gsp_num_groups=1,
+        gsp_prompts_per_group=9,
+        gsp_workflow_shape=(1, 3, 1, 3, 1),
+        gsp_stage_long_decode_agent_index=0,
+        gsp_long_decode_output_multiplier=5.0,
+        gsp_output_len=10,
+        gsp_range_ratio=1.0,
+        gsp_fast_prepare=False,
+        gsp_ordered=True,
+    )
+
+    requests = generate_shared_prefix_workload(client, _server())
+
+    assert len(requests) == 9
+    assert [r.stage_width for r in requests] == [1, 3, 3, 3, 1, 3, 3, 3, 1]
+    assert [r.stage_id for r in requests] == [0, 1, 1, 1, 2, 3, 3, 3, 4]
+    assert [r.critical_agent for r in requests] == [
+        True,
+        True,
+        False,
+        False,
+        True,
+        True,
+        False,
+        False,
+        True,
+    ]
+    assert [r.decode_dominant for r in requests] == [
+        False,
+        True,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+    ]
+    assert [r.output_len for r in requests] == [10, 50, 10, 10, 10, 50, 10, 10, 10]
+    assert {r.workflow_id for r in requests} == {"wf-0"}
+    assert {r.workflow_shape for r in requests} == {"1-3-1-3-1"}
 
 
 def test_load_config_dir(tmp_path: Path):

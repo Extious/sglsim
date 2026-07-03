@@ -63,6 +63,7 @@ class Req:
     kv_released: bool = False
     original_prompt_len: int | None = None
     original_max_new_tokens: int | None = None
+    aegis_restored_prefill_tokens: int = 0
 
     @property
     def fill_ids(self) -> list[int]:

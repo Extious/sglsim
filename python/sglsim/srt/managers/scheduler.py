@@ -21,6 +21,11 @@ from sglsim.srt.simulation.pipeline_accounting import (
     PipelineStages,
     compute_pipeline_sleep_s,
 )
+from sglsim.srt.simulation.alpha_policy import (
+    choose_alpha,
+    resolve_failure_rate_per_window,
+)
+from sglsim.srt.simulation.recovery_model import aegis_restore_overhead_ms
 from sglsim.srt.simulation.types import RequestStats, SimulationMode
 from sglsim.srt.time_predictor.base import InferTimePredictor
 from sglsim.srt.utils.network import SimIpcRegistry, SimZmqContext, SimZmqSocket, get_zmq_socket
@@ -38,6 +43,16 @@ def _env_flag(name: str, *, default: bool = False) -> bool:
 
 def _is_terminal_status(status: str) -> bool:
     return status in ("completed", "aborted")
+
+
+def _normalized_fraction(value: object) -> float | None:
+    try:
+        fraction = float(value)
+    except (TypeError, ValueError):
+        return None
+    if fraction < 0.0:
+        return None
+    return max(0.0, min(fraction, 1.0))
 
 
 class Scheduler(SchedulerMetricsMixin):
@@ -168,15 +183,445 @@ class Scheduler(SchedulerMetricsMixin):
         stats.last_event_time = stats.created_time
         stats.queue_start = now
         stats.status = "running"
+        stats.workflow_id = str(sim.get("workflow_id", ""))
+        try:
+            stats.stage_id = int(sim.get("stage_id", -1))
+        except (TypeError, ValueError):
+            stats.stage_id = -1
+        try:
+            stats.stage_width = int(sim.get("stage_width", 1))
+        except (TypeError, ValueError):
+            stats.stage_width = 1
+        try:
+            stats.stage_local_agent_index = int(
+                sim.get("stage_local_agent_index", 0)
+            )
+        except (TypeError, ValueError):
+            stats.stage_local_agent_index = 0
+        stats.decode_dominant = bool(sim.get("decode_dominant", False))
+        stats.workflow_shape = str(sim.get("workflow_shape", ""))
         stats.agent_id = str(sim.get("agent_id", sim.get("worker_id", "")))
         stats.critical_agent = bool(sim.get("critical_agent", False))
+        stats.aegis_backup_kv = bool(sim.get("backup_kv", False))
+        stats.aegis_failover_replay = bool(sim.get("failover_replay", False))
+        stats.aegis_soft_failure_injected = bool(
+            sim.get("soft_failure_injected", False)
+        )
+        stats.aegis_hard_failure_injected = bool(
+            sim.get("hard_failure_injected", False)
+        )
+        stats.aegis_host_backup_lookup_hit = bool(
+            sim.get("host_backup_lookup_hit", False)
+        )
+        try:
+            stats.aegis_host_backup_lookup_tokens = int(
+                sim.get("host_backup_lookup_tokens", 0)
+            )
+        except (TypeError, ValueError):
+            stats.aegis_host_backup_lookup_tokens = 0
+        stats.aegis_peer_gpu_lookup_hit = bool(
+            sim.get("peer_gpu_lookup_hit", False)
+        )
+        try:
+            stats.aegis_peer_gpu_lookup_tokens = int(
+                sim.get("peer_gpu_lookup_tokens", 0)
+            )
+        except (TypeError, ValueError):
+            stats.aegis_peer_gpu_lookup_tokens = 0
+        stats.aegis_policy = str(
+            sim.get("aegis_policy")
+            or ("aegiskv" if stats.aegis_backup_kv else "baseline")
+        )
+        stats.aegis_ablation = str(sim.get("aegis_ablation", ""))
+        gpu_budget = _normalized_fraction(sim.get("aegis_gpu_budget_fraction", -1.0))
+        stats.aegis_gpu_budget_fraction = -1.0 if gpu_budget is None else gpu_budget
+        failure_rate_raw = sim.get(
+            "aegis_failure_rate_per_window",
+            sim.get("failure_rate_per_window"),
+        )
+        stats.aegis_failure_rate_per_window = (
+            -1.0
+            if failure_rate_raw is None
+            else resolve_failure_rate_per_window(failure_rate_raw)
+        )
+        stats.aegis_alpha_policy_source = (
+            "request_static" if gpu_budget is not None else ""
+        )
+        request_pressure = _normalized_fraction(
+            sim.get("aegis_critical_pressure", -1.0)
+        )
+        stats.aegis_critical_pressure = (
+            -1.0 if request_pressure is None else request_pressure
+        )
+        try:
+            stats.aegis_worker_seq = int(sim.get("worker_seq", 0))
+        except (TypeError, ValueError):
+            stats.aegis_worker_seq = 0
+        try:
+            stats.aegis_assigned_dp_rank = int(
+                sim.get("assigned_dp_rank", getattr(self, "dp_rank", 0))
+            )
+        except (TypeError, ValueError):
+            stats.aegis_assigned_dp_rank = int(getattr(self, "dp_rank", 0))
+        try:
+            stats.aegis_failed_source_dp_rank = int(
+                sim.get("failed_dp_rank", stats.aegis_assigned_dp_rank)
+            )
+        except (TypeError, ValueError):
+            stats.aegis_failed_source_dp_rank = stats.aegis_assigned_dp_rank
+        try:
+            stats.aegis_replay_restored_tokens = int(
+                sim.get("restore_tokens", 0)
+            )
+        except (TypeError, ValueError):
+            stats.aegis_replay_restored_tokens = 0
+        try:
+            stats.aegis_replay_restored_prefill_tokens = int(
+                sim.get("restored_prefill_tokens", 0)
+            )
+        except (TypeError, ValueError):
+            stats.aegis_replay_restored_prefill_tokens = 0
+        try:
+            stats.aegis_replay_recompute_tokens = int(
+                sim.get("restore_recompute_tokens", 0)
+            )
+        except (TypeError, ValueError):
+            stats.aegis_replay_recompute_tokens = 0
+        stats.aegis_replay_restore_action = str(
+            sim.get("restore_action", "none")
+        )
+        stats.aegis_replay_restore_data_plane = str(
+            sim.get("restore_data_plane")
+            or (
+                "metadata_materialization"
+                if stats.aegis_replay_restore_action in {"host_restore", "gpu_replica"}
+                else stats.aegis_replay_restore_action
+            )
+            or "none"
+        )
+        stats.aegis_replay_restore_timing_source = str(
+            sim.get("restore_timing_source", "default_coefficients")
+        )
+        try:
+            stats.aegis_replay_restore_overhead_s = float(
+                sim.get("restore_overhead_s", 0.0)
+            )
+        except (TypeError, ValueError):
+            stats.aegis_replay_restore_overhead_s = 0.0
+        stats.aegis_cross_rank_retry = (
+            stats.aegis_failover_replay
+            and stats.aegis_failed_source_dp_rank >= 0
+            and stats.aegis_assigned_dp_rank >= 0
+            and stats.aegis_failed_source_dp_rank != stats.aegis_assigned_dp_rank
+        )
+        stats.aegis_replay_restore_sleep_s = 0.0
+        if stats.aegis_failover_replay and stats.aegis_replay_restore_overhead_s > 0:
+            restore_start = time.time()
+            time.sleep(stats.aegis_replay_restore_overhead_s)
+            restore_end = time.time()
+            stats.aegis_replay_restore_sleep_s = max(
+                restore_end - restore_start,
+                0.0,
+            )
+            stats.last_event_time = restore_end
+        self._materialize_aegis_replay_restore(req, stats)
         if self.cache.config.l3_capacity_pages > 0:
             self.cache.prefetch_from_storage(req)
         self._req_registry[req.rid] = req
         self._enqueue_req(req, stats.queue_start)
 
+    def _materialize_aegis_replay_restore(
+        self, req: Req, stats: RequestStats
+    ) -> None:
+        if not stats.aegis_failover_replay:
+            stats.aegis_replay_restored_prefill_tokens = 0
+            return
+        if stats.aegis_replay_restore_action not in {
+            "host_restore",
+            "gpu_replica",
+        }:
+            stats.aegis_replay_restored_prefill_tokens = 0
+            return
+        if stats.aegis_replay_restored_tokens <= 0:
+            stats.aegis_replay_restored_prefill_tokens = 0
+            return
+
+        restored = self.cache.materialize_restored_prefix(
+            req,
+            stats.aegis_replay_restored_tokens,
+        )
+        stats.aegis_replay_restored_prefill_tokens = restored
+        if restored > 0:
+            stats.cache_hit_tokens = req.cache_hit_tokens
+
+    def _refresh_aegis_stats(self, req: Req, stats: RequestStats) -> None:
+        total_tokens = max(stats.input_length + stats.generated_tokens, 0)
+        if total_tokens <= 0:
+            total_tokens = max(req.prefill_length, 0)
+
+        # Fixed write-through HostBackup makes ACKed Host KV physically
+        # available in the simulator. Policy labels only control which
+        # metadata frontier is published for paper-facing AegisKV sweeps; they
+        # do not change SGLang admission or batch scheduling.
+        aegis_policy = stats.aegis_policy.lower().replace("-", "_").replace(" ", "_")
+        aegis_ablation = (
+            stats.aegis_ablation.lower().replace("-", "_").replace(" ", "_")
+        )
+        no_backup_policy = aegis_policy in {
+            "baseline",
+            "none",
+            "no_backup",
+            "nobackup",
+        }
+        host_only_policy = aegis_policy in {
+            "host",
+            "host_only",
+            "hostbackup",
+            "host_backup",
+            "uniform_host",
+        }
+        gpu_only_policy = aegis_policy in {
+            "gpu",
+            "gpu_only",
+            "gpu_replica",
+            "gpureplica",
+            "uniform_gpu",
+        }
+        aegis_policy_enabled = aegis_policy in {"aegis", "aegiskv", "dynamic"}
+        disable_lifecycle = aegis_ablation in {
+            "no_lifecycle",
+            "disable_lifecycle",
+        }
+        disable_critical_restore = (
+            aegis_ablation in {"no_critical_restore", "disable_critical_restore"}
+            and stats.critical_agent
+        )
+
+        host_enabled = (
+            not no_backup_policy
+            and not disable_lifecycle
+            and not disable_critical_restore
+            and not gpu_only_policy
+            and (
+                host_only_policy
+                or aegis_policy_enabled
+                or stats.aegis_backup_kv
+                or stats.critical_agent
+            )
+        )
+        gpu_enabled = (
+            not no_backup_policy
+            and not disable_lifecycle
+            and not disable_critical_restore
+            and not host_only_policy
+            and (
+                gpu_only_policy
+                or (stats.aegis_backup_kv and stats.critical_agent)
+            )
+        )
+        gpu_budget = _normalized_fraction(stats.aegis_gpu_budget_fraction)
+        if gpu_budget is None and aegis_policy_enabled:
+            failure_rate = (
+                None
+                if stats.aegis_failure_rate_per_window < 0
+                else stats.aegis_failure_rate_per_window
+            )
+            decision = choose_alpha(
+                critical_agent=stats.critical_agent,
+                decode_dominant=stats.decode_dominant,
+                stage_width=stats.stage_width,
+                critical_pressure=(
+                    None
+                    if stats.aegis_critical_pressure < 0
+                    else stats.aegis_critical_pressure
+                ),
+                failure_rate_per_window=failure_rate,
+            )
+            gpu_budget = decision.alpha
+            stats.aegis_gpu_budget_fraction = decision.alpha
+            stats.aegis_failure_rate_per_window = decision.failure_rate_per_window
+            stats.aegis_alpha_policy_source = decision.source
+            stats.aegis_critical_pressure = decision.critical_pressure
+        elif gpu_budget is not None and not stats.aegis_alpha_policy_source:
+            stats.aegis_alpha_policy_source = "request_static"
+
+        if host_enabled:
+            stats.aegis_host_visible_tokens = total_tokens
+        else:
+            stats.aegis_host_visible_tokens = 0
+
+        if gpu_enabled:
+            hot_tail = max(stats.generated_tokens, total_tokens // 8)
+            stats.aegis_gpu_replica_tokens = min(total_tokens, max(hot_tail, 1))
+        else:
+            stats.aegis_gpu_replica_tokens = 0
+        if gpu_budget is not None:
+            budget_tokens = int(total_tokens * gpu_budget)
+            stats.aegis_gpu_replica_tokens = min(
+                stats.aegis_gpu_replica_tokens,
+                budget_tokens,
+            )
+        if aegis_ablation == "no_segment_granularity":
+            if stats.aegis_host_visible_tokens < total_tokens:
+                stats.aegis_host_visible_tokens = 0
+            if stats.aegis_gpu_replica_tokens < total_tokens:
+                stats.aegis_gpu_replica_tokens = 0
+        elif aegis_ablation == "no_pressure":
+            stats.aegis_gpu_replica_tokens = 0
+        elif aegis_ablation == "no_hysteresis" and stats.aegis_worker_seq % 2:
+            stats.aegis_host_visible_tokens = 0
+            stats.aegis_gpu_replica_tokens = 0
+
+        stats.aegis_safe_frontier_tokens = max(
+            stats.aegis_host_visible_tokens,
+            stats.aegis_gpu_replica_tokens,
+            min(total_tokens, stats.cache_hit_tokens + stats.load_back_tokens),
+        )
+        stats.aegis_recompute_tokens = max(
+            total_tokens - stats.aegis_safe_frontier_tokens,
+            0,
+        )
+
+        def best_recovery(
+            token_count: int, host_frontier: int, gpu_frontier: int
+        ) -> tuple[str, int, float]:
+            if no_backup_policy:
+                return (
+                    "recompute",
+                    0,
+                    aegis_restore_overhead_ms(
+                        action="recompute",
+                        token_count=token_count,
+                        restored_tokens=0,
+                    ),
+                )
+            if host_only_policy and host_frontier > 0:
+                return (
+                    "host_restore",
+                    host_frontier,
+                    aegis_restore_overhead_ms(
+                        action="host_restore",
+                        token_count=token_count,
+                        restored_tokens=host_frontier,
+                    ),
+                )
+            if gpu_only_policy:
+                if gpu_frontier > 0:
+                    return (
+                        "gpu_replica",
+                        gpu_frontier,
+                        aegis_restore_overhead_ms(
+                            action="gpu_replica",
+                            token_count=token_count,
+                            restored_tokens=gpu_frontier,
+                        ),
+                    )
+                return (
+                    "recompute",
+                    0,
+                    aegis_restore_overhead_ms(
+                        action="recompute",
+                        token_count=token_count,
+                        restored_tokens=0,
+                    ),
+                )
+            candidates = [
+                (
+                    "recompute",
+                    0,
+                    aegis_restore_overhead_ms(
+                        action="recompute",
+                        token_count=token_count,
+                        restored_tokens=0,
+                    ),
+                )
+            ]
+            if host_frontier > 0:
+                candidates.append(
+                    (
+                        "host_restore",
+                        host_frontier,
+                        aegis_restore_overhead_ms(
+                            action="host_restore",
+                            token_count=token_count,
+                            restored_tokens=host_frontier,
+                        ),
+                    )
+                )
+            if gpu_frontier > 0:
+                candidates.append(
+                    (
+                        "gpu_replica",
+                        gpu_frontier,
+                        aegis_restore_overhead_ms(
+                            action="gpu_replica",
+                            token_count=token_count,
+                            restored_tokens=gpu_frontier,
+                        ),
+                    )
+                )
+            return min(candidates, key=lambda item: item[2])
+
+        (
+            stats.aegis_recovery_action,
+            _,
+            stats.aegis_expected_recovery_ms,
+        ) = best_recovery(
+            total_tokens,
+            min(stats.aegis_host_visible_tokens, total_tokens),
+            min(stats.aegis_gpu_replica_tokens, total_tokens),
+        )
+
+        candidate_retry = (
+            stats.critical_agent or stats.aegis_backup_kv or host_enabled or gpu_enabled
+        )
+        stats.aegis_candidate_retry = bool(candidate_retry)
+        if not candidate_retry:
+            stats.aegis_candidate_failed_dp_rank = -1
+            stats.aegis_candidate_pre_failure_output_tokens = 0
+            stats.aegis_candidate_pre_failure_total_tokens = 0
+            stats.aegis_candidate_backed_up_tokens = 0
+            stats.aegis_candidate_recompute_tokens = 0
+            stats.aegis_candidate_recovery_action = "none"
+            stats.aegis_candidate_failover_overhead_s = 0.0
+            return
+
+        sim = req.sampling_params.custom_params.get("simulation", {})
+        try:
+            failure_after_output = int(
+                sim.get("failure_after_output_tokens", stats.generated_tokens // 2)
+            )
+        except (TypeError, ValueError):
+            failure_after_output = stats.generated_tokens // 2
+        if stats.generated_tokens > 0:
+            failure_after_output = max(1, min(failure_after_output, stats.generated_tokens))
+        else:
+            failure_after_output = 0
+        pre_failure_total = max(stats.input_length + failure_after_output, 0)
+
+        try:
+            failed_dp_rank = int(
+                sim.get("failed_dp_rank", stats.aegis_assigned_dp_rank)
+            )
+        except (TypeError, ValueError):
+            failed_dp_rank = stats.aegis_assigned_dp_rank
+
+        action, backed_up, overhead_ms = best_recovery(
+            pre_failure_total,
+            min(stats.aegis_host_visible_tokens, pre_failure_total),
+            min(stats.aegis_gpu_replica_tokens, pre_failure_total),
+        )
+        stats.aegis_candidate_failed_dp_rank = failed_dp_rank
+        stats.aegis_candidate_pre_failure_output_tokens = failure_after_output
+        stats.aegis_candidate_pre_failure_total_tokens = pre_failure_total
+        stats.aegis_candidate_backed_up_tokens = backed_up
+        stats.aegis_candidate_recompute_tokens = max(pre_failure_total - backed_up, 0)
+        stats.aegis_candidate_recovery_action = action
+        stats.aegis_candidate_failover_overhead_s = overhead_ms / 1000.0
+
     def _stats_payload(self, req: Req, *, finished: bool, last_event_time: float) -> dict:
         stats = REQUEST_STATS[req.rid]
+        self._refresh_aegis_stats(req, stats)
         return {
             "dp_rank": getattr(self, "dp_rank", 0),
             "rid": req.rid,
@@ -194,8 +639,54 @@ class Scheduler(SchedulerMetricsMixin):
             "cache_hit_tokens": stats.cache_hit_tokens,
             "load_back_tokens": stats.load_back_tokens,
             "prefetch_complete_tokens": stats.prefetch_complete_tokens,
+            "workflow_id": stats.workflow_id,
+            "stage_id": stats.stage_id,
+            "stage_width": stats.stage_width,
+            "stage_local_agent_index": stats.stage_local_agent_index,
+            "decode_dominant": stats.decode_dominant,
+            "workflow_shape": stats.workflow_shape,
             "agent_id": stats.agent_id,
             "critical_agent": stats.critical_agent,
+            "aegis_policy": stats.aegis_policy,
+            "aegis_ablation": stats.aegis_ablation,
+            "aegis_gpu_budget_fraction": stats.aegis_gpu_budget_fraction,
+            "aegis_failure_rate_per_window": stats.aegis_failure_rate_per_window,
+            "aegis_alpha_policy_source": stats.aegis_alpha_policy_source,
+            "aegis_critical_pressure": stats.aegis_critical_pressure,
+            "aegis_backup_kv": stats.aegis_backup_kv,
+            "aegis_worker_seq": stats.aegis_worker_seq,
+            "aegis_assigned_dp_rank": stats.aegis_assigned_dp_rank,
+            "aegis_host_visible_tokens": stats.aegis_host_visible_tokens,
+            "aegis_gpu_replica_tokens": stats.aegis_gpu_replica_tokens,
+            "aegis_safe_frontier_tokens": stats.aegis_safe_frontier_tokens,
+            "aegis_recompute_tokens": stats.aegis_recompute_tokens,
+            "aegis_recovery_action": stats.aegis_recovery_action,
+            "aegis_expected_recovery_ms": stats.aegis_expected_recovery_ms,
+            "aegis_candidate_retry": stats.aegis_candidate_retry,
+            "aegis_candidate_failed_dp_rank": stats.aegis_candidate_failed_dp_rank,
+            "aegis_candidate_pre_failure_output_tokens": stats.aegis_candidate_pre_failure_output_tokens,
+            "aegis_candidate_pre_failure_total_tokens": stats.aegis_candidate_pre_failure_total_tokens,
+            "aegis_candidate_backed_up_tokens": stats.aegis_candidate_backed_up_tokens,
+            "aegis_candidate_recompute_tokens": stats.aegis_candidate_recompute_tokens,
+            "aegis_candidate_recovery_action": stats.aegis_candidate_recovery_action,
+            "aegis_candidate_failover_overhead_s": stats.aegis_candidate_failover_overhead_s,
+            "aegis_failover_replay": stats.aegis_failover_replay,
+            "aegis_failed_source_dp_rank": stats.aegis_failed_source_dp_rank,
+            "aegis_replay_restored_tokens": stats.aegis_replay_restored_tokens,
+            "aegis_replay_restored_prefill_tokens": stats.aegis_replay_restored_prefill_tokens,
+            "aegis_replay_recompute_tokens": stats.aegis_replay_recompute_tokens,
+            "aegis_replay_restore_action": stats.aegis_replay_restore_action,
+            "aegis_replay_restore_overhead_s": stats.aegis_replay_restore_overhead_s,
+            "aegis_replay_restore_sleep_s": stats.aegis_replay_restore_sleep_s,
+            "aegis_replay_restore_data_plane": stats.aegis_replay_restore_data_plane,
+            "aegis_replay_restore_timing_source": stats.aegis_replay_restore_timing_source,
+            "aegis_cross_rank_retry": stats.aegis_cross_rank_retry,
+            "aegis_soft_failure_injected": stats.aegis_soft_failure_injected,
+            "aegis_hard_failure_injected": stats.aegis_hard_failure_injected,
+            "aegis_host_backup_lookup_hit": stats.aegis_host_backup_lookup_hit,
+            "aegis_host_backup_lookup_tokens": stats.aegis_host_backup_lookup_tokens,
+            "aegis_peer_gpu_lookup_hit": stats.aegis_peer_gpu_lookup_hit,
+            "aegis_peer_gpu_lookup_tokens": stats.aegis_peer_gpu_lookup_tokens,
         }
 
     def _send_detokenizer_update(
@@ -668,6 +1159,7 @@ class Scheduler(SchedulerMetricsMixin):
             prefix_limit = req.cache_hit_tokens if req.cache_hit_tokens > 0 else max_cached
             prefix_limit = min(prefix_limit, max_cached)
             stats.load_back_tokens = min(prefix_limit, req.admit_load_back_tokens)
+            self._refresh_aegis_stats(req, stats)
 
     def _decay_new_token_ratio(self) -> None:
         self.new_token_ratio = max(

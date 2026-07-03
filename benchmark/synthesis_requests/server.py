@@ -54,13 +54,15 @@ def build_server_command(
     return command
 
 
-def _server_env(log_path: Path) -> dict[str, str]:
+def _server_env(log_path: Path, extra_env: dict[str, str] | None = None) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
     env["SGLSIM_SERVER_LOG"] = str(log_path)
     env.setdefault("SGLSIM_LOG_PROFILE", "sglang_projected")
     env.setdefault("SGLSIM_LOG_BASE_TIME_EPOCH_S", str(time.time()))
     env.setdefault("SGLSIM_LOG_MS", "1")
+    if extra_env:
+        env.update({str(key): str(value) for key, value in extra_env.items()})
     return env
 
 
@@ -183,6 +185,7 @@ def start_server(
     log_path: Path,
     *,
     stderr_path: Path | None = None,
+    extra_env: dict[str, str] | None = None,
 ) -> subprocess.Popen:
     logger.info("Starting server: %s", " ".join(command))
     host, port = "127.0.0.1", 30000
@@ -202,7 +205,7 @@ def start_server(
         command,
         stdout=subprocess.DEVNULL,
         stderr=stderr_file,
-        env=_server_env(log_path),
+        env=_server_env(log_path, extra_env=extra_env),
         start_new_session=True,
     )
     process._stderr_file = stderr_file  # type: ignore[attr-defined]

@@ -137,6 +137,73 @@ class HiRadixCache:
             self.tree.inc_lock_ref(old_node)
         return new_cached, last_node_id
 
+    def materialize_device_prefix(
+        self,
+        req_id: str,
+        token_ids: list[int],
+        restored_tokens: int,
+        *,
+        last_node_id: int | None,
+    ) -> tuple[int, int | None]:
+        """Materialize restored KV as a device-resident radix prefix.
+
+        This is the metadata equivalent of copying protected KV pages into the
+        retry rank before the replay request is admitted. It intentionally does
+        not model tensor contents; it only allocates target-rank page metadata,
+        inserts the restored prefix into radix, and locks the prefix for the
+        request's lifecycle.
+        """
+        target = min(max(restored_tokens, 0), len(token_ids))
+        target = _page_align(target, self.page_size)
+        if target <= 0:
+            return 0, last_node_id
+
+        aligned_ids = token_ids[:target]
+        match = self.tree.match_prefix(aligned_ids)
+        device_covered = min(match.device_length, target)
+        page_ids = list(match.page_ids[:device_covered])
+        missing_tokens = target - device_covered
+        allocated_pages: list[KVPage] = []
+
+        if missing_tokens > 0:
+            self.evict_from_tree_cache(missing_tokens, owner=req_id)
+            allocated_pages = self._alloc_device_pages(
+                ceil(missing_tokens / self.page_size),
+                owner=req_id,
+            )
+            added = 0
+            for page in allocated_pages:
+                remaining = missing_tokens - added
+                covered_page = min(self.page_size, remaining)
+                page_ids.extend([page.page_id] * covered_page)
+                added += covered_page
+
+        result = self.tree.insert(aligned_ids, page_ids)
+        self._free_replaced_page_ids(result.replaced_page_ids)
+
+        old_node = self.tree.get_node(last_node_id)
+        if old_node is not None and old_node.id != result.last_node.id:
+            self._dec_request_lock_ref_tolerant(
+                old_node,
+                req_id=req_id,
+                context="materialize_device_prefix",
+            )
+        if old_node is None or old_node.id != result.last_node.id:
+            self.tree.inc_lock_ref(result.last_node)
+        elif result.last_node.lock_ref == 0 and result.last_node is not self.tree.root_node:
+            self.tree.inc_lock_ref(result.last_node)
+
+        if allocated_pages:
+            self._free_redundant_allocations(
+                allocated_pages,
+                cache_protected_len=device_covered,
+                prefix_len=result.prefix_len,
+                covered=device_covered,
+                extend_end=target,
+            )
+
+        return target, result.last_node.id
+
     def _extend_prefill_bounds(
         self,
         extend_tokens: int,

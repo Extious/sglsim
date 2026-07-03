@@ -206,6 +206,41 @@ class KVCachePool:
         # node, dec'ing an unlocked node -> "Lock reference counter is already zero".)
         req.last_node_id = last_node_id
 
+    def materialize_restored_prefix(self, req: Req, restored_tokens: int) -> int:
+        max_cached = max(req.prefill_length - 1, 0)
+        target = min(max(restored_tokens, 0), max_cached)
+        if target <= 0:
+            req.aegis_restored_prefill_tokens = 0
+            return 0
+
+        restored, last_node_id = self._cache.materialize_device_prefix(
+            req.rid,
+            self._prefill_match_ids(req),
+            target,
+            last_node_id=req.last_node_id,
+        )
+        restored = min(restored, max_cached)
+        if restored <= 0:
+            req.aegis_restored_prefill_tokens = 0
+            return 0
+
+        req.cached_length = max(req.cached_length, restored)
+        req.kv_committed_length = max(req.kv_committed_length, restored)
+        req.cache_protected_len = max(req.cache_protected_len, restored)
+        req.last_node_id = last_node_id
+        req.aegis_restored_prefill_tokens = restored
+
+        previous_hit = req.cache_hit_tokens if req.cache_hit_recorded else 0
+        if restored > previous_hit:
+            delta = restored - previous_hit
+            self.cache_prefix_tokens += delta
+            self.metrics["cache_prefix_tokens"] = self.cache_prefix_tokens
+        req.cache_hit_tokens = max(req.cache_hit_tokens, restored)
+        req.cache_hit_log_pending = req.cache_hit_tokens
+        req.cache_hit_recorded = True
+        req.prefill_plan_synced = True
+        return restored
+
     def sync_retract_prefix(self, req: Req, *, chunk_size: int | None) -> None:
         """Reconcile req cache pointers after retract; prefix stays in radix tree."""
         match = self._cache.match_prefix(self._prefill_match_ids(req))

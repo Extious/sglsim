@@ -1,0 +1,347 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import re
+from pathlib import Path
+from typing import Any
+
+
+EXP_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_AUDIT_DIR = EXP_DIR / "results" / "strict_final_recovery_matrix_audit"
+DEFAULT_MANIFEST = DEFAULT_AUDIT_DIR / "strict_final_recovery_submission_manifest.json"
+DEFAULT_OUTPUT_DIR = DEFAULT_AUDIT_DIR
+CHECK_SLURM_SCRIPT = EXP_DIR / "scripts" / "check_bound_slurm_jobs.py"
+
+SUBMIT_LINE_RE = re.compile(
+    r"^submit\s+(?P<pair_id>\S+)\s+(?P<role>invisible|visible)\s*$"
+)
+SBATCH_RE = re.compile(r"Submitted batch job\s+(?P<job_id>\d+)")
+
+
+def read_json(path: Path) -> dict[str, Any]:
+    if not path.exists() or path.stat().st_size == 0:
+        return {}
+    value = json.loads(path.read_text(encoding="utf-8"))
+    return value if isinstance(value, dict) else {}
+
+
+def read_csv(path: Path) -> list[dict[str, str]]:
+    if not path.exists() or path.stat().st_size == 0:
+        return []
+    with path.open(newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    fields: list[str] = []
+    for row in rows:
+        for key in row:
+            if key not in fields:
+                fields.append(key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def parse_submit_log(path: Path) -> dict[tuple[str, str], str]:
+    if not path.exists():
+        return {}
+    bindings: dict[tuple[str, str], str] = {}
+    pending: tuple[str, str] | None = None
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if match := SUBMIT_LINE_RE.search(line):
+            pending = (match.group("pair_id"), match.group("role"))
+            continue
+        if pending is not None and (match := SBATCH_RE.search(line)):
+            bindings[pending] = match.group("job_id")
+            pending = None
+    return bindings
+
+
+def explicit_bindings(path: Path) -> dict[tuple[str, str], str]:
+    out: dict[tuple[str, str], str] = {}
+    for row in read_csv(path):
+        pair_id = str(row.get("pair_id") or "")
+        role = str(row.get("role") or "")
+        job_id = str(row.get("slurm_job_id") or "")
+        if pair_id and role in {"invisible", "visible"} and job_id:
+            out[(pair_id, role)] = job_id
+    return out
+
+
+def empty_binding_rows(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for job in manifest.get("jobs") or []:
+        if not isinstance(job, dict):
+            continue
+        rows.extend(
+            [
+                {
+                    "pair_id": job.get("pair_id", ""),
+                    "role": "invisible",
+                    "run_label": job.get("invisible_run_label", ""),
+                    "slurm_job_id": "",
+                    "bound": "false",
+                    "source": "",
+                },
+                {
+                    "pair_id": job.get("pair_id", ""),
+                    "role": "visible",
+                    "run_label": job.get("visible_run_label", ""),
+                    "slurm_job_id": "",
+                    "bound": "false",
+                    "source": "",
+                },
+            ]
+        )
+    return rows
+
+
+def build_binding_rows(
+    manifest: dict[str, Any],
+    *,
+    log_bindings: dict[tuple[str, str], str],
+    csv_bindings: dict[tuple[str, str], str],
+) -> list[dict[str, Any]]:
+    rows = empty_binding_rows(manifest)
+    for row in rows:
+        key = (str(row["pair_id"]), str(row["role"]))
+        if key in csv_bindings:
+            row["slurm_job_id"] = csv_bindings[key]
+            row["bound"] = "true"
+            row["source"] = "job_map_csv"
+        elif key in log_bindings:
+            row["slurm_job_id"] = log_bindings[key]
+            row["bound"] = "true"
+            row["source"] = "submit_log"
+    return rows
+
+
+def binding_map(rows: list[dict[str, Any]]) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for row in rows:
+        run_label = str(row.get("run_label") or "")
+        job_id = str(row.get("slurm_job_id") or "")
+        if run_label and job_id:
+            out[f"<{run_label}_job_id>"] = job_id
+    return out
+
+
+def substitute_jobs(command: str, jobs: dict[str, str]) -> str:
+    out = command
+    for placeholder, job_id in jobs.items():
+        out = out.replace(placeholder, job_id)
+    return out
+
+
+def render_sync_bound_script(
+    manifest: dict[str, Any],
+    rows: list[dict[str, Any]],
+) -> str:
+    jobs = binding_map(rows)
+    all_bound = len(jobs) == len(rows) and bool(rows)
+    status_json = str(DEFAULT_AUDIT_DIR / "strict_final_bound_slurm_jobs.json")
+    lines = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "",
+        "# Generated by bind_strict_final_job_ids.py.",
+        "# Re-run audit_strict_final_recovery_matrix.py after this script completes.",
+        "",
+    ]
+    if not all_bound:
+        lines.extend(
+            [
+                "echo 'ERROR: sync_bound_jobs.sh still has unbound Slurm job ids.' >&2",
+                "echo 'Fill strict_final_recovery_job_bindings.csv or rerun bind_strict_final_job_ids.py with --submit-log.' >&2",
+                "exit 2",
+                "",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "# Refresh bound Slurm job status and refuse to sync incomplete jobs.",
+                f"python {CHECK_SLURM_SCRIPT}",
+                "python - <<'PY'",
+                "import json",
+                "from pathlib import Path",
+                f"path = Path({status_json!r})",
+                "payload = json.loads(path.read_text(encoding='utf-8'))",
+                "status = payload.get('overall_status')",
+                "if status != 'complete':",
+                "    raise SystemExit(f\"ERROR: bound Slurm jobs are {status}; wait for completion before syncing.\")",
+                "PY",
+                "",
+            ]
+        )
+    for job in manifest.get("jobs") or []:
+        if not isinstance(job, dict):
+            continue
+        pair_id = str(job.get("pair_id") or "")
+        sync_cmd = substitute_jobs(
+            str(job.get("sync_pair_direct_proxy_command") or job.get("sync_pair_command") or ""),
+            jobs,
+        )
+        physical_cmd = substitute_jobs(str(job.get("physical_restore_command") or ""), jobs)
+        still_unbound = "<" in sync_cmd or "<" in physical_cmd
+        lines.extend(
+            [
+                f"# {pair_id}",
+                (
+                    "# WARNING: this pair still has unbound placeholders."
+                    if still_unbound
+                    else "# Bound pair."
+                ),
+                sync_cmd,
+                physical_cmd,
+                "",
+            ]
+        )
+    return "\n".join(lines)
+
+
+def render_markdown(
+    manifest: dict[str, Any],
+    rows: list[dict[str, Any]],
+    *,
+    submit_log: Path | None,
+    job_map_csv: Path | None,
+) -> str:
+    bound = [row for row in rows if str(row.get("bound")) == "true"]
+    total = len(rows)
+    lines = [
+        "# Strict-Final Job Binding",
+        "",
+        "This file binds Slurm job ids to the strict-final missing recovery jobs.",
+        "It does not claim new evidence; it only prepares the sync/parse step.",
+        "",
+        f"- Bound runs: {len(bound)}/{total}",
+        f"- Submit log: `{submit_log}`" if submit_log is not None else "- Submit log: not used",
+        f"- Job map CSV: `{job_map_csv}`" if job_map_csv is not None else "- Job map CSV: not used",
+        "",
+        "| Pair | Role | Run label | Job id | Bound | Source |",
+        "|---|---|---|---:|---|---|",
+    ]
+    for row in rows:
+        lines.append(
+            "| {pair} | {role} | {label} | {job} | {bound} | {source} |".format(
+                pair=row.get("pair_id", ""),
+                role=row.get("role", ""),
+                label=row.get("run_label", ""),
+                job=row.get("slurm_job_id", ""),
+                bound=row.get("bound", ""),
+                source=row.get("source", ""),
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "Next step:",
+            "",
+            "1. Fill any empty `slurm_job_id` cells, or re-run this script with a submit log.",
+            "2. Run `sync_bound_jobs.sh`.",
+            "3. Run `audit_strict_final_recovery_matrix.py`.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def write_text_executable(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text + "\n", encoding="utf-8")
+    path.chmod(0o755)
+
+
+def run_bind(
+    *,
+    manifest_path: Path = DEFAULT_MANIFEST,
+    submit_log: Path | None = None,
+    job_map_csv: Path | None = None,
+) -> dict[str, Any]:
+    manifest = read_json(manifest_path)
+    log_bindings = parse_submit_log(submit_log) if submit_log is not None else {}
+    csv_bindings = explicit_bindings(job_map_csv) if job_map_csv is not None else {}
+    rows = build_binding_rows(
+        manifest,
+        log_bindings=log_bindings,
+        csv_bindings=csv_bindings,
+    )
+    return {
+        "manifest": manifest,
+        "binding_rows": rows,
+        "bound_runs": sum(1 for row in rows if str(row.get("bound")) == "true"),
+        "total_runs": len(rows),
+        "submit_log": str(submit_log or ""),
+        "job_map_csv": str(job_map_csv or ""),
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Bind Slurm job ids to strict-final missing job manifest entries."
+    )
+    parser.add_argument("--manifest-json", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--submit-log", type=Path, default=None)
+    parser.add_argument("--job-map-csv", type=Path, default=None)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    args = parser.parse_args()
+
+    payload = run_bind(
+        manifest_path=args.manifest_json,
+        submit_log=args.submit_log,
+        job_map_csv=args.job_map_csv,
+    )
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    (args.output_dir / "strict_final_recovery_job_bindings.json").write_text(
+        json.dumps(
+            {
+                "bound_runs": payload["bound_runs"],
+                "total_runs": payload["total_runs"],
+                "submit_log": payload["submit_log"],
+                "job_map_csv": payload["job_map_csv"],
+                "binding_rows": payload["binding_rows"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    write_csv(args.output_dir / "strict_final_recovery_job_bindings.csv", payload["binding_rows"])
+    (args.output_dir / "strict_final_recovery_job_bindings.md").write_text(
+        render_markdown(
+            payload["manifest"],
+            payload["binding_rows"],
+            submit_log=args.submit_log,
+            job_map_csv=args.job_map_csv,
+        ),
+        encoding="utf-8",
+    )
+    write_text_executable(
+        args.output_dir / "sync_bound_jobs.sh",
+        render_sync_bound_script(payload["manifest"], payload["binding_rows"]),
+    )
+    print(
+        json.dumps(
+            {
+                "bound_runs": payload["bound_runs"],
+                "output_dir": str(args.output_dir),
+                "total_runs": payload["total_runs"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

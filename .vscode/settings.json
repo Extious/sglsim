@@ -1,0 +1,102 @@
+{
+  "latex-workshop.latex.outDir": "%DIR%",
+  "latex-workshop.latex.recipe.default": "first",
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.latex.tools": [
+    {
+      "name": "xelatex (conda latex)",
+      "command": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux/xelatex",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "%DOC%"
+      ],
+      "env": {
+        "PATH": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux:/home/comp/zhanzhao/miniforge3/envs/latex/bin:${env:PATH}"
+      }
+    },
+    {
+      "name": "lualatex (conda latex)",
+      "command": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux/lualatex",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "%DOC%"
+      ],
+      "env": {
+        "PATH": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux:/home/comp/zhanzhao/miniforge3/envs/latex/bin:${env:PATH}"
+      }
+    },
+    {
+      "name": "latexmk-xelatex (conda latex)",
+      "command": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux/latexmk",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "-xelatex",
+        "%DOC%"
+      ],
+      "env": {
+        "PATH": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux:/home/comp/zhanzhao/miniforge3/envs/latex/bin:${env:PATH}"
+      }
+    },
+    {
+      "name": "pdflatex (conda latex)",
+      "command": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux/pdflatex",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "%DOC%"
+      ],
+      "env": {
+        "PATH": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux:/home/comp/zhanzhao/miniforge3/envs/latex/bin:${env:PATH}"
+      }
+    },
+    {
+      "name": "pdftoppm (conda latex)",
+      "command": "/home/comp/zhanzhao/miniforge3/envs/latex/bin/pdftoppm",
+      "args": [
+        "-png",
+        "%DOCFILE%.pdf",
+        "%DOCFILE%"
+      ],
+      "env": {
+        "PATH": "/home/comp/zhanzhao/miniforge3/envs/latex/tinytex/bin/x86_64-linux:/home/comp/zhanzhao/miniforge3/envs/latex/bin:${env:PATH}"
+      }
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "lualatex x2 (conda latex)",
+      "tools": [
+        "lualatex (conda latex)",
+        "lualatex (conda latex)"
+      ]
+    },
+    {
+      "name": "xelatex x2 (conda latex)",
+      "tools": [
+        "xelatex (conda latex)",
+        "xelatex (conda latex)"
+      ]
+    },
+    {
+      "name": "latexmk xelatex (conda latex)",
+      "tools": [
+        "latexmk-xelatex (conda latex)"
+      ]
+    },
+    {
+      "name": "pdflatex x2 (conda latex)",
+      "tools": [
+        "pdflatex (conda latex)",
+        "pdflatex (conda latex)"
+      ]
+    }
+  ],
+  "latex-workshop.view.pdf.viewer": "tab"
+}

@@ -48,6 +48,10 @@ class ChatCompletionBody(BaseModel):
     simulation: dict[str, Any] = {}
 
 
+class SimulateDpFailureBody(BaseModel):
+    dp_rank: int
+
+
 def _fixed_client_settings() -> dict[str, Any]:
     raw = ConfigManager._raw or {}
     fixed = raw.get("client", {}).get("fixed", {})
@@ -98,6 +102,38 @@ def create_app(engine: Engine) -> FastAPI:
                 content={"status": "starting"},
             )
         return JSONResponse(content={"status": "ok"})
+
+    @app.get("/simulate/failure_status")
+    def simulate_failure_status() -> dict[str, Any]:
+        return engine.soft_failure_status()
+
+    @app.post("/simulate/fail_dp")
+    def simulate_fail_dp(body: SimulateDpFailureBody) -> dict[str, Any]:
+        try:
+            return engine.soft_fail_dp_rank(int(body.dp_rank))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post("/simulate/recover_dp")
+    def simulate_recover_dp(body: SimulateDpFailureBody) -> dict[str, Any]:
+        try:
+            return engine.recover_soft_failed_dp_rank(int(body.dp_rank))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post("/simulate/kill_dp")
+    def simulate_kill_dp(body: SimulateDpFailureBody) -> dict[str, Any]:
+        try:
+            return engine.hard_fail_dp_rank(int(body.dp_rank))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post("/simulate/restart_dp")
+    def simulate_restart_dp(body: SimulateDpFailureBody) -> dict[str, Any]:
+        try:
+            return engine.restart_hard_failed_dp_rank(int(body.dp_rank))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/v1/completions")
     def completions(body: CompletionBody, request: Request) -> dict[str, Any]:
