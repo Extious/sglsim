@@ -1,0 +1,34 @@
+% Compiled by sections/03-system-design-v2.tex.
+% Design-SHA256: 915886a3fbca8270eb55c1e5867f4c01bff1b0edaa48ab0294972a3392a20682
+\begin{algorithm}[t]
+\caption{\textsc{SlackLandlord}}
+\label{alg:slack-landlord}
+\begin{tabular}{@{}r@{\hspace{0.5em}}>{\raggedright\arraybackslash}p{\dimexpr\columnwidth-2.5em\relax}@{}}
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textit{Symbols.} $x=(c,r)$: candidate chunk $c$ ($b_c$ bytes) and target $r$; $i=\operatorname{req}(c)$.}\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{$L_r$: rent; $Q_r$: tail min-heap keyed by $H_y$; $Y$: tentative evictions; $Q$: temporary view of $Q_r$.}\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{$f$: free bytes exposed by target $r$; $\bot$: none.}\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textbf{SlackLandlord}$(x=(c,r),t)$}\\
+1 & $A\gets\operatorname{Gain}(x,t)$; $\Theta\gets L_r+A/b_c$; $Y\gets\varnothing$; $Q\gets\operatorname{View}(Q_r)$.\\
+2 & $f\gets\operatorname{Free}(r)$.\\
+3 & \textbf{while} $f<b_c$ \textbf{do}\\
+4 & $\quad(y,H_y)\gets\operatorname{MinTail}(Q,Y,i,t)$.\\
+5 & $\quad$\textbf{if} $(y=\bot)\lor(H_y\ge\Theta)$ \textbf{then} \textbf{return} \textsc{Bypass}.\\
+6 & $\quad Y\gets Y\cup\{y\}$; $f\gets f+b_y$.\\
+7 & $\quad z\gets\operatorname{PrevTail}(y,Y)$; $z\ne\bot\Rightarrow Q.\operatorname{insert}(z,\operatorname{RefreshKey}(z,Y,t))$.\\
+8 & \textbf{end while}\\
+9 & $D\gets\operatorname{Loss}(Y,t)$; $A\le D\Rightarrow\operatorname{return}\ \textsc{Bypass}$.\\
+10 & $\operatorname{Evict}(Y)$; $Y\ne\varnothing\Rightarrow L_r\gets\max\{L_r,\max_{y\in Y}H_y\}$.\\
+11 & $\operatorname{Allocate}(c,r,b_c)$; $\operatorname{state}(c)\gets\textsc{Pending}$.\\
+12 & $\operatorname{Transfer.Enqueue}(x)$; $\operatorname{return}\ \textsc{Pending}$.\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textbf{MinTail}$(Q,Y,i,t)$}\\
+13 & \textbf{while} $Q\ne\varnothing$ \textbf{do}\\
+14 & $\quad(y,H_y)\gets Q.\operatorname{min}()$.\\
+15 & $\quad$\textbf{if} $\operatorname{Stale}(y,Y,t)$ \textbf{then} $Q.\operatorname{update}(y,\operatorname{RefreshKey}(y,Y,t))$; \textbf{continue}.\\
+16 & $\quad Q.\operatorname{pop}()$; $\operatorname{req}(y)\ne i\Rightarrow\operatorname{return}\ (y,H_y)$.\\
+17 & \textbf{end while}; $\operatorname{return}\ (\bot,\infty)$.\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textbf{OnCopyDone}$(x=(c,r),t')$}\\
+18 & \textbf{if} $\operatorname{AllAck}(c)\land\operatorname{Valid}(c)$ \textbf{then}\\
+19 & $\quad H_c\gets L_r+\operatorname{Gain}(x,t')/b_c$; $\operatorname{state}(c)\gets\textsc{Committed}$; $Q_r.\operatorname{insert}(c,H_c)$; \textbf{return}.\\
+20 & $\operatorname{state}(c)\gets\textsc{Aborted}$; $\operatorname{Free}(c)$.\\
+\end{tabular}
+\end{algorithm}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S5",
+  "layer": "deployment",
+  "description": "AegisKV online alpha and source-owned independent HBM/DRAM tiers",
+  "topology": {
+    "hardware": "NVIDIA A100 40 GiB modeled capacity",
+    "layout": "Qwen3-8B TP1/PP1",
+    "system_dp": 16,
+    "node_count": 2
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "controller": "AIMD alpha/pressure controller",
+    "tier_accounting": "independent HBM and DRAM admission"
+  },
+  "axes": {},
+  "planned_cells": 3,
+  "unique_cells": 3,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s4_s5_targeted_v2.py",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s4_s5_targeted_v2/s5_plot_source.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s4_s5_targeted_v2/s5_audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s4_s5_targeted_v2/manifest.json",
+    "expected_rows": 15,
+    "plot_kind": "alpha_pressure_occupancy_timeline",
+    "figure_slug": "alpha_pressure_load_occupancy_timeline"
+  },
+  "evidence": {
+    "class": "modeled_metadata_des_preliminary",
+    "paper_ready": false,
+    "known_gaps": []
+  },
+  "matrix_note": "3 paired seeds, each with a frozen multi-phase timeline"
+}

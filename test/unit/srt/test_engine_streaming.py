@@ -72,3 +72,25 @@ def test_finished_abort_message_preserves_aborted_status(monkeypatch):
     stats = engine.wait_for_rid("r0", timeout_s=0.0)
 
     assert stats.status == "aborted"
+
+
+def test_detokenizer_message_persists_l3_restore_evidence():
+    engine = Engine.__new__(Engine)
+    REQUEST_STATS.clear()
+
+    engine._apply_detokenizer_message(
+        {
+            "rid": "r-l3",
+            "finished": False,
+            "aegis_replay_capacity_limited_tokens": 17,
+            "aegis_replay_l3_restore_path": "l3_read+h2d",
+            "aegis_l3_backup_lookup_hit": True,
+            "aegis_l3_backup_lookup_tokens": 8192,
+        }
+    )
+
+    stats = REQUEST_STATS["r-l3"]
+    assert stats.aegis_replay_capacity_limited_tokens == 17
+    assert stats.aegis_replay_l3_restore_path == "l3_read+h2d"
+    assert stats.aegis_l3_backup_lookup_hit
+    assert stats.aegis_l3_backup_lookup_tokens == 8192

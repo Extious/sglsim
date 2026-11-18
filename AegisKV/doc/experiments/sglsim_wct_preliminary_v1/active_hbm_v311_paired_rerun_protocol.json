@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-active-hbm-v311-domain-corrected-20260827",
+  "status": "PREREGISTERED_AFTER_V31_DOMAIN_BUG_DISCOVERY_BEFORE_V311_RESULTS",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "current_design_path": "/home/comp/zhanzhao/Mooncake/aegiskv/design/current_design.md",
+  "current_design_sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac",
+  "parent_capacity_protocol": "active_hbm_v3_protocol.json",
+  "parent_capacity_protocol_sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f",
+  "invalidated_v31_protocol": "active_hbm_v31_paired_rerun_protocol.json",
+  "invalidated_v31_protocol_sha256": "cc62e9934837be17372f9b7e860c03c13270512db911176d30224947ffffa6fd",
+  "invalidated_v31_result_marker": "results/active_hbm_v31_paired_rerun/INVALIDATED.json",
+  "invalidated_v31_result_marker_sha256": "2b77831d1a822c5a40620930105df7c0ccef606c8faa8de19b06d35e346e9287",
+  "v31_des": "active_hbm_v31.py",
+  "v31_des_sha256": "dca2c99abcc7913d48021b499103f0ae6917529e058db2a97e85e2831206a495",
+  "implementation_runner": "run_active_hbm_v31_paired_rerun.py",
+  "implementation_runner_sha256": "38c19d2cbe307103ad3a71507d7179271cdc3b0cdf45f8601d711cbf2820f718",
+  "lineage_wrapper": "run_active_hbm_v311_paired_rerun.py",
+  "lineage_wrapper_sha256": "fdca16fd78c3096fe2069df70b32acf2a8a66c1dc824769bd1f83577fdb289cf",
+  "core_runner": "run_preliminary.py",
+  "core_runner_sha256": "0bb1dfb06c21dabb3e6460c6005ecea3ee1baa52db225f07b26660bb36a192fb",
+  "domain_correction": {
+    "old_invalid_behavior": "source_node replay affected only probe.source_rank",
+    "new_behavior": "source_node replay affects exactly ranks floor(source_rank/8)*8 through +7; source_worker_gpu affects exactly source_rank",
+    "explicit_regression": "source_node_hits_exact_eight_ranks_and_worker_hits_one",
+    "partial_reuse_of_invalidated_v31": false
+  },
+  "corrections": {
+    "serving_backup_projection": "exact dry-run of the same per-chunk policy admission; gate on HBM bytes actually retained",
+    "slack_prediction": "seed-separated independent categorical prediction plus independent residual; never reads realized output/service",
+    "copy_paths": "unchanged separate source-owned tier lanes; critical service is max rather than sum; exact per-tier bytes"
+  },
+  "matrix": {
+    "model": "Qwen3-8B TP1 PP1",
+    "system_dp": 16,
+    "context_tokens": 40960,
+    "active_requests_per_gpu": 16,
+    "arrival_cutoff_ms": 90000.0,
+    "fault_probes_per_cell": 24,
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "policies": [
+      "Native Mooncake",
+      "AegisKV",
+      "AegisKV no Algorithm 1",
+      "AegisKV no Algorithm 2",
+      "AegisKV no Algorithm 3"
+    ],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "expected_cells": 30
+  },
+  "primary_estimands": {
+    "healthy_wct": "mean no-fault WCT on the common workflow universe",
+    "same_probe_failure_conditioned_wct": "per shared probe mean WCT over the entire common workflow universe, equal weighted across probes",
+    "all_workflow_total_wct": "healthy WCT plus all-workflow added-WCT, exactly equal to the shared-probe replay mean",
+    "primary_denominator": "workflow_count times fault_probe_count"
+  },
+  "secondary_diagnostic": "policy-specific changed-only values are forbidden as cross-policy primary evidence",
+  "hard_gates": {
+    "source_node_exactly_eight_ranks_and_worker_exactly_one": true,
+    "same_workflow_and_probe_hashes_across_all_five_policies": true,
+    "raw_hash_and_statistic_recomputation": true,
+    "capacity_violations": 0,
+    "exact_projection_matches_real_admission": true,
+    "slack_and_dispatch_do_not_read_realized_output": true,
+    "source_copy_parallel_max_not_sum": true,
+    "no_performance_direction_or_win_threshold": true
+  },
+  "modeled_unmeasured_timing_inputs": {
+    "aegis_worker_fence_activation_ms": 500.0,
+    "native_replacement_ms": 60000.0
+  },
+  "evidence_boundary": "Preliminary metadata DES diagnostic, not paper-ready or physical evidence. Native Mooncake is modeled. Slack prediction is uncalibrated. The 500 ms and 60 s inputs are modeled/unmeasured."
+}

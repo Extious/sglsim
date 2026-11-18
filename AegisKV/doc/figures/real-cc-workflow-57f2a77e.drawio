@@ -1,0 +1,65 @@
+<mxfile host="Electron" modified="2026-08-10T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="real-cc-fanout" name="Page-1">
+    <mxGraphModel dx="1066" dy="654" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="660" pageHeight="285" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="main" value="Main" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#DCEAF7;strokeColor=#356A9A;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=22;fontStyle=1;fontColor=#17324D;" vertex="1" parent="1">
+          <mxGeometry x="8" y="104" width="82" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="fork" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="112" y="120" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="branch-a" value="&lt;b&gt;Subagent A&lt;/b&gt;&lt;br&gt;22.3 min" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFF1DF;strokeColor=#C65D21;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=22;fontColor=#7C2D12;" vertex="1" parent="1">
+          <mxGeometry x="174" y="18" width="280" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="branch-b" value="&lt;b&gt;Subagent B&lt;/b&gt;&lt;br&gt;20.2 min" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFF1DF;strokeColor=#C65D21;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=22;fontColor=#7C2D12;" vertex="1" parent="1">
+          <mxGeometry x="174" y="107" width="254" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="branch-c" value="&lt;b&gt;Subagent C&lt;/b&gt;&lt;br&gt;2.8 min" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#F1F5F9;strokeColor=#64748B;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=20;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="174" y="196" width="140" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="join" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="480" y="120" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="continue" value="Continue" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#DCEAF7;strokeColor=#356A9A;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=21;fontStyle=1;fontColor=#17324D;" vertex="1" parent="1">
+          <mxGeometry x="542" y="104" width="106" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-main-fork" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="main" target="fork">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-fork-a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=1.8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="fork" target="branch-a">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-fork-b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=1.8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="fork" target="branch-b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-fork-c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=1.8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="fork" target="branch-c">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-a-join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=1.8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="branch-a" target="join">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="466" y="49"/>
+              <mxPoint x="466" y="138"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-b-join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=1.8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="branch-b" target="join">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-c-join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=1.8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="branch-c" target="join">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="466" y="227"/>
+              <mxPoint x="466" y="138"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-join-continue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="join" target="continue">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

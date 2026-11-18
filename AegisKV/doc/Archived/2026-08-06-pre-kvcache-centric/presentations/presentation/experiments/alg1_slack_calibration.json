@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "semantics": "fixed_dag_cpm_slack_v2",
+  "calibration_id": "alg1-fixed-dag-runtime-b25bc35a0cd2",
+  "algorithm": "AegisKV Algorithm 1 fixed-DAG CPM runtime envelope",
+  "source_results": [
+    "/home/comp/zhanzhao/sglsim/AegisKV/demo/results/qwen3_32b_dp4_pp4_alg1_formal_calibration_v2/20260804-021032/no_backup.json"
+  ],
+  "source_results_sha256": "b25bc35a0cd20f6b2aeacfcda99810155dd1de639e4aa10f607f5a9de5952fe6",
+  "split_salt": "aegiskv-fixed-dag-runtime-v2-2",
+  "target_lower_coverage": 0.9,
+  "global_lower_margin_s": 0.0,
+  "role_lower_margins_s": {},
+  "fallback_lower_bounds_s": {},
+  "slack_lower_margin_ms": 0.0,
+  "request_cost_model": {
+    "request_setup_ms": 5841.0723029414585,
+    "prefill_ms_per_token": 1.7637816141831932,
+    "decode_ms_per_token": 37.179602527717115,
+    "lower_scale": 0.45672805971479713,
+    "upper_scale": 1.689543015750941
+  },
+  "online_progress_correction": {
+    "enabled": true,
+    "minimum_progress_fraction": 0.75,
+    "requires_future_request": true,
+    "replaces_static_ranking_after_trigger": true,
+    "replay_inputs": "measured request completion prefixes plus modeled remaining work"
+  },
+  "partitions": {
+    "fit": {
+      "workflows": 11,
+      "examples": 76
+    },
+    "calibration": {
+      "workflows": 3,
+      "examples": 16
+    },
+    "evaluation": {
+      "workflows": 5,
+      "examples": 30
+    }
+  },
+  "evaluation": {
+    "examples": 30,
+    "fanout_examples": 17,
+    "workflows": 5,
+    "observed_lower_coverage": 1.0,
+    "observed_interval_coverage": 1.0,
+    "critical_recall": 1.0,
+    "critical_precision": 1.0,
+    "median_absolute_error_ms": 10418.040259312445,
+    "p90_absolute_error_ms": 106792.1284468639,
+    "p90_error_budget_ms": 110379.2486,
+    "nonzero_lcb_fraction": 0.0,
+    "accuracy_passed": true
+  },
+  "evaluation_gate": {
+    "passed": true,
+    "formal_runtime_gate_passed": true,
+    "accuracy_passed": true,
+    "formal_scope_passed": true,
+    "formal_workflows": 19,
+    "required_scope": {
+      "evidence_tier": "sglsim-online-measured",
+      "model": "Qwen/Qwen3-32B",
+      "dp_size": 4,
+      "pp_size": 4,
+      "context_length": 32768
+    },
+    "minimum_runtime_lower_coverage": 0.9,
+    "minimum_runtime_critical_recall": 0.9,
+    "minimum_runtime_critical_precision": 0.75,
+    "p90_absolute_error_budget_ms": 110379.2486
+  },
+  "safety_contract": "Durations are fitted only on workflow-disjoint runtime rows and transformed through the fixed stage DAG. Singleton stages have zero Slack. A causal last-quarter progress correction may only upgrade a branch while another request remains to protect. Algorithm 2 consumes only the conformal lower bound; payload and manifest ACK state remain the recoverability authority."
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "evidence_class": "real_weka_context_projection_preregistration",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "trace": {
+    "path": "/home/comp/zhanzhao/sglsim/AegisKV/Archived/2026-08-06-pre-kvcache-centric/presentations/presentation/experiments/sglsim_large/traces/cc-traces-weka-062126/traces.materialized.jsonl",
+    "sha256": "29b6a19e751ff5230771519aab755f80a0f43a4ba9cf96b72d3a6a437ec99276",
+    "expected_full_profile": {
+      "request_count": 98827,
+      "input_tokens": 21635381376,
+      "output_tokens": 106474498
+    }
+  },
+  "model": {
+    "revision": "Qwen/Qwen3-8B@b968826d9c46dd6066d109eabc6255188de91218",
+    "config_path": "/home/comp/zhanzhao/.cache/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218/config.json",
+    "config_sha256": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+    "kv_bytes_per_token_all_layers": 147456
+  },
+  "physical_calibration_contract": {
+    "hardware_label": "V100S-1node-TP1-PP1-systemDP4",
+    "profile_semantics": "source_owned_four_physical_paths_v1",
+    "maximum_calibrated_context_tokens": 4096,
+    "status": "WAITING_FOR_SCHEMA_V2_V100_PROFILE"
+  },
+  "scale_points": [
+    {
+      "label": "unscaled-diagnostic-invalid",
+      "factor": 1.0,
+      "role": "diagnose_original_trace_model_mismatch_only"
+    },
+    {
+      "label": "scale-0.004-calibration-aligned-primary-candidate",
+      "factor": 0.004,
+      "role": "preregistered_primary_after_physical_profile_gate"
+    },
+    {
+      "label": "scale-0.008-context-sensitivity",
+      "factor": 0.008,
+      "role": "preregistered_sensitivity_context_extrapolation"
+    },
+    {
+      "label": "scale-0.016-context-sensitivity",
+      "factor": 0.016,
+      "role": "preregistered_sensitivity_context_extrapolation"
+    },
+    {
+      "label": "scale-0.032-context-sensitivity",
+      "factor": 0.032,
+      "role": "preregistered_sensitivity_context_extrapolation"
+    }
+  ],
+  "result_policy": {
+    "retain_all_scale_points": true,
+    "post_hoc_primary_selection_forbidden": true,
+    "scaled_trace_label_required": true,
+    "performance_results_present": false
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "status": "PRELIMINARY_EXTENSION_COMPLETE",
+  "paper_ready": false,
+  "model": "Qwen3-8B",
+  "common_contract": "paired three-seed 90-second fixed-arrival DES; controller opportunities at 30/60/90 seconds",
+  "results": {
+    "S3": {
+      "audit": "results/s3_preliminary_v1/audit.json",
+      "audit_sha256": "0e48e8e3edf9ee1ba64385d58d844fa7aa0243f4aea168ef54fb1d16a2db6ce9",
+      "audit_checks": "11/11 PASS",
+      "summary_sha256": "0b37e7bc1d5f3244998ad8ccc4cbf945cd49b5678f594ea0d6164a0651c8aeed",
+      "figure_pdf": "results/s3_preliminary_v1/figures/s3_scale_context_preliminary.pdf",
+      "figure_pdf_sha256": "0bf6045041b9e13788c12e1898b7a77e6689f89525b5e2f03c91958b8adbbb99",
+      "figure_png": "results/s3_preliminary_v1/figures/s3_scale_context_preliminary.png"
+    },
+    "S6": {
+      "audit": "results/s6_preliminary_v3/audit.json",
+      "audit_sha256": "536cd2c078f555dfac593e0839f3caaff40e427f750a583260381d556ebf52c4",
+      "audit_checks": "15/15 PASS",
+      "summary_sha256": "2692c9d5205673356e3da80ea451acdc37ab5a2b81f23634e76a528a49882e7c",
+      "figure_pdf": "results/s6_preliminary_v3/figures/s6_reuse_occupancy_preliminary.pdf",
+      "figure_pdf_sha256": "3a287fe7115d16099b667353057334818de50b4e417e64879f0c690f78bb1057",
+      "figure_png": "results/s6_preliminary_v3/figures/s6_reuse_occupancy_preliminary.png",
+      "occupancy_evidence": "controller pool used_bytes step traces saved in every raw NPZ; byte-ms capacity integrals independently reconstructed and matched in audit; no event-fraction inference"
+    },
+    "S7": {
+      "audit": "results/s7_preliminary_v1/audit.json",
+      "audit_sha256": "47246d4eb5478d352e8e7a91569c2a9d3dbe2cfc7396aceb25103198ea9df2ec",
+      "audit_checks": "14/14 PASS after independent correction of the paired repair-delay gate",
+      "summary_sha256": "8e0e3edd7de96b6020a52fddcf044fa2b2e40a70d5f7c32e4d3e2bb0fb7f9228",
+      "figure_pdf": "results/s7_preliminary_v1/figures/s7_topology_repair_preliminary.pdf",
+      "figure_pdf_sha256": "df53579e5eb872d790b0cfacfb37a517ffa1bcaca1031924d4162c2a701c78cb",
+      "figure_png": "results/s7_preliminary_v1/figures/s7_topology_repair_preliminary.png"
+    }
+  },
+  "invalidated": [
+    "results/s6_preliminary_v1",
+    "results/s6_preliminary_v2"
+  ],
+  "evidence_boundary": "SGLSim metadata DES preliminary only; not physical A100 measurement, not paper-ready, and not a production Mooncake failover implementation. Native Mooncake remains a modeled Router+Store approximation. Qwen3-32B was not run."
+}

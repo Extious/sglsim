@@ -1,6 +1,7 @@
 import pytest
 
 from sglsim.srt.managers.schedule_batch import Batch, ForwardMode, Req, SamplingParams
+from sglsim.srt.time_predictor.base import physical_pipeline_stage_latency
 from sglsim.srt.time_predictor.constant import ConstantTimePredictor
 from sglsim.srt.time_predictor.topology import TopologyAwareTimePredictor
 
@@ -43,6 +44,27 @@ def test_topology_aware_predictor_scales_prefill_latency_by_tp_and_pp():
         [Req("r0", [1, 2, 3], SamplingParams(max_new_tokens=1))],
     )
     assert predictor.predict_batch_latency(batch) == 0.020
+
+
+def test_physical_pipeline_partitions_e2e_latency_without_double_counting():
+    predicted_pipeline_s = 0.020
+
+    stage_s = physical_pipeline_stage_latency(
+        predicted_pipeline_s,
+        pp_size=4,
+    )
+
+    assert stage_s == 0.005
+    assert stage_s * 4 == predicted_pipeline_s
+
+
+@pytest.mark.parametrize(
+    ("latency_s", "pp_size"),
+    [(-0.001, 4), (0.001, 0)],
+)
+def test_physical_pipeline_partition_rejects_invalid_inputs(latency_s, pp_size):
+    with pytest.raises(ValueError):
+        physical_pipeline_stage_latency(latency_s, pp_size=pp_size)
 
 
 @pytest.mark.parametrize(

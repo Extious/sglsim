@@ -1,0 +1,17 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S6",
+  "layer": "request",
+  "description": "Shared-prefix identity reuse sweep",
+  "workload": {
+    "arrival_window_ms": 180000,
+    "warmup_ms": 90000,
+    "model": "Qwen/Qwen3-8B",
+    "reuse_gate": "shared-prefix identity, not shortened context"
+  },
+  "axes": {
+    "reuse_fraction": [0.0, 0.25, 0.5, 0.75, 1.0],
+    "paired_seed": [2026082600, 2026082601, 2026082602]
+  },
+  "matrix_note": "All five prefix-identity reuse points are executed"
+}

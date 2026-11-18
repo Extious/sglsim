@@ -1,0 +1,58 @@
+{
+  "content_families": [
+    {
+      "family_id": "family-00",
+      "prefix_stream_preimage": "aegiskv-controlled-prefix-reuse-v1:family=0:shared-prefix",
+      "prefix_stream_sha256": "71366f1b812227be5bf3dc4d1ab9d2a9e763cfda2cd6e2d2dc4c57f2ea750aa8"
+    },
+    {
+      "family_id": "family-01",
+      "prefix_stream_preimage": "aegiskv-controlled-prefix-reuse-v1:family=1:shared-prefix",
+      "prefix_stream_sha256": "aed6be87a110be8dc9a5bac4c9fcfde40c9693f041d34fe04d6ef9ac9404b176"
+    },
+    {
+      "family_id": "family-02",
+      "prefix_stream_preimage": "aegiskv-controlled-prefix-reuse-v1:family=2:shared-prefix",
+      "prefix_stream_sha256": "f1d6fe989aeeb62f9e31bbf84a37d1752ac47b61cd236c13f9b73d7fc0487fe8"
+    },
+    {
+      "family_id": "family-03",
+      "prefix_stream_preimage": "aegiskv-controlled-prefix-reuse-v1:family=3:shared-prefix",
+      "prefix_stream_sha256": "093d9d734eb5169d907cc316dbf8c5fb8bfc81bcfba809c4c90eaac91a1dcf2f"
+    }
+  ],
+  "dataset_id": "aegiskv-controlled-prefix-reuse-v1",
+  "generator": {
+    "empirical_measurement": false,
+    "implementation": "AegisKV/experiments/src/controlled_prefix_artifact.py",
+    "provenance": "Preregistered deterministic synthetic workload for isolating prefix-reuse effects; not TraceLab data and not a measured trace.",
+    "schema_version": "aegiskv.controlled-prefix-generator.v1"
+  },
+  "schema_version": "aegiskv.controlled-prefix-artifact.v1",
+  "session_identity_recipe": {
+    "complete_sessions_only": true,
+    "session_id_format": "cp-family-{family_index:02d}-session-{session_index:02d}",
+    "suffix_stream_preimage_format": "aegiskv-controlled-prefix-reuse-v1:family={family_index}:session={session_index}:round={round_index}:reuse={reuse_numerator}/4:private-suffix"
+  },
+  "token_identity": {
+    "algorithm": "sha256_counter_u32_mod_vocab",
+    "content_bytes_materialized": false,
+    "vocab_size": 151936
+  },
+  "workload_shape": {
+    "content_family_count": 4,
+    "controllable_prefix_tokens": 11904,
+    "input_tokens_per_request": 15872,
+    "output_tokens_per_request": 512,
+    "parameter_provenance": {
+      "arrival_spacing": "Preregistered deterministic schedule used to isolate reuse; not measured.",
+      "cardinalities": "Preregistered balanced-factorial simulation choice; not measured.",
+      "token_counts": "Preregistered 16K-context controlled point: 15,872 input plus 512 output tokens; not measured."
+    },
+    "round_spacing_ns": 250000000,
+    "rounds_per_session": 16,
+    "selected_sessions_per_family": 2,
+    "session_stagger_ns": 10000000,
+    "sessions_per_family": 8
+  }
+}

@@ -14,6 +14,7 @@ from .config import (
     scenario_names,
     scenario_plan_row,
 )
+from .online import build_online_experiment_plan, write_online_experiment_plan
 from .summary import summarize_run_dir, write_summary_csv, write_summary_json
 
 
@@ -57,7 +58,16 @@ def execute_scenario(
             output_dir=scenario_root,
             trial=trial,
         )
+        online_plan = build_online_experiment_plan(
+            scenario,
+            output_dir=scenario_root,
+            base_config_dir=base_config_dir,
+            trial=trial,
+        )
+        plan_path = scenario_root / "plans" / f"trial_{trial:03d}" / "online_experiment_plan.json"
+        write_online_experiment_plan(plan_path, online_plan)
         row = scenario_plan_row(scenario, config_dir=config_dir, trial=trial)
+        row["online_plan"] = str(plan_path)
         plan_rows.append(row)
         if dry_run:
             continue
@@ -71,6 +81,7 @@ def execute_scenario(
             log_level=log_level,
             disable_overlap_schedule=bool(scenario.disable_overlap_schedule),
         )
+        write_online_experiment_plan(run_dir / "online_experiment_plan.json", online_plan)
         summary = summarize_run_dir(run_dir, scenario=scenario.name)
         summaries.append(summary)
         row["run_dir"] = str(run_dir)

@@ -1,0 +1,15 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S1",
+  "layer": "failure",
+  "description": "Registered worker/GPU and node fault domains",
+  "fault_model": {
+    "enabled": true,
+    "trace": "paired Poisson probes",
+    "source_worker_gpu": "one global GPU rank",
+    "source_node": "all eight ranks on floor(source_rank / 8)",
+    "domains_per_cell": ["source_worker_gpu", "source_node"]
+  },
+  "axes": {},
+  "matrix_note": "Both domains are evaluated from the same policy-free probe universe inside each cell"
+}

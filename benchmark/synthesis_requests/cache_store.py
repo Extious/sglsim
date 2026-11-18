@@ -18,6 +18,33 @@ if TYPE_CHECKING:
 
 CACHE_DIR = BENCHMARK_DIR / "cache"
 LEGACY_CACHE_DIR = Path.home() / ".cache" / "sglsim" / "benchmark"
+CACHE_SCHEMA_VERSION = "synthesis-requests-cache-v2"
+
+
+def _trace_jsonl_fingerprint(client: ClientConfig) -> dict[str, Any] | None:
+    if not client.trace_jsonl_path:
+        return None
+    path = Path(client.trace_jsonl_path)
+    if not path.is_absolute():
+        path = BENCHMARK_DIR.parents[1] / path
+    path = path.resolve()
+    if not path.is_file():
+        return {
+            "path": str(path),
+            "exists": False,
+        }
+    stat = path.stat()
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return {
+        "path": str(path),
+        "exists": True,
+        "size": stat.st_size,
+        "mtime_ns": stat.st_mtime_ns,
+        "sha256": digest.hexdigest()[:16],
+    }
 
 
 def _canonical_payload(client: ClientConfig, server: ServerConfig) -> dict[str, Any]:
@@ -25,7 +52,11 @@ def _canonical_payload(client: ClientConfig, server: ServerConfig) -> dict[str, 
     workload["request_rate"] = (
         "inf" if client.request_rate == float("inf") else client.request_rate
     )
+    trace_fingerprint = _trace_jsonl_fingerprint(client)
+    if trace_fingerprint is not None:
+        workload["trace_jsonl_fingerprint"] = trace_fingerprint
     return {
+        "cache_schema_version": CACHE_SCHEMA_VERSION,
         "model_path": server.model_path,
         "workload": workload,
     }

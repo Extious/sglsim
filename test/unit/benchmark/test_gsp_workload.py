@@ -198,6 +198,77 @@ def test_generate_staged_13131_workload_marks_critical_long_decode_agents():
     assert {r.workflow_shape for r in requests} == {"1-3-1-3-1"}
 
 
+def test_generate_staged_workload_uses_stage_context_lens_for_first_turn():
+    from sglsim.srt.utils.tokenizer_runtime import encode_text
+
+    client = _client(
+        gsp_num_groups=1,
+        gsp_prompts_per_group=9,
+        gsp_workflow_shape=(1, 3, 1, 3, 1),
+        gsp_stage_context_lens=(40, 40, 80, 40, 120),
+        gsp_stage_long_decode_agent_index=0,
+        gsp_output_len=10,
+        gsp_range_ratio=1.0,
+        gsp_fast_prepare=False,
+        gsp_ordered=True,
+        gsp_num_turns=3,
+    )
+
+    requests = generate_shared_prefix_workload(client, _server())
+
+    assert len(requests) == 9
+    assert [r.stage_id for r in requests] == [0, 1, 1, 1, 2, 3, 3, 3, 4]
+    assert [len(encode_text("mock-model", r.first_turn_prompt)) for r in requests] == [
+        40,
+        40,
+        40,
+        40,
+        80,
+        40,
+        40,
+        40,
+        120,
+    ]
+    assert [r.agent_id for r in requests] == [
+        "wf-0-main",
+        "wf-0-s1-a0",
+        "wf-0-s1-a1",
+        "wf-0-s1-a2",
+        "wf-0-main",
+        "wf-0-s3-a0",
+        "wf-0-s3-a1",
+        "wf-0-s3-a2",
+        "wf-0-main",
+    ]
+    assert [r.critical_agent for r in requests] == [
+        True,
+        True,
+        False,
+        False,
+        True,
+        True,
+        False,
+        False,
+        True,
+    ]
+
+
+def test_generate_staged_workload_rejects_mismatched_stage_context_lens():
+    client = _client(
+        gsp_num_groups=1,
+        gsp_prompts_per_group=9,
+        gsp_workflow_shape=(1, 3, 1, 3, 1),
+        gsp_stage_context_lens=(40, 80),
+        gsp_ordered=True,
+    )
+
+    try:
+        generate_shared_prefix_workload(client, _server())
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert "gsp_stage_context_lens" in str(exc)
+
+
 def test_load_config_dir(tmp_path: Path):
     cfg = tmp_path / "config"
     cfg.mkdir()

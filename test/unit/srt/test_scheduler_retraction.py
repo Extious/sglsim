@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from sglsim.srt.managers.schedule_batch import ForwardMode, Req, RequestStatus, SamplingParams, ScheduleBatch
 from sglsim.srt.managers.scheduler import REQUEST_STATS, Scheduler
 from sglsim.srt.server_args import ServerArgs
+from sglsim.srt.simulation.time_driver import WallClockDriver
 from sglsim.srt.simulation.types import RequestStats
 
 
@@ -117,6 +118,10 @@ def _make_scheduler(*, cache: _CacheStub | None = None) -> Scheduler:
     scheduler.max_running_requests = 4
     scheduler.RETRACT_DECODE_STEPS = 20
     scheduler.server_args = ServerArgs()
+    # ``Scheduler.__init__`` installs the wall driver in production.  This
+    # fixture intentionally bypasses __init__, so preserve that invariant
+    # explicitly for completion and abort timestamps.
+    scheduler._time_driver = WallClockDriver()
     scheduler.send_to_detokenizer = MagicMock()
     scheduler._prioritize_decode_after_retract = False
     scheduler._blocked_chunked_waiting_for_decode = False

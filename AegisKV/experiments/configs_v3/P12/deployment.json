@@ -1,0 +1,16 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "deployment",
+  "group": "P12",
+  "extends": "../common/deployment.json",
+  "fixed": {
+    "output_contract": {
+      "evidence_class": "planned_analytical_vs_des_verification"
+    }
+  },
+  "axes": {
+    "model": ["qwen3-8b", "qwen3-32b"],
+    "cross_node_bandwidth_gb_s": [10, 20, 25],
+    "verification_chunk_tokens": [1024, 4096, 8192]
+  }
+}

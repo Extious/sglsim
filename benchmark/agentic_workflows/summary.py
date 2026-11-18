@@ -19,6 +19,7 @@ class WorkflowRunSummary:
     seed: int
     dp_size: int
     workflow_count: int
+    total_agentic_requests: int
     turns: int
     groups: int
     prompts_per_group: int
@@ -217,7 +218,8 @@ def summarize_run_dir(run_dir: Path, *, scenario: str = "") -> WorkflowRunSummar
         ),
         seed=_as_int(workload.get("seed", 0)),
         dp_size=_as_int(scheduler.get("dp_size", 0)),
-        workflow_count=_as_int(workload.get("num_requests", 0)),
+        workflow_count=_as_int(workload.get("gsp_num_groups", 0)),
+        total_agentic_requests=_as_int(workload.get("num_requests", 0)),
         turns=_as_int(workload.get("gsp_num_turns", 0)),
         groups=_as_int(workload.get("gsp_num_groups", 0)),
         prompts_per_group=_as_int(workload.get("gsp_prompts_per_group", 0)),

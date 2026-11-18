@@ -1,0 +1,47 @@
+% !TeX root = ../paper_outline.tex
+\section{系统模型}
+
+\begin{frame}{AegisKV | Failure Model 与恢复正确性边界}
+  \scriptsize
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Failure model}
+        \begin{itemize}
+          \tightitems
+          \item worker/GPU 发生 crash-stop；owner GPU 的 active KV 全部丢失；
+          \item 一次 recovery epoch 处理一个 failure domain；
+          \item model weights、request input 与 workflow state 可在 survivor 上获得；
+          \item peer GPU/Host 只有位于 owner failure domain 之外才可作为 backup；
+          \item detector 发布单调递增的 \code{failure\_epoch}。
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Recovery object}
+        \begin{itemize}
+          \tightitems
+          \item 保护对象是 fixed-size、immutable、committed KV chunk；
+          \item 每个 chunk 由 \code{workflow/node/request/span/version} 唯一标识；
+          \item mutable decode tail 在 commit frontier 之后，故障时直接 recompute；
+          \item 恢复完成后，request 从 verified frontier 继续执行。
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.10cm}
+  \renewcommand{\arraystretch}{1.16}
+  \begin{tabularx}{\textwidth}{p{0.12\textwidth}p{0.25\textwidth}X}
+    \toprule
+    不变量 & 条件 & 保证 \\
+    \midrule
+    I1 & destination $\notin\operatorname{FD}(\mathrm{owner})$ & owner failure 不同时销毁 backup \\
+    I2 & restore version $=$ committed version & 不恢复 stale 或 partial KV \\
+    I3 & copy ACK 之前 action 保持 Recompute & 不把 in-flight copy 计为可恢复状态 \\
+    I4 & 任一检查失败均回退 Recompute & metadata/copy failure 只损失性能，不损失正确性 \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.08cm}
+  \takeaway{L1 Backup 与 L2 Backup 是性能优化；Recompute 始终是 correctness-preserving base path。}
+\end{frame}

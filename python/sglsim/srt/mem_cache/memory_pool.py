@@ -34,5 +34,20 @@ class DeviceKVPool:
         if pages:
             self._allocator.free(pages)
 
+    def clear(self) -> int:
+        """Release every device page after a simulated GPU-memory loss.
+
+        Returns the number of pages that were resident before the clear.  The
+        host pool is a separate allocator and is deliberately unaffected.
+        """
+
+        pages = [
+            self._allocator._pages_by_id[page_id]
+            for page_id in range(self._allocator.capacity_pages)
+            if page_id not in self._allocator._free_page_ids
+        ]
+        self.free(pages)
+        return len(pages)
+
     def page(self, page_id: int) -> KVPage:
         return self._allocator._pages_by_id[page_id]

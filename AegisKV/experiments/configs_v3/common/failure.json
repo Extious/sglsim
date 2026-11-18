@@ -1,0 +1,87 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "failure",
+  "group": "common",
+  "fixed": {
+    "fault_model": {
+      "type": "fail_stop",
+      "enabled": true,
+      "central_domain": "worker",
+      "central_target": "worker_1",
+      "fence_before_recovery": true,
+      "volatile_hbm_lost_on_gpu_or_node_failure": true,
+      "node_failure_invalidates_all_local_gpu_and_dram_resources": true
+    },
+    "domain": {
+      "supported": [
+        "worker",
+        "gpu",
+        "process",
+        "node"
+      ],
+      "same_node_peer_survives_node_failure": false,
+      "target_resolution_before_injection": true
+    },
+    "trigger": {
+      "mode": "policy_independent_active_exposure_v1",
+      "central_time_ns": 10000000000,
+      "active_offset_ns": 1000000,
+      "anchor_selector": "minimum_arrival_ns_then_request_id_v1",
+      "activation_signal": "actual_scheduler_stage_ownership_v1",
+      "target_selector": {
+        "worker": "anchor_source_then_dense_order_v1",
+        "gpu": "anchor_source_then_dense_order_v1",
+        "process": "anchor_source_then_dense_order_v1",
+        "node": "node_containing_anchor_source_v1"
+      },
+      "shadow_plan": {
+        "construction": "pre_execution_request_universe_projection_v1",
+        "hash": "sha256_canonical_json_v1",
+        "same_plan_required_across_policies": true,
+        "policy_outcome_selection_forbidden": true,
+        "included_inputs": [
+          "request_universe_sha256",
+          "executed_request_set_sha256",
+          "seed",
+          "failure_scenario",
+          "physical_topology_identity",
+          "anchor_selector",
+          "target_selector",
+          "active_offset_rule"
+        ],
+        "excluded_inputs": [
+          "deployment.policy",
+          "deployment.algorithm_variant",
+          "deployment.hbm_budget_gib_per_gpu",
+          "deployment.dram_budget_gib_per_node",
+          "deployment.cross_node_bandwidth_gb_s",
+          "runtime_completion_time",
+          "runtime_failure_outcome"
+        ]
+      },
+      "same_timestamp_ties_use_global_des_priority": true,
+      "short_run_poisson_generation": false
+    },
+    "repair": {
+      "central_horizon_s": 30,
+      "replacement_route_delay_ms": 100,
+      "routing_outage_ms": 50,
+      "failed_resource_unavailable_until_repair": true,
+      "repair_restores_empty_volatile_state": true
+    },
+    "paired_plan": {
+      "required": true,
+      "baseline_policy": "recompute",
+      "same_seed": true,
+      "same_request_universe": true,
+      "same_failure_target": true,
+      "same_failure_timestamp": false,
+      "same_trigger_rule": true,
+      "same_anchor_request": true,
+      "same_active_offset": true,
+      "shadow_schedule_hash_required": true,
+      "shadow_plan_sha256_required": true
+    }
+  },
+  "axes": {}
+}

@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="65bd71144e" pages="5">
+    <diagram id="fig1" name="Figure 1">
+        <mxGraphModel dx="1674" dy="830" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0" />
+                <mxCell id="1" parent="0" />
+                <mxCell id="f1-input" value="工作流 Slack&#10;命中率 / 复用信息&#10;LRU / 最近访问时序" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="290" y="175" width="250" height="135" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-p1" value="A  工作流感知 KV 优先级&#10;故障恢复收益融入租值" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=24;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="370" width="350" height="135" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-p2" value="B  动态租值独立分层管理&#10;Lazy Refresh&#10;准入 / 淘汰 / 提交" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=24;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="370" width="350" height="135" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-p3" value="C  AIMD 资源平衡&#10;压力时快降，稳定时慢增" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=24;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="370" width="300" height="135" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-source" value="源 Worker&#10;生成 KV 分块" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="670" width="260" height="110" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-target" value="路由绑定目标 Worker&#10;Peer-HBM 快速副本" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="690" y="560" width="300" height="110" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-store" value="共享 Store&#10;DRAM 后备副本" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="690" y="770" width="300" height="110" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-recovery" value="故障恢复&#10;只使用已确认副本&#10;其余区间重算" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="1130" y="665" width="270" height="120" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-note" value="租值优先级驱动两层管理；AIMD 只约束 Peer-HBM 额度，不改写优先级" style="text;html=1;align=center;verticalAlign=middle;fontSize=23;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="220" width="590" height="90" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f1-input" target="f1-p1" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f1-p1" target="f1-p2" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f1-p2" target="f1-p3" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-e4" value="D2D/P2P" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;fontSize=18;fontFamily=Arial;" parent="1" source="f1-source" target="f1-target" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-e5" value="D2H" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;fontSize=18;fontFamily=Arial;" parent="1" source="f1-source" target="f1-store" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f1-target" target="f1-recovery" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f1-e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f1-store" target="f1-recovery" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="fig2" name="Figure 2">
+        <mxGraphModel dx="1674" dy="830" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0" />
+                <mxCell id="1" parent="0" />
+                <mxCell id="f2-state" value="工作流信息&#10;请求 Slack  sᵢ(t)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=23;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="200" width="320" height="140" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-predict" value="本层容错信息&#10;Tbefore / Tafter&#10;r ∈ {Peer-HBM, DRAM}" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="200" width="360" height="140" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-slack" value="工作流恢复收益&#10;Wₓʳ = Δ[max(Tᵢʳ-sᵢ,0)]" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="200" width="420" height="140" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-request" value="传统缓存信息&#10;命中率 p_hit、复用代价&#10;LRU / 最近访问时序" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=23;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="470" width="360" height="150" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-chunk" value="复合收益&#10;Gₓʳ = λwW + λhUhit + λlUlru" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=24;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="440" width="520" height="190" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-score" value="单位字节优先级&#10;Pₓʳ = Gₓʳ / bₓ&#10;租值键 Hₓʳ = Lᵣ + Pₓʳ" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=26;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="1170" y="455" width="390" height="175" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f2-state" target="f2-predict" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f2-predict" target="f2-slack" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="f2-slack" target="f2-chunk" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f2-request" target="f2-chunk" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f2-e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f2-chunk" target="f2-score" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="fig3" name="Figure 3">
+        <mxGraphModel dx="1674" dy="830" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0" />
+                <mxCell id="1" parent="0" />
+                <mxCell id="f3-new" value="已封闭 KV 候选 x" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=25;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="140" y="270" width="180" height="80" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-hbmq" value="Peer-HBM 独立决策&#10;SlackLandlord(x,r)" style="rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=22;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="125" width="360" height="140" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-hbm" value="BYPASS；或&#10;撤销 Y 并分配空间&#10;PENDING → D2D/P2P&#10;COMMITTED / ABORTED" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=25;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="120" width="330" height="150" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-dramq" value="DRAM 独立决策&#10;SlackLandlord(x,r)" style="rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=22;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="345" width="360" height="140" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-dram" value="BYPASS；或&#10;撤销 Y 并分配空间&#10;PENDING → D2H&#10;COMMITTED / ABORTED" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=25;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="340" width="330" height="150" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-none" value="组合结果&lt;br&gt;HBM_ONLY&lt;br&gt;DRAM_ONLY&lt;br&gt;HBM_AND_DRAM&lt;br&gt;BYPASS" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=24;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="190" width="250" height="240" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-note" value="Slack、命中率或访问时序变化只使索引键失效；仅在检查堆顶或暴露新尾部时 Lazy Refresh，不扫描或搬运全部 KV" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=23;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="510" width="1000" height="90" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-local" value="第一级：每请求连续尾部&#10;只暴露一个安全候选&#10;隐藏分块保留原租值键" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=22;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="330" y="640" width="380" height="120" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-global" value="第二级：本池最小堆&#10;比较各请求暴露的尾部&#10;按版本惰性刷新陈旧键" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=22;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="890" y="640" width="380" height="120" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f3-new" target="f3-hbmq" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="f3-new" target="f3-dramq" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f3-hbmq" target="f3-hbm" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f3-dramq" target="f3-dram" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f3-hbm" target="f3-none" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f3-local" target="f3-global" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f3-e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f3-dram" target="f3-none" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="fig5" name="Figure 4">
+        <mxGraphModel dx="1674" dy="830" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0" />
+                <mxCell id="1" parent="0" />
+                <mxCell id="f5-signal" value="每个控制窗口&#10;读取显存压力" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="240" width="270" height="120" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-pressure" value="前台有压力？" style="rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="222.5" width="230" height="155" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-down" value="乘性降低&#10;保护额度按比例快速缩小" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=24;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="120" width="280" height="130" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-release" value="本地执行器&#10;阻止新 HBM 接纳&#10;发出容量事件" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=22;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="115" width="230" height="140" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-stable" value="连续多个窗口稳定？" style="rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=23;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="360" width="310" height="120" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-up" value="加性增加&#10;保护额度固定步长&#10;缓慢提高" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=3;fontSize=23;fontStyle=1;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="1070" y="345" width="300" height="150" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-hold" value="保持当前额度" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=24;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="570" width="310" height="100" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f5-signal" target="f5-pressure" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-e2" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;fontSize=20;fontFamily=Arial;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="f5-pressure" target="f5-down" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f5-down" target="f5-release" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-e5" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;fontSize=20;fontFamily=Arial;" parent="1" source="f5-stable" target="f5-up" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-e6" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;fontSize=20;fontFamily=Arial;" parent="1" source="f5-stable" target="f5-hold" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-store" value="存储控制模块&#10;从安全尾部直接回收&#10;HBM_ONLY / HBM_AND_DRAM&#10;先撤销资格，再释放显存" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#ffffff;strokeWidth=2;fontSize=20;fontFamily=Arial;" parent="1" vertex="1">
+                    <mxGeometry x="1220" y="80" width="330" height="220" as="geometry" />
+                </mxCell>
+                <mxCell id="f5-e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="f5-release" target="f5-store" edge="1">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+                <mxCell id="aiWQ90tJ-RYHV_Qi8CeI-1" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;endArrow=block;endFill=1;fontSize=20;fontFamily=Arial;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="f5-pressure" target="f5-stable">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="505" y="233" as="sourcePoint" />
+                        <mxPoint x="640" y="180" as="targetPoint" />
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

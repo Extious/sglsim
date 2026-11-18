@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-wct-preliminary-v1-20260826",
+  "evidence_class": "simulated_sglsim_metadata_des_preliminary",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "wct_definition": "max simulated request completion in workflow minus workflow arrival; request completion includes arrival, lane queueing, modeled service, replacement delay, KV recovery, and downstream lane queue propagation",
+  "failure_model": {
+    "rates_per_1000_gpu_shard_hour": [0.0, 5.952, 20.833],
+    "types": ["source_worker_gpu", "source_node"],
+    "type_mixture": {"source_worker_gpu": 0.5, "source_node": 0.5},
+    "replacement_delay_ms": 60000.0,
+    "single_fault_hazard_integration": true,
+    "single_fault_note": "Each fault replay is an executed DES WCT replay. Sparse-rate whole-workload estimates use a first-order Poisson mixture of no-fault and one-fault replays; concurrent multi-fault overlap is not modeled in this preliminary campaign."
+  },
+  "hardware": {
+    "gpu": "NVIDIA A100 40GB",
+    "gpu_hbm_gib": 40.0,
+    "gpus_per_node": 8,
+    "dram_gib_per_worker": 64.0,
+    "bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "topology_assignment": "even source ranks use same-node Peer-HBM plus local DRAM; odd source ranks use cross-node Peer-HBM plus remote DRAM; paths retain independent parameters, admission, copy, failure-domain validity, event counts, and recovery counts"
+  },
+  "aegiskv": {
+    "initial_alpha": 0.25,
+    "minimum_alpha": 0.0,
+    "maximum_alpha": 0.3,
+    "multiplicative_decrease": 0.5,
+    "additive_increase": 0.05,
+    "stable_windows_before_increase": 3,
+    "window_ms": 30000.0,
+    "hbm_nominal_quota_gib": 10.0,
+    "dram_quota_gib": 64.0,
+    "prefix_chunk_tokens": 4096
+  },
+  "models": {
+    "qwen3_8b": {
+      "display": "Qwen3-8B FP16",
+      "tp": 1,
+      "pp": 1,
+      "same_node_system_dp": [1, 2, 4, 8],
+      "multi_node_system_dp": [16, 32, 64, 128, 256],
+      "center_system_dp": 64,
+      "kv_bytes_per_token": 147456,
+      "prefill_setup_ms": 4.0,
+      "prefill_ms_per_token": 0.06,
+      "decode_ms_per_token": 0.34
+    },
+    "qwen3_32b": {
+      "display": "Qwen3-32B BF16",
+      "tp": 1,
+      "pp": 4,
+      "same_node_system_dp": [1, 2],
+      "multi_node_system_dp": [4, 8, 16, 32, 64],
+      "kv_bytes_per_token": 262144
+    }
+  },
+  "workload": {
+    "center_context_tokens": 16384,
+    "output_tokens": [256, 1024, 4096],
+    "output_weights": [0.4, 0.4, 0.2],
+    "requests_per_workflow": 4,
+    "active_requests_per_gpu": [1, 2, 4, 8, 16],
+    "center_active_requests_per_gpu": 4,
+    "max_batch_lanes_per_gpu": 16,
+    "center_workflows_smoke": 256,
+    "center_workflows_main": 4096,
+    "fault_probes_per_seed_smoke": 8,
+    "fault_probes_per_seed_main": 24
+  },
+  "normal_path_copy_burden": {
+    "semantics": "For each request, the policy's asynchronous protection copy critical path includes its configured per-tier copy-lane queue and transfer service. A preregistered fraction is charged to the serving lane as front-end/fabric contention; the remainder is overlapped. This is a modeled SGLSim input, not measured A100 overhead.",
+    "visible_fraction_of_copy_critical_path": 0.05,
+    "maximum_fraction_of_request_service": 0.10
+  },
+  "mechanism_gate": {
+    "separate_from_performance_matrix": true,
+    "purpose": "exercise all four independent-tier residency outcomes without selecting on performance",
+    "fixed_tier_limit_phases": [
+      {"name": "both_enabled", "hbm_limit_gib": 10.0, "dram_limit_gib": 64.0, "expected": "HBM_AND_DRAM"},
+      {"name": "dram_closed", "hbm_limit_gib": 10.0, "dram_limit_gib": 0.0, "expected": "HBM_ONLY"},
+      {"name": "hbm_closed", "hbm_limit_gib": 0.0, "dram_limit_gib": 64.0, "expected": "DRAM_ONLY"},
+      {"name": "both_closed", "hbm_limit_gib": 0.0, "dram_limit_gib": 0.0, "expected": "BYPASS"}
+    ]
+  },
+  "policies": [
+    "Native Mooncake",
+    "Static FCFS",
+    "DejaVu",
+    "RAIDServe",
+    "KevlarFlow",
+    "GhostServe",
+    "AegisKV",
+    "AegisKV no Algorithm 1",
+    "AegisKV no Algorithm 2",
+    "AegisKV no Algorithm 3"
+  ],
+  "baseline_fidelity": {
+    "Native Mooncake": "modeled approximation: native-style round-robin route plus asynchronous Mooncake Store DRAM backup and Store restore; complete production Router/Store failover code is not executed",
+    "Static FCFS": "capacity-matched independent Peer-HBM and DRAM FCFS protection",
+    "DejaVu": "capacity-matched neighbor Peer-HBM streaming component adaptation",
+    "RAIDServe": "capacity-matched host checkpoint component adaptation",
+    "KevlarFlow": "capacity-matched ring Peer-HBM component adaptation",
+    "GhostServe": "capacity-matched 8+2 parity component adaptation; not a TP=1 end-to-end reproduction"
+  },
+  "paired_seeds": [2026082600, 2026082601, 2026082602],
+  "provenance_boundary": "All bandwidth, compute, and replacement values are explicit modeled inputs. Results are SGLSim metadata DES preliminary evidence, not physical A100 measurement and not an independent empirical replication."
+}

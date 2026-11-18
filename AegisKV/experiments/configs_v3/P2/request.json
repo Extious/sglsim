@@ -1,0 +1,170 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "request",
+  "group": "P2",
+  "extends": "../common/request.json",
+  "fixed": {
+    "workload": {
+      "sha256": "a7bab286bc640844560850965ccf47975cf66407154132abaab90f27ec9be744",
+      "sampling": {
+        "unit": "provider_session",
+        "strata": [
+          "provider",
+          "session_round_count_bin"
+        ],
+        "session_round_count_bins": [
+          4,
+          17,
+          65,
+          257
+        ],
+        "sessions_per_stratum": 1,
+        "expected_selected_sessions": 8,
+        "complete_sessions_only": true
+      },
+      "context_projection": {
+        "algorithm": "rank_preserving_scale_to_target_median_then_clip",
+        "source_median_input_tokens": 132092,
+        "target_median_fraction": 0.5,
+        "output_cap_tokens": 2048,
+        "preserve_prefix_fraction": true,
+        "clipping_audit_required": true
+      },
+      "anomaly_exclusions": {
+        "policy": "exclude_before_seeded_sampling",
+        "criterion": "event_index_1_timestamp_decrease_under_round_index_then_round_pk",
+        "observed_nonmonotonic_transitions": 23,
+        "observed_affected_sessions": 21,
+        "excluded_provider_sessions": [
+          {
+            "provider": "claude",
+            "session_id": "claude:14a09bbd-6718-67af-85de-261ba29ef117",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:22edfa53-689c-2d6b-aeda-e835a02ee195",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:29bffbb0-86d3-9dc0-a528-f5f8ffd00ec9",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:30328c8a-8306-71f9-895a-80b67580cb7a",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:33f559c0-054f-5ec5-3b83-d1a6a99192f5",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:3c11f859-85ba-a36e-6dca-2842599ddb4b",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:3ccb124e-849c-5b1c-1011-166e199c56fd",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:5263c175-39af-2463-48b7-a4036686293c",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:5afd80d6-c891-a398-3a0a-0491f3c96412",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:6cfa7c68-1703-5556-f6ba-03a378008fdc",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:771f57a7-0ba3-749d-8f55-2187b71c3d7d",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:90b235f1-8e24-c47b-9024-27193997b477",
+            "nonmonotonic_transitions": 2
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:a68676ad-8234-93b8-c1ce-ddee6a79eba8",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:a89be5b9-e2b6-527a-904a-b5eb907e3bd7",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:af70fa19-81cd-b491-9675-5e9df1eecde6",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:bdb42caa-dfb6-94d1-c33c-3de809d543c9",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:bf494d43-93ba-0878-5f7c-d6c1ee498dd4",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:dc1fc1da-bc51-716e-de8d-93c2322a5021",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:e3ac563c-610f-3af2-02ec-b8d8220d3ed7",
+            "nonmonotonic_transitions": 2
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:f8757795-e5a7-3c7a-d18d-2958b0255589",
+            "nonmonotonic_transitions": 1
+          },
+          {
+            "provider": "claude",
+            "session_id": "claude:fe5c8d89-75a8-601f-60c7-5c2022cc3f03",
+            "nonmonotonic_transitions": 1
+          }
+        ]
+      },
+      "parameter_provenance": {
+        "source_median_input_tokens": "Exact median(rounds.input_tokens_total) in the pinned TraceLab artifact; observed artifact statistic, not a serving measurement.",
+        "session_round_count_bins": "Preregistered geometric coverage bins 4-16, 17-64, 65-256, and 257+; simulation sampling choice, not measured.",
+        "sessions_per_stratum": "One complete session per provider and length bin; preregistered simulation sample size, not measured.",
+        "target_median_fraction": "Target prompt median is one half of the selected context window; modeled projection choice, not measured.",
+        "output_cap_tokens": "Preregistered 2,048-token simulation cap with per-record clipping audit; not measured."
+      }
+    },
+    "arrival": {
+      "timestamp_source": "timing_events.event_index_1.timestamp",
+      "session_order": "round_index_then_round_pk",
+      "nonmonotonic_timestamp_policy": "fail_selected_session",
+      "zero_origin": "minimum_selected_timestamp",
+      "load_scaling": "divide_relative_arrival_ns",
+      "parameter_provenance": {
+        "timestamp_source": "Observed TraceLab round-boundary field from the pinned artifact.",
+        "load_scaling": "Counterfactual virtual-time arrival-rate transform; modeled experiment parameter, not measured."
+      }
+    }
+  },
+  "axes": {
+    "seed": [2026082900, 2026082901, 2026082902, 2026082903, 2026082904, 2026082905, 2026082906, 2026082907, 2026082908, 2026082909],
+    "load_multiplier": [0.5, 1.0, 1.5, 2.0]
+  }
+}

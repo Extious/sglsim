@@ -1,0 +1,8 @@
+{
+  "extends": "../common/failure.json",
+  "group": "S8",
+  "layer": "failure",
+  "description": "One, two, four replicas and one correlated node",
+  "fault_model": {"trigger": "early_active_worker_from_shadow_schedule", "trigger_mode": "early_active", "failure_time_fraction": 0.25},
+  "axes": {"failure_scenario": ["worker_1", "worker_2", "worker_4", "node_1"]}
+}

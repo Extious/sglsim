@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-v311-scientific-workload-failure-and-warmup-followup",
+  "status": "PREREGISTERED_BEFORE_FOLLOWUP_SWEEP_EXECUTION_NO_WIN_GATE",
+  "v311_protocol": "active_hbm_v311_paired_rerun_protocol.json",
+  "purpose": "Separate cold-start quota convergence from steady offered load, then map workload and failure mechanism regions without selecting cells or seeds by outcome.",
+  "common_rules": {
+    "model": "Qwen3-8B TP1 PP1",
+    "system_dp": 16,
+    "gpu": "A100 40 GiB modeled capacity",
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "max_output_tokens_for_dispatch_reservation": 4096,
+    "fixed_arrival_generation": true,
+    "same_workflow_probe_and_failure_domain_hashes_across_policies": true,
+    "primary_denominator": "all workflows in the preregistered cohort times all common probes",
+    "changed_only_cross_policy_primary": false,
+    "performance_direction_or_win_threshold": false
+  },
+  "cold_start_and_steady_state": {
+    "arrival_interval_ms": [0.0, 180000.0],
+    "control_window_ms": 30000.0,
+    "warmup_interval_ms": [0.0, 90000.0],
+    "steady_arrival_cohort_ms": [90000.0, 180000.0],
+    "inclusive_cohort_ms": [0.0, 180000.0],
+    "policies": ["Native Mooncake", "AegisKV"],
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "context_tokens": 40960,
+    "active_requests_per_gpu": 16,
+    "probes_per_failure_type": 24,
+    "initial_alpha_sensitivity": [0.25, 0.03125],
+    "initial_alpha_basis": "checked-in default and checked-in minimum; not selected from outcome magnitude",
+    "control_window_sensitivity_ms": [10000.0, 30000.0, 60000.0],
+    "control_window_basis": "one-third, registered default, and twice default",
+    "required_outputs": [
+      "warmup-inclusive and steady-cohort healthy/same-probe/all-workflow WCT",
+      "per-window active serving GiB, Peer-HBM backup GiB, headroom GiB, queue integral, alpha, releases, and dispatches",
+      "common cohort/probe/domain hashes"
+    ],
+    "note": "The steady cohort is fixed before execution and retains backlog created during warmup; no first-30-second deletion or post-hoc truncation is allowed."
+  },
+  "workload_failure_region": {
+    "arrival_interval_ms": [0.0, 180000.0],
+    "warmup_interval_ms": [0.0, 90000.0],
+    "primary_arrival_cohort_ms": [90000.0, 180000.0],
+    "policies": ["Native Mooncake", "AegisKV"],
+    "active_requests_per_gpu": [2, 8, 16],
+    "context_tokens": [8192, 16384, 40960],
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "probes_per_failure_type": 24,
+    "expected_cells": 108,
+    "scientific_basis": "crosses feasible low/medium/high active-serving HBM demand with registered 8K/16K/40K context and the two supported source failure domains",
+    "statistics": "paired-seed mean, Student-t 95% CI, per-seed paired policy difference; no seed filtering"
+  },
+  "modeled_delay_sensitivity": {
+    "cell": {"active_requests_per_gpu": 16, "context_tokens": 40960},
+    "native_replacement_ms": [10000.0, 30000.0, 60000.0],
+    "aegis_activation_ms": [100.0, 500.0, 1000.0],
+    "status": "modeled-unmeasured sensitivity only",
+    "paper_ready_physical_claim": false
+  },
+  "stop_rule": "Run and report the complete registered matrices even if AegisKV remains slower; do not expand or suppress cells based on sign or significance."
+}

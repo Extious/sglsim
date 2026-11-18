@@ -1,0 +1,39 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S6",
+  "layer": "deployment",
+  "description": "Native and AegisKV reuse/cost/occupancy comparison",
+  "topology": {
+    "hardware": "NVIDIA A100 40 GiB modeled capacity",
+    "layout": "Qwen3-8B TP1/PP1",
+    "system_dp": 16,
+    "node_count": 2
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "metrics": ["recovery hit", "copy amplification", "evictions", "time-integrated tier occupancy"]
+  },
+  "axes": {
+    "policy": ["Native Mooncake", "AegisKV"],
+    "topology": ["same_node", "cross_node"]
+  },
+  "planned_cells": 60,
+  "unique_cells": 60,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s6_v2.py",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s6_shared_prefix_v2_pilot/aggregate_ci.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s6_shared_prefix_v2_pilot/audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s6_shared_prefix_v2_pilot/manifest.json",
+    "expected_rows": 20,
+    "plot_kind": "reuse_cost_occupancy",
+    "figure_slug": "reuse_cost_occupancy"
+  },
+  "evidence": {
+    "class": "modeled_metadata_des_preliminary",
+    "paper_ready": false,
+    "known_gaps": ["needs validation with a real prefix-identity workload and broader failure exposure"]
+  },
+  "matrix_note": "2 policies x 2 topologies x 5 reuse fractions x 3 seeds"
+}

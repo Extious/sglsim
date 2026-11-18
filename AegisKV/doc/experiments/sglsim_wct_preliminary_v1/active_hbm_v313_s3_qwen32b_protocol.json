@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-active-hbm-v313-s3-qwen3-32b-scale-context-20260827",
+  "status": "PREREGISTERED_BEFORE_ANY_QWEN3_32B_RAW",
+  "paper_ready": false,
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "question": "How do Qwen3-32B TP1/PP4 modeled healthy and source-worker-failure WCT vary over a full system-DP by context matrix under same-node and cross-node protection?",
+  "selection_policy": "All 300 cells, all three paired seeds, all contexts, scales, topologies, and both policies are retained. There is no performance-direction threshold.",
+  "profile_gate_resolution": {
+    "old_plan_gate": "BLOCKED_REQUIRES_MATCHED_A100_40GB_PROFILE",
+    "resolution": "This separately identified preliminary is authorized only as MODELED_ANALYTIC_WEIGHT_RATIO_NOT_PHYSICAL; it does not satisfy or replace a matched A100 profile.",
+    "forbidden_claims": [
+      "matched A100 profile",
+      "physical Qwen3-32B measurement",
+      "paper-ready performance evidence"
+    ]
+  },
+  "model": {
+    "model_id": "Qwen/Qwen3-32B",
+    "display": "Qwen3-32B TP1/PP4",
+    "tp": 1,
+    "pp": 4,
+    "layers_total": 64,
+    "layers_per_pp_stage": 16,
+    "weight_bytes_total": 65524246528,
+    "weight_bytes_per_pp_stage": [17158971392, 15603146752, 15603146752, 17158981632],
+    "capacity_stage_weight_bytes": 17158981632,
+    "capacity_stage_rule": "use the maximum of the four exact stage partitions for every representative stage rank; conservative and not outcome-selected",
+    "kv_heads": 8,
+    "head_dim": 128,
+    "kv_dtype": "bfloat16",
+    "kv_dtype_bytes": 2,
+    "kv_bytes_per_token_per_stage_formula": "2 * 16 * 8 * 128 * 2",
+    "kv_bytes_per_token_per_stage": 65536,
+    "kv_bytes_per_token_whole_pipeline": 262144,
+    "request_max_output_tokens": 4096,
+    "upstream_config_sha256": "97e295b63283935788fac5e4f8860862a56d4089538cafc93f0431f2ebe483bb",
+    "upstream_safetensors_index_sha256": "bed42c6c55274bc08a1f616bceb3bcb84b3f02cb6584c573bd18c6519291ecd0"
+  },
+  "service_model": {
+    "status": "MODELED_ANALYTIC_WEIGHT_RATIO_NOT_PHYSICAL",
+    "reference_model": "Qwen3-8B TP1/PP1 modeled synthetic coefficients",
+    "reference_weight_bytes": 16381470720,
+    "weight_ratio_formula": "Qwen3-32B total weight bytes / Qwen3-8B total weight bytes",
+    "weight_ratio": 3.9999001095794164,
+    "prefill_setup_ms": 15.999600438317666,
+    "prefill_ms_per_token": 0.23999400657476497,
+    "decode_ms_per_token": 1.3599660372570015,
+    "coefficient_formula": "each Qwen3-8B modeled coefficient multiplied by the frozen total-weight ratio",
+    "pp_latency_abstraction": "coefficients represent end-to-end serialization across four stages; simulator lanes are logical pipeline replicas and do not claim measured PP microbatch overlap",
+    "recompute_formula": "prefill_setup_ms + recomputed_tokens * prefill_ms_per_token using the same registered analytic coefficients",
+    "not_a100_calibration": true
+  },
+  "hardware": {
+    "gpu": "NVIDIA A100 40GB modeled as 40 GiB addressable HBM per physical PP-stage GPU",
+    "physical_total_hbm_bytes_per_gpu": 42949672960,
+    "usable_hbm_bytes_per_gpu": 37795712204,
+    "runtime_reserve_bytes_per_gpu": 5153960756,
+    "serving_plus_peer_backup_budget_bytes_per_stage_gpu": 20636730572,
+    "physical_gpus_per_node": 8,
+    "pipeline_stage_gpus_per_replica": 4,
+    "pipeline_replicas_per_node": 2,
+    "logical_ranks_per_node_in_DES": 2,
+    "logical_rank_semantics": "one complete TP1/PP4 pipeline replica; capacity and protection bytes use one conservative representative physical stage GPU",
+    "physical_total_gpu_formula": "system_dp * 4",
+    "physical_node_count_formula": "system_dp / 2",
+    "placement": "each pipeline occupies four contiguous GPUs; two complete pipeline replicas per 8-GPU node",
+    "fault_abstraction": "a source_worker_gpu event invalidates one logical pipeline because loss of any one PP stage makes that pipeline unavailable; failed physical GPU count is one",
+    "bandwidth_profile_id": "sglsim_a100_40gib_modeled_directional_v1",
+    "bandwidth_calibration_status": "MODELED_NOT_PHYSICALLY_CALIBRATED_A100",
+    "copy_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "recovery_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "topologies": {
+      "same_node": {
+        "peer_hbm": "same_node",
+        "dram": "local",
+        "peer_rule": "the other complete PP4 pipeline in the same 8-GPU node; stage-aligned physical copy",
+        "dram_rule": "CPU DRAM attached to the source node"
+      },
+      "cross_node": {
+        "peer_hbm": "cross_node",
+        "dram": "remote",
+        "peer_rule": "stage-aligned pipeline target on the next physical node ring",
+        "dram_rule": "CPU DRAM attached to the next physical node"
+      }
+    }
+  },
+  "capacity_equation": {
+    "invariant": "capacity_stage_weight_bytes + runtime_reserve_bytes + active_serving_stage_kv_bytes + peer_hbm_stage_backup_used_bytes <= 40 GiB",
+    "dispatch_reservation_formula": "(prompt_tokens + request_max_output_tokens) * kv_bytes_per_token_per_stage",
+    "no_oracle": "dispatch never reads realized output length or realized service time",
+    "max_context_reservation_bytes_per_request": 2952790016,
+    "max_context_two_request_serving_bytes": 5905580032,
+    "max_context_two_request_headroom_bytes": 14731150540,
+    "offered_active_requests_per_pipeline": 2,
+    "analytic_gate": "two max-context conservative serving reservations fit before dynamic Peer-HBM backup reclaim"
+  },
+  "sweep": {
+    "system_dp": [4, 8, 16, 32, 64],
+    "context_tokens": [4096, 8192, 16384, 32768, 40960],
+    "full_cross_product": true,
+    "topologies": ["same_node", "cross_node"],
+    "policies": ["Native Mooncake", "AegisKV"],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "registered_condition_count": 25,
+    "registered_cell_count": 300
+  },
+  "workload": {
+    "fixed_arrival_cutoff_ms": 90000.0,
+    "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0],
+    "offered_active_requests_per_pipeline": 2,
+    "failure_type": "source_worker_gpu",
+    "fault_probes_per_condition_seed": 12,
+    "probe_schedule": "policy-free deterministic probes from the common no-oracle workload universe, paired across policy and topology",
+    "primary_denominator": "all workflows in the identical condition-seed universe",
+    "warmup": "none; common cold-start-inclusive 90 s window"
+  },
+  "statistics": {
+    "seed_unit": "three paired workload seeds",
+    "interval": "Student-t 95% CI across seed-level estimates (df=2)",
+    "primary": [
+      "healthy all-workflow mean and p99 WCT",
+      "same-probe source-worker-failure all-workflow mean and p99 WCT",
+      "paired AegisKV-minus-Native delta and reduction",
+      "throughput, queue, capacity blocks, copy/reclaim/recovery counts"
+    ],
+    "forbidden_primary_metric": "changed-only workflows across policies"
+  },
+  "figure_grammar": {
+    "filename_stem": "s3_v313_qwen3_32b_scale_context_topology",
+    "size_inches": [7.0, 4.8],
+    "layout": "2x2: same/cross-node paired mean-WCT reduction across all contexts, plus absolute fault-WCT at the preregistered 16K context",
+    "x_axis": "system DP pipeline replicas",
+    "context_encoding": "five fixed colors, no result-dependent omission",
+    "policy_encoding_absolute": "Native square and AegisKV circle",
+    "error_bars": "paired or architecture Student-t 95% CI across three seeds",
+    "minimum_font_pt": 7.0,
+    "png_minimum_width_px": 1800,
+    "panel_text_boundary": "no preliminary, seed, hash, or evidence prose in panels"
+  },
+  "hard_gates": [
+    "protocol tests pass before full raw",
+    "exactly 300 registered cells atomically published",
+    "workflow universe and fault probe hashes match across policy and topology for each condition and seed",
+    "no-oracle predicted slack lineage is used; core.build_workload oracle lineage is fail-closed",
+    "source_worker_gpu invalidates exactly one logical pipeline and one physical PP-stage GPU",
+    "PP4 placement fills complete 8-GPU nodes with two pipelines per node",
+    "same/cross topology is bijective and uses separately registered directional bandwidth",
+    "every capacity record obeys the conservative physical stage-GPU 40 GiB equation",
+    "copy bytes and physical target accounting conserve exactly",
+    "empty fault replay is exact and fault replay never lowers WCT",
+    "no performance direction, seed, context, DP, topology, or policy selection",
+    "single-page vector PDF, at least 1800 px PNG, minimum font at least 7 pt"
+  ],
+  "sources": {
+    "run_preliminary.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/run_preliminary.py",
+      "sha256": "0bb1dfb06c21dabb3e6460c6005ecea3ee1baa52db225f07b26660bb36a192fb"
+    },
+    "active_hbm_v31.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v31.py",
+      "sha256": "dca2c99abcc7913d48021b499103f0ae6917529e058db2a97e85e2831206a495"
+    },
+    "active_hbm_v313.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v313.py",
+      "sha256": "b0acce20051ce0c3a9dfd4f03dcabb73170859da8f6b8a54ffd234bc32f3c7f1"
+    },
+    "capacity_protocol_template": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v3_protocol.json",
+      "sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f"
+    },
+    "minimum_execution_plan_model_metadata": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/sglsim_s1_s9_minimum_execution_plan.json",
+      "sha256": "d5ec9081ad0733f96349bbe451ff0a8bcb66f1e34438039b1a21cf15a63f4519"
+    }
+  },
+  "evidence_boundary": "Three-seed cold-start-inclusive metadata DES preliminary using a modeled analytic Qwen3-32B service profile. Weight, PP layout, per-stage KV bytes, and A100 40 GiB capacity are frozen; service coefficients, bandwidth, 500 ms activation, and 60 s Native replacement are modeled/unmeasured. This is not a matched A100 profile, physical measurement, or paper-ready evidence."
+}

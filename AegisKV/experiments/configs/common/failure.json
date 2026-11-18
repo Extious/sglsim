@@ -1,0 +1,35 @@
+{
+  "schema_version": "aegiskv.failure-config.v2",
+  "layer": "failure",
+  "description": "Paired conditional fail-stop plus separately reported field-hazard weighting",
+  "sources": ["meta_hpca_reliability", "aegis_nsdi_reliability", "failsafe_local", "lumen_local", "ghostserve_local", "dejavu_local"],
+  "fault_model": {
+    "type": "fail_stop",
+    "conditional_injection": true,
+    "trigger": "active_workflow_critical_tail_at_shadow_schedule_median",
+    "trigger_mode": "critical_tail",
+    "failure_time_fraction": 0.50,
+    "central_scenario": "worker_1",
+    "repair_time_ms": 30000,
+    "repair_time_semantics": "capacity_restoration_horizon_not_hardware_repair_distribution",
+    "replacement_delay_ms": 100,
+    "replacement_delay_semantics": "controlled_failover_delay_not_same_topology_measurement",
+    "queue_outage_ms": 50,
+    "queue_outage_semantics": "controlled_routing_outage_not_same_topology_measurement",
+    "correlated_node_failure": "all_model_replicas_on_one_8gpu_node",
+    "ordering_stress": "none",
+    "paired_across_policies": true
+  },
+  "hazard_weighting": {
+    "distribution": "exponential_independent_gpu_sensitivity_only",
+    "central_mttf_gpu_hours": 9600,
+    "central_basis": "400_days_times_24_hours_from_alibaba_a100_hard_failure_statistic",
+    "sensitivity_mttf_gpu_hours": [4800, 9600, 19200],
+    "cross_check_gpu_equivalent_hours": 8089.6,
+    "cross_check_basis": "1024_gpus_times_7.9_job_hours_from_meta_all_cause_training_job_mttf",
+    "evidence_scope": "training_cluster_proxy_not_inference_field_measurement",
+    "generated_as_poisson_in_short_run": false,
+    "reported_separately_from_conditional_injection": true
+  },
+  "axes": {"failure_scenario": ["worker_1"]}
+}

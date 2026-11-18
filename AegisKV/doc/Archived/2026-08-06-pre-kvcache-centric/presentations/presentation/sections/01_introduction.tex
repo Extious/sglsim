@@ -1,0 +1,159 @@
+% !TeX root = ../paper_outline.tex
+\section{问题与系统总览}
+
+\begin{frame}{AegisKV | 系统目标：用有限备份资源降低工作流故障延迟}
+  \small
+  智能体工作流的完成时间由依赖路径决定。worker/GPU 故障后，KV 恢复只有在
+  恢复延迟超过请求松弛时间时才增加工作流完成时间：
+  \begin{equation}
+    \begin{aligned}
+      \operatorname{WCT}_w
+      &=\operatorname{WCT}_w^{0}
+        +\Delta\operatorname{WCT}_w^{\mathrm{fail}},\\
+      (\mathbf x^{(k)},\mathbf D^{(k)})
+      &=\mathcal P(
+        \widehat{\boldsymbol\sigma},\text{KV 块},\text{恢复路径};
+        \boldsymbol\alpha^{(k)},\boldsymbol\beta^{(k)}),\\
+      (\boldsymbol\alpha^{(k+1)},\boldsymbol\beta^{(k+1)})
+      &=\mathcal C(
+        \mathbf L_1^{(k)},\mathbf L_2^{(k)},
+        \mathbf D_1^{(k)},\mathbf D_2^{(k)}).
+    \end{aligned}
+    \label{eq:system-objective}
+  \end{equation}
+
+  \scriptsize
+  $\operatorname{WCT}_w^{0}$ 是无故障完成时间；
+  $\Delta\operatorname{WCT}_w^{\mathrm{fail}}$ 是 failure-time recovery 的可见增量；
+  $\mathbf x^{(k)}$ 是算法 2 的备份动作，$\mathbf D^{(k)}$ 是容量截断前影子需求；
+  $\mathbf L_1^{(k)},\mathbf L_2^{(k)}$ 是逐节点正常负载；
+  $\boldsymbol\alpha,\boldsymbol\beta$ 分别是 L1 HBM 与 L2 Host DRAM 的备份比例。
+  算法 2 在窗口 $k$ 使用当前预算，算法 3 用其反馈确定窗口 $k+1$ 的预算。
+  系统受三类硬约束限制：
+
+  \vspace{0.07cm}
+  \renewcommand{\arraystretch}{1.17}
+  \begin{tabularx}{\textwidth}{p{0.20\textwidth}X}
+    \toprule
+    约束 & 系统含义 \\
+    \midrule
+    Correctness & 只恢复 committed、version-valid、跨故障域的 KV chunk \\
+    Normal-path SLO & backup copy 与 L1/L2 reservation 不得突破 no-failure p99/OOM 上限 \\
+    Capacity & L1 HBM 与 L2 Host DRAM 都使用显式 per-node backup ratio \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.08cm}
+  \takeaway{算法 2 负责容量约束下的备份决策；算法 3 根据正常负载和算法 2
+  的本窗口需求反馈，确定下一窗口的 $\alpha_n,\beta_n$。}
+\end{frame}
+
+\begin{frame}{AegisKV | 完整架构：三个控制算法与一个恢复数据面}
+  \centering
+  \begin{tikzpicture}[
+    x=1cm,y=1cm,
+    box/.style={draw,rounded corners=2pt,align=center,font=\scriptsize,
+                minimum height=0.78cm,inner sep=5pt},
+    app/.style={box,draw=AegisBlue,fill=AegisBlueLight,minimum width=2.10cm},
+    route/.style={box,draw=AegisPurple,fill=AegisPurpleLight,minimum width=2.55cm},
+    algtwo/.style={box,draw=AegisOrange,fill=AegisOrangeLight,minimum width=2.15cm},
+    algthree/.style={box,draw=AegisGreen,fill=AegisGreenLight,minimum width=2.15cm},
+    data/.style={box,draw=AegisGray,fill=AegisGrayLight,minimum width=2.15cm},
+    arr/.style={-{Stealth[length=1.8mm]},thick,draw=AegisGray},
+    control/.style={-{Stealth[length=1.6mm]},thin,dashed,draw=AegisPurple}
+  ]
+    \node[app] (alg1) at (0.8,1.3) {算法 1\\DAG 松弛时间};
+    \node[route] (router) at (4.0,1.3)
+      {Cache-Aware Router\\负载 + Radix Tree\\$\pi_1$: 执行，$\pi_2$: 备份};
+
+    \node[draw=AegisGray,rounded corners=4pt,minimum width=5.7cm,
+      minimum height=2.85cm,fill=AegisGrayLight] (dp) at (9.2,1.05) {};
+    \node[font=\scriptsize\bfseries,anchor=west] at (6.55,2.25)
+      {每个 DP rank：算法与 ACK 权威状态均在本地};
+    \node[algtwo] (alg2) at (7.9,1.35) {算法 2\\KV 块 L1/L2/R};
+    \node[algthree] (alg3) at (10.5,1.35) {算法 3\\本地 $\alpha/\beta$};
+    \node[data,minimum width=4.65cm] (stores) at (9.2,0.15)
+      {Backup Manager：复制、ACK、$D/U/O$、Recovery Hint};
+
+    \draw[arr] (alg1) -- node[above,font=\tiny]{请求 + slack} (router);
+    \draw[arr] (router) -- node[above,font=\tiny]{$e(r),b(r)$} (alg2);
+    \draw[control] (alg3) -- node[above,font=\tiny]{当前预算} (alg2);
+    \draw[arr] (alg2) -- (stores);
+    \draw[control] (stores.east) to[bend right=20]
+      node[right,font=\tiny]{$D/U/O$} (alg3.south);
+    \draw[control] (stores.west) to[bend left=24]
+      node[below,font=\tiny]{聚合 Recovery Hint} (router.south);
+  \end{tikzpicture}
+
+  \vspace{0.14cm}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.12}
+  \begin{tabularx}{\textwidth}{p{0.15\textwidth}p{0.23\textwidth}p{0.27\textwidth}X}
+    \toprule
+    算法 & 输入 & 发布结果 & 所在层 \\
+    \midrule
+    算法 1 & 固定工作流 DAG + 时长分布 & 请求松弛时间 & 应用层 \\
+    Router 策略 & 正常负载 + Radix Tree & 执行/备份 Rank 绑定 + Retry Rank & Router \\
+    算法 2 & 固定 Backup Rank + slack + KV 块 + 当前预算 & L1/L2/R plan + ACK + $D/U/O$ & DP rank \\
+    算法 3 & 本地正常负载 + 本地算法 2 反馈 & 下一窗口 $\alpha_n,\beta_n$ & DP rank \\
+    \bottomrule
+  \end{tabularx}
+\end{frame}
+
+\begin{frame}{AegisKV | 跨窗口备份决策闭环}
+  \centering
+  \begin{tikzpicture}[
+    x=1cm,y=1cm,
+    event/.style={draw,rounded corners=2pt,align=center,font=\tiny,
+                  minimum width=1.62cm,minimum height=0.68cm,inner sep=2pt},
+    arr/.style={-{Stealth[length=1.8mm]},thick,draw=AegisGray},
+    feedback/.style={-{Stealth[length=1.6mm]},thin,dashed,draw=AegisPurple}
+  ]
+    \node[event,draw=AegisBlue,fill=AegisBlueLight] (e1) at (0,1.4)
+      {1. 固定 DAG\\激活片段};
+    \node[event,draw=AegisBlue,fill=AegisBlueLight] (e2) at (2.05,1.4)
+      {2. 算法 1\\发布 slack};
+    \node[event,draw=AegisPurple,fill=AegisPurpleLight] (e3) at (4.10,1.4)
+      {3. Router Top-2\\绑定两个 Rank};
+    \node[event,draw=AegisOrange,fill=AegisOrangeLight] (e4) at (6.15,1.4)
+      {4. DP 算法 2\\选择 L1/L2/R};
+    \node[event,draw=AegisGreen,fill=AegisGreenLight] (e5) at (8.20,1.4)
+      {5. 目标 DP\\ACK + Hint};
+    \node[event,draw=AegisRed,fill=AegisRedLight] (e6) at (10.25,1.4)
+      {6. Failure\\零查询重路由};
+
+    \foreach \a/\b in {e1/e2,e2/e3,e3/e4,e4/e5,e5/e6}
+      \draw[arr] (\a) -- (\b);
+
+    \node[event,draw=AegisOrange,fill=AegisOrangeLight,minimum width=2.0cm] (c)
+      at (6.15,0) {窗口 $k$ 结束\\发布 $D^{(k)},U^{(k)},O^{(k)}$};
+    \node[event,draw=AegisGreen,fill=AegisGreenLight,minimum width=2.0cm] (b)
+      at (8.75,0) {算法 3\\发布窗口 $k+1$ 预算};
+    \draw[feedback] (e4.south) -- (c.north);
+    \draw[arr] (c) -- node[above,font=\tiny]{需求反馈} (b);
+    \draw[feedback] (b.north) to[bend right=28]
+      node[right,font=\tiny]{下一窗口 $\alpha,\beta$} (e4.south east);
+  \end{tikzpicture}
+
+  \vspace{0.18cm}
+  \scriptsize
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \textbf{Normal path：}
+      Router 只给出 $e(r),b(r)$；DP rank 内算法 2 使用当前 $\alpha,\beta$
+      决定 KV 层级，算法 3 在窗口边界更新本地预算。
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Failure path：}
+      Router 使用已缓存 Recovery Hint、当前负载和 Radix Tree 比较
+      Backup Rank 与其他 Rank，不在故障路径发起同步查询。
+    \end{column}
+  \end{columns}
+
+  \vspace{0.10cm}
+  \takeaway{因果链是 $\text{算法 3}(k)\rightarrow\text{算法 2}(k)
+  \rightarrow\text{算法 3}(k+1)$，不存在同窗口循环依赖。}
+
+  \vspace{0.05cm}
+  \boundary{算法 2/3 与 ACK 权威状态都在 DP rank；Router 只缓存 Recovery Hint 摘要。摘要过期、copy 未 ACK 或版本不匹配时按 Recompute 估价。}
+\end{frame}

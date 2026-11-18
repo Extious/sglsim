@@ -379,6 +379,10 @@ def test_agentic_ablation_derives_fig12_rows_from_online_suite():
         ("ablation_no_pressure", "no_pressure", 104.0),
         ("ablation_no_hysteresis", "no_hysteresis", 103.0),
         ("ablation_no_critical_restore", "no_critical_restore", 111.0),
+        ("ablation_static_alpha", "static_alpha", 102.0),
+        ("ablation_size_only", "size_only_backup", 105.0),
+        ("ablation_no_peer_locality", "no_peer_locality", 107.0),
+        ("ablation_no_marginal_accounting", "no_marginal_accounting", 101.0),
     ]
     rows = []
     for scenario, ablation, mean_ms in scenario_means:
@@ -425,6 +429,10 @@ def test_agentic_ablation_derives_fig12_rows_from_online_suite():
         "no pressure",
         "no hysteresis",
         "no critical restore",
+        "static alpha",
+        "size-only backup",
+        "no peer locality",
+        "no marginal accounting",
     }
     assert by_variant["AegisKV"]["normalized_wct"] == 1.0
     assert by_variant["no lifecycle"]["normalized_wct"] > 1.0
@@ -712,6 +720,60 @@ def test_calibration_anchor_uses_sglang_and_sglsim_overhead_rows(tmp_path):
             ]
         )
     output = tmp_path / "fig_simulator_calibration.csv"
+    visibility_csv = tmp_path / "fig_hostbackup_visibility.csv"
+    with visibility_csv.open("w", newline="", encoding="utf-8") as f:
+        fields = [
+            "policy",
+            "retry_latency_norm",
+            "retry_latency_norm_std",
+            "retry_latency_norm_ci95",
+            "run_id",
+            "remote_host",
+            "slurm_job_id",
+            "model_path",
+            "dp_size",
+            "tp_size",
+            "failure_rank",
+            "repeat",
+        ]
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(
+            [
+                {
+                    "policy": "baseline write-through invisible",
+                    "retry_latency_norm": 1.0,
+                    "run_id": "sglsim-control",
+                },
+                {
+                    "policy": "Host visible only",
+                    "retry_latency_norm": 0.7,
+                    "run_id": "sglsim-visible",
+                },
+                {
+                    "policy": "SGLang remote_backup lookup disabled",
+                    "retry_latency_norm": 1.0,
+                    "run_id": "sglang-control",
+                    "slurm_job_id": "3",
+                    "model_path": "Qwen/Qwen3-8B",
+                    "dp_size": 2,
+                    "tp_size": 1,
+                    "failure_rank": 0,
+                    "repeat": "aggregate",
+                },
+                {
+                    "policy": "SGLang remote_backup lookup enabled",
+                    "retry_latency_norm": 0.8,
+                    "run_id": "sglang-visible",
+                    "slurm_job_id": "4",
+                    "model_path": "Qwen/Qwen3-8B",
+                    "dp_size": 2,
+                    "tp_size": 1,
+                    "failure_rank": 0,
+                    "repeat": "aggregate",
+                },
+            ]
+        )
 
     subprocess.run(
         [
@@ -721,6 +783,8 @@ def test_calibration_anchor_uses_sglang_and_sglsim_overhead_rows(tmp_path):
             "unit-calibration",
             "--input-csv",
             str(input_csv),
+            "--hostbackup-visibility-csv",
+            str(visibility_csv),
             "--output-csv",
             str(output),
         ],

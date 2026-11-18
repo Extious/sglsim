@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-active-serving-hbm-v3-20260827",
+  "status": "PREREGISTERED_BEFORE_V3_DES_RESULTS_NO_ORACLE_AMENDMENT",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "purpose": "couple serving KV and source-owned Peer-HBM backup to one physical per-GPU A100 40 GiB capacity before any further S1/S4/S5/S8 interpretation",
+  "hardware": {
+    "gpu": "NVIDIA A100 40GB modeled as 40 GiB addressable HBM",
+    "total_hbm_bytes": 42949672960,
+    "total_hbm_gib": 40.0
+  },
+  "frozen_model": {
+    "model_id": "Qwen/Qwen3-8B",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "config_path": "/home/comp/zhanzhao/.cache/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218/config.json",
+    "config_sha256": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+    "safetensors_index_path": "/home/comp/zhanzhao/.cache/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218/model.safetensors.index.json",
+    "safetensors_index_sha256": "f9fdbcb91c23971c13ec5d5f2573d2349e8f61f2f049371ec699281748fdb1bc",
+    "weight_bytes_per_tp1_pp1_rank": 16381470720,
+    "weight_bytes_source": "model.safetensors.index.json metadata.total_size; no fitted multiplier",
+    "layers": 36,
+    "kv_heads": 8,
+    "head_dim": 128,
+    "kv_dtype_bytes": 2,
+    "kv_bytes_per_token_formula": "2 * layers * kv_heads * head_dim * kv_dtype_bytes",
+    "kv_bytes_per_token": 147456
+  },
+  "runtime_reserve": {
+    "mem_fraction_static": 0.88,
+    "source_path": "python/sglsim/srt/simulation/manager/scheduler_config.py",
+    "source_sha256": "07c5a575564a978cbd9c91f131f5c3d458f3e8353c2326287804963a98401c00",
+    "capacity_formula_source_path": "python/sglsim/srt/simulation/manager/cache_config.py",
+    "capacity_formula_source_sha256": "57c917cde72a92dc694f0da9d7766e035d15adf655f0b2ae2a3ed105f3a6e100",
+    "static_hbm_bytes_formula": "floor(total_hbm_bytes * mem_fraction_static)",
+    "static_hbm_bytes": 37795712204,
+    "runtime_reserve_bytes_formula": "total_hbm_bytes - static_hbm_bytes",
+    "runtime_reserve_bytes": 5153960756,
+    "runtime_reserve_gib": 4.800000000745058,
+    "provenance_note": "0.88 is the checked-in SGLSim SchedulerSimConfig default, not a value selected from AegisKV outcomes"
+  },
+  "shared_capacity": {
+    "serving_plus_peer_backup_budget_bytes_formula": "static_hbm_bytes - weight_bytes_per_tp1_pp1_rank",
+    "serving_plus_peer_backup_budget_bytes": 21414241484,
+    "serving_plus_peer_backup_budget_gib": 19.943566512316465,
+    "invariant": "weight_bytes + runtime_reserve_bytes + active_serving_kv_bytes + peer_hbm_backup_used_bytes <= total_hbm_bytes",
+    "request_max_output_tokens": 4096,
+    "request_max_output_tokens_source_path": "protocol.json",
+    "request_max_output_tokens_source_sha256": "7535a7bf7162f036d0154a67f25608bcb43c0f59526593f4f06e37515fcca9c9",
+    "request_max_output_tokens_source_field": "workload.output_tokens=max([256, 1024, 4096])",
+    "request_serving_reservation_formula": "(prompt_tokens + request_max_output_tokens) * kv_bytes_per_token",
+    "reservation_policy": "reserve prompt plus the frozen request maximum output at dispatch; the dispatch path must not inspect trace-realized final output length",
+    "max_engine_lanes_per_gpu": 16,
+    "dispatch_policy": "per-rank FCFS; dispatch only if an engine lane is free and projected shared capacity remains feasible, otherwise queue",
+    "peer_mapping_note": "the rank-indexed target pool represents the paired peer GPU; uniform per-rank load lets target backup and local serving share the same indexed capacity budget"
+  },
+  "backup_projection": {
+    "formula": "min(current_hbm_backup_limit_bytes, current_hbm_backup_used_bytes + prompt_tokens * kv_bytes_per_token)",
+    "reason": "upper-bound the new request's source-owned Peer-HBM admission before dispatch so the shared capacity invariant cannot be violated",
+    "native_peer_backup_limit_bytes": 0,
+    "static_fcfs_peer_backup_limit_bytes": 10737418240,
+    "aegiskv_initial_peer_backup_limit_bytes": 10737418240
+  },
+  "algorithm3_coupling": {
+    "pressure_signal": "existing controller pressure OR a nonempty FCFS queue whose head request is blocked by shared HBM capacity",
+    "effect": "AIMD decreases alpha and evicts Peer-HBM backup suffixes at the registered 30 s windows; the freed bytes immediately become serving-dispatch headroom",
+    "no_algorithm3": "keeps alpha and Peer-HBM limit fixed, while retaining the same shared-capacity admission gate",
+    "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0]
+  },
+  "sanity_matrix": {
+    "context_tokens": [8192, 16384, 40960],
+    "realized_output_tokens_for_oracle_invariance_test": [256, 1024, 4096],
+    "offered_active_requests_per_gpu": [2, 4, 8, 16]
+  },
+  "pilot_matrix": {
+    "context_tokens": [8192, 16384, 40960],
+    "active_requests_per_gpu": [2, 8, 16],
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "policies": ["Native Mooncake", "AegisKV", "AegisKV no Algorithm 1", "AegisKV no Algorithm 2", "AegisKV no Algorithm 3"],
+    "phase1_seed": 2026082600,
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "arrival_cutoff_ms": 90000.0,
+    "fault_probes_per_cell": 24,
+    "system_dp": 16
+  },
+  "registered_gates": {
+    "no_performance_win_threshold": true,
+    "capacity_invariant_every_recorded_event": true,
+    "every_dispatched_request_individually_fits_shared_budget": true,
+    "memory_blocked_queue_observed_in_at_least_one_stressed_cell": true,
+    "full_algorithm3_frees_backup_or_increases_dispatch_headroom_in_at_least_one_stressed_cell": true,
+    "no_algorithm3_executes_zero_control_updates": true,
+    "fault_replay_wct_monotone": true,
+    "empty_fault_replay_preserves_coupled_healthy_completion": true
+  },
+  "no_oracle_gate": {
+    "dispatch_uses_no_realized_output_oracle": true,
+    "test": "for fixed prompt/max_output, changing the trace-realized output among 256/1024/4096 must not change reserved bytes or the dispatch capacity decision"
+  },
+  "amendment_history": [
+    {
+      "status": "INVALIDATED_BEFORE_V3_DES",
+      "formula": "(prompt_tokens + realized_output_tokens) * kv_bytes_per_token",
+      "reason": "used future final-length information at dispatch",
+      "retained_artifact": "results/active_hbm_v3_capacity_sanity.invalidated_realized_output_oracle"
+    }
+  ],
+  "evidence_boundary": "V3 remains preliminary metadata DES evidence. Capacity constants are frozen from the local model artifact and checked-in SGLSim configuration, but service time, bandwidth, fence, and replacement remain modeled inputs. No paper-ready claim or target-trend threshold is registered."
+}

@@ -7,14 +7,16 @@ def _by_id(payload):
     return {item["check_id"]: item for item in payload["checks"]}
 
 
-def test_goal_completion_audit_keeps_strict_final_blocker_visible() -> None:
+def test_goal_completion_audit_reports_current_goal_complete() -> None:
     payload = audit.run_audit()
     checks = _by_id(payload)
 
     assert payload["summary"]["complete"] is True
+    assert payload["summary"]["checks"] == 19
     assert payload["summary"]["blocked"] == 0
     assert payload["summary"]["partial"] == 0
-    assert payload["summary"]["pass"] == 17
+    assert payload["summary"]["missing"] == 0
+    assert payload["summary"]["pass"] == 19
     assert checks["workflow_13131_config"]["status"] == audit.PASS
     assert checks["workflow_generated_request_shape"]["status"] == audit.PASS
     assert (
@@ -39,33 +41,43 @@ def test_goal_completion_audit_keeps_strict_final_blocker_visible() -> None:
     )
     assert "violations=[]" in checks["workflow_generated_request_shape"]["evidence"]
     assert checks["failure_replay_semantics"]["status"] == audit.PASS
-    assert "config_files=12" in checks["failure_replay_semantics"]["evidence"]
-    assert "request_files=12" in checks["failure_replay_semantics"]["evidence"]
-    assert "normal_rows=972" in checks["failure_replay_semantics"]["evidence"]
-    assert "retry_rows=540" in checks["failure_replay_semantics"]["evidence"]
+    assert "suite=policy_matrix" in checks["failure_replay_semantics"]["evidence"]
+    assert "config_files=28" in checks["failure_replay_semantics"]["evidence"]
+    assert "request_files=28" in checks["failure_replay_semantics"]["evidence"]
+    assert "normal_rows=2160" in checks["failure_replay_semantics"]["evidence"]
+    assert "retry_rows=1200" in checks["failure_replay_semantics"]["evidence"]
     assert (
-        "critical_retry_rows=540"
+        "critical_retry_rows=1200"
         in checks["failure_replay_semantics"]["evidence"]
     )
     assert (
         "noncritical_retry_rows=0"
         in checks["failure_replay_semantics"]["evidence"]
     )
-    assert "soft_retry_rows=540" in checks["failure_replay_semantics"]["evidence"]
-    assert "hard_retry_rows=0" in checks["failure_replay_semantics"]["evidence"]
+    assert "soft_retry_rows=660" in checks["failure_replay_semantics"]["evidence"]
+    assert "hard_retry_rows=540" in checks["failure_replay_semantics"]["evidence"]
     assert (
         "pre_failure_boundary_matches=True"
         in checks["failure_replay_semantics"]["evidence"]
     )
-    assert "restore_rows=405" in checks["failure_replay_semantics"]["evidence"]
-    assert "recompute_retry_rows=135" in checks["failure_replay_semantics"]["evidence"]
+    assert "restore_rows=900" in checks["failure_replay_semantics"]["evidence"]
+    assert "recompute_retry_rows=300" in checks["failure_replay_semantics"]["evidence"]
     assert "request_violations=[]" in checks["failure_replay_semantics"]["evidence"]
     assert checks["online_policy_sweep_results"]["status"] == audit.PASS
+    assert "current_matrix_rows=28" in checks[
+        "online_policy_sweep_results"
+    ]["evidence"]
+    assert "current_matrix_ready=True" in checks[
+        "online_policy_sweep_results"
+    ]["evidence"]
     assert checks["sglang_sglsim_accuracy"]["status"] == audit.PASS
+    assert "metrics=8" in checks["sglang_sglsim_accuracy"]["evidence"]
+    assert "within_10pct=8/8" in checks["sglang_sglsim_accuracy"]["evidence"]
     assert (
         "expected_metrics_present=True"
         in checks["sglang_sglsim_accuracy"]["evidence"]
     )
+    assert "max_rel_error_pct=7.12" in checks["sglang_sglsim_accuracy"]["evidence"]
     assert "completed_pairs=[(60, 60)]" in checks["sglang_sglsim_accuracy"]["evidence"]
     assert "source_dirs_exist=True" in checks["sglang_sglsim_accuracy"]["evidence"]
     assert checks["motivation_critical_profile"]["status"] == audit.PASS
@@ -102,7 +114,7 @@ def test_goal_completion_audit_keeps_strict_final_blocker_visible() -> None:
     assert "physical_tensor_copy_rows=0" in strict_final["evidence"]
     assert "effective_physical_tensor_copy_rows=693" in strict_final["evidence"]
     assert "effective_nonfinal_restore_rows=0" in strict_final["evidence"]
-    assert "physical_bridge_rows=693" in strict_final["evidence"]
+    assert "physical_bridge_rows=0" in strict_final["evidence"]
     assert "physical_bridge_missing_rows=0" in strict_final["evidence"]
     assert "missing_data_plane_rows=0" in strict_final["evidence"]
     assert "missing_timing_source_rows=0" in strict_final["evidence"]
@@ -182,13 +194,33 @@ def test_goal_completion_audit_checks_alpha_policy_chain() -> None:
     online = checks["online_alpha_adaptation"]
     assert online["status"] == audit.PASS
     assert "online_policy_source_match=True" in online["evidence"]
-    assert "critical_policy_alpha_matches_online=True" in online["evidence"]
-    assert "noncritical_effective_alpha_zero=True" in online["evidence"]
+    assert "rows=8" in online["evidence"]
+    assert "critical_rows=4" in online["evidence"]
+    assert "noncritical_rows=4" in online["evidence"]
     assert "raw_trace_files=4" in online["evidence"]
     assert "raw_policy_source_match=True" in online["evidence"]
-    assert "raw_alpha_matches_fig3c=True" in online["evidence"]
     assert "runtime_trace_alpha_matches_raw=True" in online["evidence"]
     assert "raw_noncritical_gpu_tokens=0" in online["evidence"]
+
+    tradeoff = checks["alpha_tradeoff_convexity"]
+    assert tradeoff["status"] == audit.PASS
+    assert "curve_rows=68" in tradeoff["evidence"]
+    assert "raw_measured_rows=54" in tradeoff["evidence"]
+    assert "alpha_star_sequence=[0.5, 0.3, 0.2, 0.1]" in tradeoff["evidence"]
+    assert "alpha_star_left_shifts=True" in tradeoff["evidence"]
+    assert "raw_load_regimes=['base load', 'high load', 'low load']" in tradeoff["evidence"]
+
+    trace = checks["real_trace_online_path"]
+    assert trace["status"] == audit.PASS
+    assert "figure_rows=10" in trace["evidence"]
+    assert "request_rows=205" in trace["evidence"]
+    assert "completed_rows=205" in trace["evidence"]
+    assert "workflows=96" in trace["evidence"]
+    assert "policy_source_match=True" in trace["evidence"]
+    assert "trace_runtime_selector_checks=205" in trace["evidence"]
+    assert "trace_runtime_alpha_matches_raw=True" in trace["evidence"]
+    assert "input_tokens=635539" in trace["evidence"]
+    assert "output_tokens=57678" in trace["evidence"]
 
 
 def test_goal_completion_audit_reports_completed_recovery_matrix() -> None:
@@ -226,13 +258,17 @@ def test_goal_completion_audit_checks_beamer_without_design_flowcharts() -> None
 
     figure_gate = checks["hpca_hybrid_figure_gate"]
     assert figure_gate["status"] == audit.PASS
-    assert "hpca_hybrid_ready=25/25" in figure_gate["evidence"]
+    assert "hpca_hybrid_ready=11/11" in figure_gate["evidence"]
     assert "final_gate_summary_match=True" in figure_gate["evidence"]
     assert "final_gate_hybrid_summary_match=True" in figure_gate["evidence"]
-    assert "fig1_trace_motivation=True" in figure_gate["evidence"]
-    assert "fig3b_runtime_replay_boundary=True" in figure_gate["evidence"]
-    assert "strict_ready_stems=['fig_shared_prefix_marginal']" in figure_gate["evidence"]
-    assert "fig10b_only_strict_ready=True" in figure_gate["evidence"]
+    assert "required_result_ready=True" in figure_gate["evidence"]
+    assert "required_design_ready=True" in figure_gate["evidence"]
+    assert "fig_motivation_criticality_ci" in figure_gate["evidence"]
+    assert "fig_motivation_failure_replay_repeats" in figure_gate["evidence"]
+    assert "fig_real_system_recovery_calibration" in figure_gate["evidence"]
+    assert "missing_required_result_stems=[]" in figure_gate["evidence"]
+    assert "missing_required_design_stems=[]" in figure_gate["evidence"]
+    assert "blocked_result_figures=0" in figure_gate["evidence"]
     beamer_compile = checks["beamer_compiles_and_references_figures"]
     assert beamer_compile["status"] == audit.PASS
     assert "evidence_status_sync=True" in beamer_compile["evidence"]
@@ -245,15 +281,19 @@ def test_goal_completion_audit_checks_beamer_without_design_flowcharts() -> None
         "prompt_refs_tight_asset=True"
         in checks["system_overview_generated_asset"]["evidence"]
     )
-    assert "image_width=1665" in checks["system_overview_generated_asset"]["evidence"]
-    assert "image_height=689" in checks["system_overview_generated_asset"]["evidence"]
+    assert "image_width=2357" in checks["system_overview_generated_asset"]["evidence"]
+    assert "image_height=1053" in checks["system_overview_generated_asset"]["evidence"]
     assert "image_usable=True" in checks["system_overview_generated_asset"]["evidence"]
     assert (
         "forbidden_design_refs=[]"
         in checks["beamer_no_design_flowcharts"]["evidence"]
     )
     assert (
-        "referenced_result_figures=24"
+        "result_figures_in_manifest=9"
+        in checks["beamer_result_figure_coverage"]["evidence"]
+    )
+    assert (
+        "referenced_result_figures=9"
         in checks["beamer_result_figure_coverage"]["evidence"]
     )
     assert (

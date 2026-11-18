@@ -1,0 +1,9 @@
+{
+  "extends": "../common/request.json",
+  "group": "S5",
+  "layer": "request",
+  "description": "Fork-join pressure trace for HBMQuotaAIMD timeline",
+  "workload": {"profile": "controlled_fork_join", "workflow_count": 96, "branches_per_workflow": 4, "session_arrival_rate_per_s": 8.0, "context_tokens": 16384},
+  "sources": ["sglsim_complete_source", "pythia_local"],
+  "axes": {"seed": [2026082900, 2026082901, 2026082902, 2026082903, 2026082904], "load_multiplier": [0.75, 1.0, 1.5]}
+}

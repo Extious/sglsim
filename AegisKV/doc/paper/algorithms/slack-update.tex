@@ -1,0 +1,28 @@
+% Compiled by sections/03-system-design-v2.tex.
+% Design-SHA256: 915886a3fbca8270eb55c1e5867f4c01bff1b0edaa48ab0294972a3392a20682
+\begin{algorithm}[t]
+\caption{Online GBDT--CPM Slack update}
+\label{alg:slack-update}
+\begin{tabular}{@{}r@{\hspace{0.5em}}>{\raggedright\arraybackslash}p{\dimexpr\columnwidth-2.5em\relax}@{}}
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textbf{UpdateSlack}$(e,t)$}\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textit{Symbols.} $G_t=(V_t,E_t)$: residual DAG; $H_t$: execution summary; $\mathcal N_t/\mathcal A_t$: agent nodes/active frontier; $\mathcal V_t^{\mathrm{start}}/\mathcal V_t^{\mathrm{end}}$: start/end-node sets.}\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{$f_\theta/\phi_v$: GBDT/features; $\hat w_v$: predicted time; $ES_v/LS_v$: earliest/latest start; $\sigma_i=(s_i,t)$; $\operatorname{Valid}_i$: complete causal input.}\\
+1 & $(G_t=(V_t,E_t),H_t,\mathcal N_t,\mathcal A_t)\gets\operatorname{Observe}(G_{t^-},H_{t^-},e)$.\\
+2 & $\pi\gets\operatorname{Topo}(G_t)$; $\mathcal V_t^{\mathrm{start}}\gets\{v:\operatorname{pred}(v)=\varnothing\}$; $\mathcal V_t^{\mathrm{end}}\gets\{v:\operatorname{succ}(v)=\varnothing\}$.\\
+3 & \textbf{for} $v\in V_t$ \textbf{do}\\
+4 & $\quad\hat w_v\gets0$; \textbf{if} $v\in\mathcal N_t$ \textbf{then} $\hat w_v\gets f_\theta(\phi_v(G_t,H_t))$.\\
+5 & \textbf{end for}\\
+6 & \textbf{for} $v\in\pi$ \textbf{do}\\
+7 & $\quad$\textbf{if} $v\in\mathcal V_t^{\mathrm{start}}$ \textbf{then} $ES_v\gets0$; \textbf{else} $ES_v\gets\max_{u\in\operatorname{pred}(v)}(ES_u+\hat w_u)$.\\
+8 & \textbf{end for}\\
+9 & $C_t\gets\max_{v\in\mathcal V_t^{\mathrm{end}}}(ES_v+\hat w_v)$.\\
+10 & \textbf{for} $v\in\mathcal V_t^{\mathrm{end}}$ \textbf{do} $LS_v\gets C_t-\hat w_v$.\\
+11 & \textbf{end for}\\
+12 & \textbf{for} $v\in\operatorname{rev}(\pi)\setminus\mathcal V_t^{\mathrm{end}}$ \textbf{do}\\
+13 & $\quad LS_v\gets\min_{u\in\operatorname{succ}(v)}LS_u-\hat w_v$.\\
+14 & \textbf{end for}\\
+15 & \textbf{for} $i\in\mathcal A_t$ \textbf{do}\\
+16 & $\quad s_i\gets[LS_i-ES_i]^+$; $\neg\operatorname{Valid}_i\Rightarrow s_i\gets0$; $\sigma_i\gets(s_i,t)$; $\operatorname{meta}(\operatorname{next}(i))[s]\gets s_i$.\\
+17 & \textbf{end for}\\
+\end{tabular}
+\end{algorithm}

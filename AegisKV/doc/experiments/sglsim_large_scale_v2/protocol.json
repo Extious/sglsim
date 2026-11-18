@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sglsim-large-scale-v2-20260826",
+  "evidence_class": "sglsim_metadata_des_v2_no_standby_rotation_conservative_sensitivity",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "source_trace": {
+    "dataset": "semianalysisai/cc-traces-weka-062126",
+    "path": "AegisKV/Archived/2026-08-06-pre-kvcache-centric/presentations/presentation/experiments/sglsim_large/traces/cc-traces-weka-062126/traces.materialized.jsonl",
+    "sha256": "29b6a19e751ff5230771519aab755f80a0f43a4ba9cf96b72d3a6a437ec99276",
+    "workflow_count": 393,
+    "request_count": 98827,
+    "input_tokens": 21635381376,
+    "output_tokens": 106474498,
+    "reuse_identity": "workflow-local hash_ids with source hash_id_scope",
+    "preserve_dag_and_relative_arrivals": true
+  },
+  "statistics": {
+    "paired_seeds": [2026082600, 2026082601, 2026082602, 2026082603, 2026082604, 2026082605, 2026082606, 2026082607, 2026082608, 2026082609],
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260826,
+    "ci_unit": "paired_seed",
+    "trace_epoch_is_not_independent": true
+  },
+  "workload": {
+    "central_prompt_scale": 0.016,
+    "prompt_scale_sweep": [0.004, 0.008, 0.016, 0.032],
+    "output_projection": "min(raw_output_tokens, 4096)",
+    "output_cap_tokens": 4096,
+    "active_workflow_concurrency_sweep": [32, 64, 128, 224],
+    "central_active_workflow_concurrency": 128,
+    "concurrency_axis_semantics": "target offered trace-workflow concurrency; arrivals are fixed across policies and do not react to simulator completion",
+    "arrival_schedule": "seeded offered-load schedule: launch min(C,N), launch one pending workflow at each projected trace-lifespan completion, preserve scaled within-workflow relative offsets; schedule is policy-independent",
+    "concurrency_measurement_interval": "from the 40th projected trace-lifespan completion (controller stabilization prefix) to the last workflow launch; drain reported separately",
+    "achieved_steady_concurrency_relative_error_gate": 0.05,
+    "controller_stabilization_completions": 40,
+    "highest_concurrency_minimum_steady_window_samples": 5,
+    "highest_concurrency_minimum_last_launch_ms": 180000.0,
+    "highest_concurrency_minimum_periodic_aimd_updates": 6,
+    "highest_concurrency_selection_rationale": "C=224 was selected before performance results solely to make six periodic AIMD update opportunities through t=180s and at least five tagged steady samples structurally observable across all ten projected schedules; alpha=0 and performance advantage remain diagnostics, not gates",
+    "wct_measurement_workflows": 393,
+    "wct_measurement_workflows_is_legacy_field_name_for_full_workflow_aggregate_count": true,
+    "fault_horizon": "complete run including startup, steady interval, and drain; idle/ineffective events retained"
+  },
+  "failure": {
+    "hazard_unit": "single_worker_shard_failure_counterfactual_per_1000_total_gpu_shard_hours",
+    "rate_sweep": [0.0, 1.389, 5.952, 41.667],
+    "central_rate": 5.952,
+    "worker_replacement_delay_s": 60.0,
+    "worker_replacement_delay_semantics": "pressure persists until t+60s; repair event then re-enables future HBM admission for that worker, while invalidated old copies stay invalid and no re-protection occurs; delay is not added directly to request recovery latency",
+    "primary_failure_type": "single physical GPU-shard fail-now counterfactual keyed by (logical source rank, TP/PP shard rank): estimate recovery for that logical rank's active source request; conservatively invalidate and block the affected logical replica's aggregate Peer-HBM protection until the latest rank-level repair; the failed request's separately bound peer target is not failed by the same event, but its old Peer-HBM copy may already be unavailable after an earlier uptime failure; all DRAM copies survive; do not re-protect",
+    "failure_execution_boundary": "not executed worker replacement, queue outage, or complete fail-stop rescheduling",
+    "uniform_gpu_shard_process_hazard": true,
+    "retain_ineffective_failures": true,
+    "paired_schedule_across_policies": true,
+    "target_first_fraction": 0.0,
+    "forced_or_synthetic_target_first_injection": false,
+    "natural_prior_target_unavailability_from_uptime_history_is_preserved": true,
+    "natural_repeated_rank_failure_history_is_preserved": true,
+    "history_reporting": "A and nonzero-rate B separately report repeated physical (source rank, shard rank) history, current versus ever-failed conservative logical replica-target outage, prior bound-target unavailability, and cumulative old-copy invalidation; exact rate-zero B and C are failure-free normal-state references",
+    "standby_rotation_modeled": false,
+    "complete_current_design_target_failover_evaluated": false,
+    "target_failure_history_is_no_standby_rotation_conservative_sensitivity": true,
+    "target_failover_evidence_boundary": "The source implementation and current design require atomic healthy standby rotation with subsequent chunks admitted to the replacement target. This large-scale DES does not migrate per-target runtime/controller/DRAM state and therefore retains natural prior-target invalidation/repair only as a conservative no-standby-rotation sensitivity; it must not claim complete current-design target failover.",
+    "node_failure_fraction": 0.0,
+    "overlapping_failure_domains": false
+  },
+  "fault_estimands": {
+    "estimand_a_uptime_poisson_incidence": {
+      "name": "full-horizon uptime-Poisson per-workflow max-overrun join-harm surrogate",
+      "aggregation": "for each workflow, take the maximum policy-independent actual-Slack overrun across its effective failed requests; workflows without an effective failed request contribute zero; report the mean over all 393 workflows",
+      "includes_idle_and_ineffective_events": true,
+      "normalization": "total GPU-shard hours",
+      "not_event_additive_sum": true,
+      "not_executed_or_replayed_workflow_wct": true
+    },
+    "estimand_b_active_source_fault_conditioned_recovery": {
+      "active_source_probe_count": 64,
+      "sampling_frame": "policy-independent base-schedule active-source GPU-shard time with at least one complete sealed chunk",
+      "sampling": "64 equal cumulative exposure strata; one seeded uniform point per stratum",
+      "prng_key_excludes": ["policy", "failure_rate", "admission", "residency", "recovery_outcome", "actual_slack"],
+      "formal_ci_unit": "paired seed mean over 64 strata; outer paired-seed bootstrap only",
+      "probe_inner_bootstrap_allowed": false,
+      "probe_quantiles_are_descriptive_nonindependent": true,
+      "probe_query_is_non_mutating": true,
+      "state_semantics": "at failure_rate=0 probes observe a failure-free normal state; at nonzero rates the same policy-independent tuples query that rate's live state after any preceding uptime Poisson invalidation/repair history"
+    },
+    "estimand_c_single_fault_normal_state_eligible_hazard_integrated_additive_burden": {
+      "name": "single-fault normal-state eligible hazard-integrated additive burden",
+      "formula_total_ms_per_trace_epoch": "(lambda_per_1000_gpu_shard_hours / 1000) * matched_rate_zero_eligible_exposure_gpu_shard_hours * matched_rate_zero_mean_probe_actual_harm_ms_per_event",
+      "formula_ms_per_workflow_epoch": "total_ms_per_trace_epoch / 393",
+      "reference_state": "same policy and seed at exact matching failure_rate=0 scenario",
+      "exact_match_fields": ["model_id", "prompt_scale", "active_workflow_concurrency", "total_gpu_count", "tp_size", "pp_size", "system_dp_size", "network_effective_gb_s", "hbm_quota_gib_per_target", "dram_quota_gib_per_target", "algorithm1_prediction_error_multiplier"],
+      "missing_exact_rate_zero_match": "NA",
+      "rate_zero_point_and_ci_exactly_zero": true,
+      "first_order_linear_normal_state_counterfactual": true,
+      "ignores_repeated_failure_invalidation_repair_and_alpha_history": true,
+      "partial_active_and_sealed_eligible_burden_only": true,
+      "must_not_be_called": ["WCT", "workflow-max", "MTBF", "steady-state observed", "total burden"],
+      "must_not_be_added_to_estimand_a": true,
+      "formal_ci_unit": "ten matched seed-level 64-strata means with paired outer-seed bootstrap only"
+    },
+    "reuse_bin_contract": {
+      "none": "input_reuse_fraction == 0",
+      "partial": "0 < input_reuse_fraction < 0.90",
+      "high": "0.90 <= input_reuse_fraction < 0.99",
+      "near_complete": "0.99 <= input_reuse_fraction <= 1",
+      "fraction": "clip(input_reuse_tokens / prompt_tokens, [0,1]); prompt_tokens=0 is NA and rejected by this workload",
+      "selected_before_results": true
+    }
+  },
+  "models": {
+    "qwen3_8b": {
+      "model": "Qwen/Qwen3-8B",
+      "dtype": "FP16",
+      "maximum_context_tokens": 40960,
+      "kv_bytes_per_token_all_stages": 147456,
+      "tp_size": 1,
+      "pp_size": 1,
+      "system_dp_size": 64,
+      "total_gpu_count": 64,
+      "simulated_compute_profile": {
+        "prefill_setup_ms": 4.0,
+        "prefill_ms_per_token": 0.06,
+        "decode_ms_per_token": 0.34,
+        "provenance": "synthetic preregistered coefficient; not hardware evidence"
+      }
+    },
+    "qwen3_32b": {
+      "model": "Qwen/Qwen3-32B",
+      "dtype": "BF16",
+      "maximum_context_tokens": 32768,
+      "kv_bytes_per_token_all_stages": 262144,
+      "kv_bytes_per_token_per_stage": 65536,
+      "tp_size": 1,
+      "pp_size": 4,
+      "system_dp_size": 16,
+      "total_gpu_count": 64,
+      "simulated_compute_profile": {
+        "prefill_setup_ms": 9.0,
+        "prefill_ms_per_token": 0.16,
+        "decode_ms_per_token": 0.92,
+        "provenance": "synthetic preregistered coefficient; not hardware evidence"
+      }
+    },
+    "coefficient_evidence_boundary": "synthetic preregistered service coefficients; not physical calibration or measured inference latency",
+    "coefficient_sensitivity_scope": "the preregistered Qwen3-8B versus Qwen3-32B model/PP axis changes all declared setup, prefill, decode, KV-size, and topology coefficients together; no isolated physical coefficient claim"
+  },
+  "cluster": {
+    "central_total_gpu_count": 64,
+    "total_gpu_sweep": [16, 32, 64, 128],
+    "gpus_per_node": 4,
+    "gpu_hbm_bytes": 34359738368,
+    "peer_hbm_quota_bytes_per_gpu": 4294967296,
+    "peer_hbm_quota_unit": "GiB per physical GPU/model shard; logical DP target aggregate multiplies by TP*PP",
+    "peer_hbm_quota_sweep_gib_per_gpu": [2.0, 4.0, 8.0],
+    "store_dram_bytes_per_worker": 68719476736,
+    "store_dram_quota_unit": "GiB per physical stage partition/model shard; logical DP target aggregate multiplies by TP*PP",
+    "store_dram_sweep_gib_per_worker": [16.0, 64.0, 256.0],
+    "prefix_chunk_tokens": 4096,
+    "decode_chunk_tokens": 256,
+    "bandwidth": {
+      "network_effective_sweep_gb_s": [1.0, 10.0, 20.0, 40.0],
+      "central_network_effective_gb_s": 10.0,
+      "source_to_peer_hbm_same_node_gb_s": 25.0,
+      "network_axis_operational_paths": [
+        "cross_node_source_to_peer_hbm",
+        "source_to_store_dram",
+        "store_dram_to_gpu_recovery",
+        "remote_peer_hbm_to_gpu_recovery"
+      ],
+      "network_axis_semantics": "end-to-end effective path rate; runner maps all listed paths to the scenario value",
+      "pipeline_lane_semantics": "per-stage independent effective rate; PP=4 has four stage lanes in aggregate and shared-NIC contention is not modeled",
+      "hbm_setup_ms": 0.05,
+      "dram_write_setup_ms": 0.1,
+      "dram_read_setup_ms": 0.15,
+      "provenance": "synthetic effective path sweep; 10 GB/s central is 100GbE-class, 1/20/40 GB/s are sensitivity points; not hardware evidence"
+    }
+  },
+  "algorithm3": {
+    "initial_alpha": 0.5,
+    "minimum_alpha": 0.0,
+    "maximum_alpha": 1.0,
+    "multiplicative_decrease": 0.5,
+    "additive_increase": 0.05,
+    "stable_windows_before_increase": 3,
+    "window_s": 30.0,
+    "initial_sample_semantics": "t=0 is a telemetry-only snapshot at initial alpha with stable counter zero; it is not an AIMD update",
+    "periodic_update_semantics": "only positive-time periodic windows apply AIMD, and only when Algorithm 3 is enabled",
+    "queue_depth_pressure_threshold": 2,
+    "quota_occupancy_pressure_threshold": 0.95,
+    "reads_failure_rate_directly": false,
+    "direct_driver": "per-target primary-serving pressure and stable headroom"
+  },
+  "algorithm1_sensitivity": {
+    "prediction_error_multiplier_central": 1.0,
+    "prediction_error_multiplier_sweep": [0.0, 0.5, 1.0, 2.0],
+    "zero_means_oracle_replay": true,
+    "one_means_workflow_disjoint_causal_visible_crossfit_point_prediction": true,
+    "central_policy_input_array": "predicted_slack_ms",
+    "current_design_prediction_semantics": "for each scenario and request/tool boundary, recompute exact actual suffix remaining and visible-frontier CPM from realized service for endpoint labels; independently scale workflow-disjoint central cross-fit remaining predictions by the current request's causal visible scenario/central service proxy, then apply exact CPM at the complete currently visible frontier; at a later fault, decrement boundary Slack by elapsed time rather than recomputing the concurrently evolving residual DAG",
+    "scenario_prediction_visible_service_proxy": "declared model setup/prefill/decode coefficients over current projected prompt, current projected reuse, and effective requested output cap min(protocol cap, model context minus projected prompt); realized output and actual suffix truth are forbidden",
+    "missing_or_incomplete_visible_frontier_slack_ms": 0.0,
+    "actual_slack_is_label_and_ground_truth_endpoint_only": true,
+    "actual_slack_label_semantics": "policy-independent actual-duration-derived boundary-CPM Slack label with elapsed due-time decrement: max(boundary_actual_slack_ms - elapsed_since_arrival_ms, 0)",
+    "ground_truth_word_boundary": "ground truth denotes an offline policy-independent duration label only; it is not an exact fault-time concurrent-branch residual-DAG recomputation",
+    "fault_time_concurrent_branch_residual_cpm_recomputed": false,
+    "future_output_or_completion_is_never_a_policy_feature": true,
+    "absolute_conformal_lcb_is_uncertainty_diagnostic_not_policy_input": true,
+    "nondegenerate_mechanism_gate": {
+      "minimum_nonzero_fraction_all_requests": 0.05,
+      "minimum_nonzero_fraction_eligible_frontiers": 0.2,
+      "selected_before_performance_campaign": true,
+      "does_not_gate_on_performance_advantage": true
+    },
+    "between_zero_and_one_means_partial_prediction_error_interpolation": true,
+    "greater_than_one_means_linear_prediction_error_stress_not_accuracy_claim": true,
+    "multiplier_application": "after scenario-specific actual and base-predicted CPM Slack: max(actual + m * (predicted - actual), 0); m=1 directly selects base prediction without reading actual Slack",
+    "raw_weka_api_think_time_crossfit_retained_as_negative_robustness": true,
+    "post_treatment_state_difference_is_diagnostic_not_validity_gate": true,
+    "applies_to_policy": "aegiskv_alg111",
+    "required_diagnostics": [
+      "remaining_mae_ms",
+      "remaining_mape",
+      "remaining_r2",
+      "remaining_interval_coverage",
+      "slack_mae_ms",
+      "slack_mape",
+      "slack_r2",
+      "slack_signed_bias_ms",
+      "slack_positive_precision",
+      "slack_positive_recall",
+      "predicted_policy_slack_nonzero_fraction",
+      "predicted_policy_slack_nonzero_fraction_eligible_frontiers",
+      "slack_lcb_coverage",
+      "slack_lcb_zero_fraction",
+      "full_vs_no_alg1_mechanism_state_differs"
+    ]
+  },
+  "primary_policies": [
+    "aegiskv_alg111",
+    "aegiskv_alg011_no_alg1",
+    "aegiskv_alg101_no_alg2",
+    "aegiskv_alg110_no_alg3",
+    "recompute_only",
+    "static_independent_fcfs",
+    "dejavu_neighbor",
+    "raidserve_host",
+    "kevlarflow_ring",
+    "ghostserve_parity"
+  ],
+  "central_compositional_supplement": [
+    "aegiskv_alg000",
+    "aegiskv_alg001",
+    "aegiskv_alg010",
+    "aegiskv_alg100"
+  ],
+  "structural_ablation_contract": {
+    "design": "hierarchical structural 2^3 closure, not three orthogonal independent switches",
+    "algorithm1_effect_interpretable_only_when_algorithm2_enabled": true,
+    "reason": "when Algorithm 2 is disabled the adapter follows StaticIndependent admission and does not consume Slack, so toggling Algorithm 1 cannot affect decisions",
+    "structural_equivalences": [
+      "aegiskv_alg101_no_alg2 == aegiskv_alg001",
+      "aegiskv_alg100 == aegiskv_alg000",
+      "aegiskv_alg101_no_alg2 == static_independent_fcfs"
+    ],
+    "retain_equivalent_cells_for_preregistered_cube_closure": true,
+    "equivalent_or_null_cells_are_not_a_validity_failure": true
+  },
+  "output": {
+    "retain_failure_sample_per_run": 128,
+    "retain_workflow_rows_per_run": "all_393",
+    "retain_window_rows_per_run": "all",
+    "retain_failure_rows_per_run": "all",
+    "retain_repair_rows_per_run": "all",
+    "retain_active_source_probe_rows_per_run": "all_64",
+    "compression": "gzip",
+    "immutable_results": true
+  }
+}

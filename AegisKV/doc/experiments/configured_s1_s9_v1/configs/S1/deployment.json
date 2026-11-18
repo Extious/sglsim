@@ -1,0 +1,39 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S1",
+  "layer": "deployment",
+  "description": "Six-architecture central A100-40GB modeled deployment",
+  "topology": {
+    "hardware": "NVIDIA A100 40 GiB modeled capacity",
+    "layout": "Qwen3-8B TP1/PP1",
+    "system_dp": 16,
+    "node_count": 2,
+    "gpus_per_node": 8
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "native_boundary": "modeled Router+Store approximation"
+  },
+  "axes": {
+    "architecture": ["Native Mooncake", "Static FCFS", "DejaVu", "KevlarFlow", "GhostServe", "AegisKV"]
+  },
+  "planned_cells": 60,
+  "unique_cells": 60,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s1_six_architecture_10seed.py",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s1_six_architecture_10seed_visual_v2/cdf_render_source.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s1_six_architecture_10seed_visual_v2/audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s1_six_architecture_10seed_visual_v2/manifest.json",
+    "expected_rows": 48000,
+    "plot_kind": "architecture_wct_cdf",
+    "figure_slug": "architecture_wct_cdf"
+  },
+  "evidence": {
+    "class": "modeled_metadata_des_preliminary",
+    "paper_ready": false,
+    "known_gaps": []
+  },
+  "matrix_note": "6 architectures x 10 seeds; both failure domains share the same cell probe universe"
+}

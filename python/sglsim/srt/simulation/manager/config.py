@@ -52,6 +52,15 @@ class ConfigManager:
         if not isinstance(sched, dict):
             sched = {}
             cls._raw["scheduler"] = sched
+        # Runtime process topology must have one authoritative view.  The
+        # existing DP resolver already treats the larger of the simulation
+        # config and CLI value as active; mirror that rule for every parallel
+        # dimension before any Controller, Scheduler, cache, or predictor is
+        # constructed.
+        for key in ("dp_size", "tp_size", "pp_size"):
+            configured = max(int(sched.get(key, 1)), 1)
+            requested = max(int(getattr(server_args, key)), 1)
+            sched[key] = max(configured, requested)
         if server_args.max_running_requests is not None:
             sched["max_running_requests"] = server_args.max_running_requests
         if server_args.load_balance_method is not None:
@@ -120,6 +129,17 @@ class ConfigManager:
                 token_capacity,
                 (cls._raw or {}).get("cache", {}),
             )
+            if (
+                chunked_prefill_size is not None
+                and chunked_prefill_size > token_capacity
+            ):
+                raise ValueError(
+                    "chunked_prefill_size exceeds per-rank L1 KV capacity: "
+                    f"chunk={chunked_prefill_size}, capacity={token_capacity}, "
+                    f"model={model_path}, pp_size={int(raw.get('pp_size', 1))}. "
+                    "Use a physically feasible TP/PP deployment, raise the "
+                    "static-memory budget, or explicitly lower the chunk size."
+                )
             resolved_max_running = resolve_max_num_reqs(
                 token_capacity=token_capacity,
                 context_len=context_len,

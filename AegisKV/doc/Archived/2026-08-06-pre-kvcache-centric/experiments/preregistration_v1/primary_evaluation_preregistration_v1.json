@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "name": "aegiskv_qwen3_32b_dp4_pp4_32k_primary_v1",
+  "frozen_design_date": "2026-08-04",
+  "status": "design_frozen_trace_manifest_pending",
+  "completion_gate": {
+    "population": "all workflows in all nonzero-failure held-out primary cells",
+    "metric": "paired_mean_wct_improvement_percent",
+    "threshold_percent": 10.0,
+    "formula": "100*(mean_wct_no_backup-mean_wct_aegiskv)/mean_wct_no_backup",
+    "bootstrap": {
+      "paired": true,
+      "stratify_by": [
+        "load",
+        "injected_failure_rate",
+        "failure_scope",
+        "seed"
+      ],
+      "replicates": 10000,
+      "confidence_level": 0.95,
+      "required_lower_bound_percent": 0.0
+    },
+    "zero_failure_mean_wct_overhead_max_percent": 5.0,
+    "all_cells_reported": true
+  },
+  "deployment": {
+    "model": "Qwen3-32B",
+    "context_length_tokens": 32768,
+    "dp_size": 4,
+    "pp_size": 4,
+    "tp_size": 1,
+    "scheduler_processes": 16,
+    "connector_mapping": "same_pp_stage_only",
+    "slack_source": "trace_oracle_future_api_completion",
+    "algorithm1_bypassed": true
+  },
+  "workload": {
+    "source_dataset": "semianalysisai/cc-traces-weka-062126",
+    "selection_salt": "aegiskv-primary-v1:",
+    "sort": "sha256(selection_salt + workflow_id)",
+    "eligibility": [
+      "at_least_one_subagent_group",
+      "main_request_after_first_subagent_group",
+      "valid_nonnegative_measured_api_times",
+      "no_malformed_request_rows"
+    ],
+    "splits": {
+      "smoke_calibration": 25,
+      "tuning": 50,
+      "held_out_primary": 100
+    },
+    "minimum_eligible": 175,
+    "trace_manifest_sha256": null,
+    "split_manifest_sha256": null
+  },
+  "primary_matrix": {
+    "workflow_concurrency": [2, 4, 8],
+    "injected_failure_rate_per_1000_logical_deployment_seconds": [0.5, 2.0],
+    "failure_scope": ["pp_worker", "dp_replica"],
+    "seeds": [901, 1901, 2901],
+    "policies": [
+      "no_backup",
+      "legacy_greedy",
+      "deployed_exact_rolling"
+    ],
+    "workflow_count_per_policy_cell": 100,
+    "paired_recovery_conditions": 36,
+    "policy_cells": 108,
+    "minimum_failure_affected_workflows_per_load_rate_scope_across_seeds": 30
+  },
+  "zero_failure_guard": {
+    "workflow_concurrency": [2, 4, 8],
+    "injected_failure_rate": 0.0,
+    "failure_scope": "none",
+    "seeds": [901, 1901, 2901],
+    "policies": [
+      "no_backup",
+      "legacy_greedy",
+      "deployed_exact_rolling"
+    ],
+    "workflow_count_per_policy_cell": 100,
+    "policy_cells": 27
+  },
+  "fairness": {
+    "byte_identical_across_policies": [
+      "trace",
+      "execution_route_plan",
+      "failure_manifest",
+      "model_and_communication_calibration"
+    ],
+    "identical_semantics_across_policies": [
+      "arrival",
+      "workflow_launch_gate",
+      "retry_trigger",
+      "retry_request_set",
+      "resource_configuration"
+    ],
+    "policy_hazard_prior_separate_from_injected_failure_rate": true,
+    "paired_route_validation_required": true,
+    "no_backup_may_not_be_weakened": true
+  },
+  "evidence": {
+    "offline_requires_accuracy_gate": true,
+    "final_candidate_requires_online_replay": true,
+    "future_failure_oracle_excluded_from_completion_gate": true,
+    "causal_admission_state_required": true,
+    "static_plan_state_mismatch_invalidates_cell": true,
+    "heuristic_fallback_from_certified_route_forbidden": true,
+    "incremental_events_required": true,
+    "bounded_event_deque_not_sufficient": true,
+    "cdf_formats": ["png", "svg", "pdf"],
+    "cdf_raw_samples_required": true,
+    "cdf_bootstrap_confidence_bands": true
+  },
+  "resource_guard": {
+    "initial_max_parallel_cells": 4,
+    "solver_threads_per_cell": 1,
+    "new_artifact_budget_gib": 300,
+    "isolated": ["ports", "output_dir", "temp_dir", "seed", "solver_state"]
+  },
+  "change_control": {
+    "outcome_driven_change_requires_new_version": true,
+    "retain_failed_and_unfavorable_cells": true,
+    "five_workflow_results_are_smoke_only": true
+  }
+}

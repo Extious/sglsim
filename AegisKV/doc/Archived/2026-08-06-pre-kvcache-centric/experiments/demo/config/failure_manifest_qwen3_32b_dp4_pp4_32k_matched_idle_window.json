@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "deployment": {
+    "nodes": 4,
+    "gpus_per_node": 4,
+    "dp_size": 4,
+    "pp_size": 4,
+    "failure_scope": "gpu",
+    "simulator_boundary": "pp_rank identifies the failed stage; current SGLSim makes the containing DP replica unavailable during replacement"
+  },
+  "events": [
+    {
+      "event_id": "failure-02",
+      "offset_s": 240.0,
+      "dp_rank": 1,
+      "pp_rank": 3,
+      "failure_scope": "gpu",
+      "duration_s": 12.0,
+      "victims": [
+        {
+          "backup_key": "03e110ac-p1-m1",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 2
+        }
+      ]
+    },
+    {
+      "event_id": "failure-03",
+      "offset_s": 330.0,
+      "dp_rank": 2,
+      "pp_rank": 0,
+      "failure_scope": "gpu",
+      "duration_s": 12.0,
+      "victims": [
+        {
+          "backup_key": "00ca01c4-p1-m4",
+          "execution_dp_rank": 2,
+          "backup_dp_rank": 3
+        },
+        {
+          "backup_key": "00ca01c4-p2-s1-t0",
+          "execution_dp_rank": 2,
+          "backup_dp_rank": 3
+        }
+      ]
+    },
+    {
+      "event_id": "failure-04",
+      "offset_s": 380.0,
+      "dp_rank": 3,
+      "pp_rank": 2,
+      "failure_scope": "gpu",
+      "duration_s": 12.0,
+      "victims": [
+        {
+          "backup_key": "085411a4-p1-m7",
+          "execution_dp_rank": 3,
+          "backup_dp_rank": 2
+        },
+        {
+          "backup_key": "085411a4-p2-s0-t0",
+          "execution_dp_rank": 3,
+          "backup_dp_rank": 0
+        },
+        {
+          "backup_key": "085411a4-p2-s1-t0",
+          "execution_dp_rank": 3,
+          "backup_dp_rank": 0
+        }
+      ]
+    }
+  ],
+  "calibration_result": "/home/comp/zhanzhao/sglsim/AegisKV/demo/results/qwen3_32b_dp4_pp4_matched_gpu_primary_v8/20260804-075443/no_backup.json",
+  "victim_selection": "same_matched_victims_with_source_route_idle_window_scheduling",
+  "schedule_basis": "measured_no_backup_route_intervals; inject only after victim completion and before the next request on the failed rank",
+  "completion_guard_s": 5.0,
+  "resolved_dp_size": 4,
+  "resolved_pp_size": 4,
+  "victim_count": 6
+}

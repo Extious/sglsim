@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "events": [
+    {
+      "event_id": "failure-02",
+      "offset_s": 90.0,
+      "dp_rank": 1,
+      "duration_s": 10.0,
+      "victims": [
+        {
+          "backup_key": "8ab0a089-p1-m5",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 5
+        }
+      ]
+    },
+    {
+      "event_id": "failure-03",
+      "offset_s": 150.0,
+      "dp_rank": 4,
+      "duration_s": 10.0,
+      "victims": [
+        {
+          "backup_key": "07dd4053-p2-s1-t5",
+          "execution_dp_rank": 4,
+          "backup_dp_rank": 1
+        },
+        {
+          "backup_key": "085411a4-p2-s1-t8",
+          "execution_dp_rank": 4,
+          "backup_dp_rank": 1
+        },
+        {
+          "backup_key": "48f9644a-p1-m0",
+          "execution_dp_rank": 4,
+          "backup_dp_rank": 5
+        },
+        {
+          "backup_key": "48f9644a-p2-s4-t6",
+          "execution_dp_rank": 4,
+          "backup_dp_rank": 1
+        },
+        {
+          "backup_key": "4cb074e3-p1-m3",
+          "execution_dp_rank": 4,
+          "backup_dp_rank": 6
+        },
+        {
+          "backup_key": "4cb074e3-p2-s0-t7",
+          "execution_dp_rank": 4,
+          "backup_dp_rank": 1
+        },
+        {
+          "backup_key": "7577f2dd-p2-s0-t2",
+          "execution_dp_rank": 4,
+          "backup_dp_rank": 1
+        }
+      ]
+    },
+    {
+      "event_id": "failure-04",
+      "offset_s": 210.0,
+      "dp_rank": 7,
+      "duration_s": 10.0,
+      "victims": [
+        {
+          "backup_key": "9d511bd6-p1-m6",
+          "execution_dp_rank": 7,
+          "backup_dp_rank": 5
+        }
+      ]
+    }
+  ],
+  "calibration_result": "/home/comp/zhanzhao/sglsim/benchmark/AegisKV/demo/results/formal_20k_matched_calibration/20260722-123529/aegiskv.json",
+  "victim_selection": "latest_completed_state_per_agent_on_failed_rank_with_pre_failure_completion_guard",
+  "completion_guard_s": 5.0,
+  "excluded_near_failure_boundary": 13,
+  "dropped_events_without_stable_victims": 1,
+  "victim_count": 9
+}

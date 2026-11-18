@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "evidence_class": "real_weka_qwen3_32b_dp4_pp4_preregistration",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "design": {
+    "path": "/home/comp/zhanzhao/Mooncake/aegiskv/design/current_design.md",
+    "sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac"
+  },
+  "context_audit": {
+    "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/real_weka_context_scale/context-audit-20260823.json",
+    "sha256": "b5d51f9bcf4f561596369913442d5c30c99877ff70abf0c402609638c99b9cc5",
+    "trace_sha256": "29b6a19e751ff5230771519aab755f80a0f43a4ba9cf96b72d3a6a437ec99276"
+  },
+  "model": {
+    "name": "Qwen/Qwen3-32B",
+    "revision": "Qwen/Qwen3-32B@9216db5781bf21249d130ec9da846c4624c16137",
+    "config_path": "/home/comp/zhanzhao/.cache/huggingface/hub/models--Qwen--Qwen3-32B/snapshots/9216db5781bf21249d130ec9da846c4624c16137/config.json",
+    "config_sha256": "97e295b63283935788fac5e4f8860862a56d4089538cafc93f0431f2ebe483bb",
+    "kv_bytes_per_token_all_layers": 262144
+  },
+  "layout": {
+    "tp_size": 1,
+    "pp_size": 4,
+    "dp_size": 4
+  },
+  "expected_scheduler_processes": 16,
+  "model_specific_profile": {
+    "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/real_weka_model_scale/profiles/qwen3-32b-bf16-dp4-pp4-v1.json",
+    "required_compatibility_identity": {
+      "serving_dtype": "bfloat16",
+      "kv_cache_dtype": "bfloat16",
+      "kv_abi": "qwen3-32b-bf16-block16-tp1-pp4-v1",
+      "block_size": 16,
+      "max_model_len": 32768,
+      "logical_chunk_tokens": {
+        "prefix": 4096,
+        "decode": 256
+      },
+      "layout": {
+        "tp_size": 1,
+        "pp_size": 4,
+        "dp_size": 4
+      }
+    }
+  },
+  "scale_points": [
+    {
+      "label": "scale-0.004-calibration-aligned-primary-candidate",
+      "role": "primary"
+    },
+    {
+      "label": "scale-0.008-context-sensitivity",
+      "role": "sensitivity"
+    },
+    {
+      "label": "scale-0.016-context-sensitivity",
+      "role": "sensitivity"
+    },
+    {
+      "label": "scale-0.032-context-sensitivity",
+      "role": "sensitivity"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-s9-rtx4090-four-direction-holdout-v1-20260827",
+  "status": "FROZEN_FEASIBILITY_FAIL_CLOSED_AWAITING_NEW_HOLDOUT_JOB",
+  "paper_ready": false,
+  "question": "Can four direction-specific RTX4090 service curves predict transfer time on independent physical repeats for every registered payload/path cell?",
+  "selection_policy": "No physical sample, repeat, direction, payload, error sign, or failing cell may be excluded based on calibration outcome or the 10% threshold.",
+  "hardware_separation": {
+    "calibration_model": "single-node 2x NVIDIA GeForce RTX 4090, PCIe pinned-host staged, float16",
+    "calibration_layout": "TP1/PP1/system-DP2",
+    "main_simulation_model": "A100 40 GiB v3.1.3 profile",
+    "main_a100_protocol_path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/protocol.json",
+    "main_a100_protocol_sha256": "7535a7bf7162f036d0154a67f25608bcb43c0f59526593f4f06e37515fcca9c9",
+    "separation_gate": "The fitted RTX4090 curves live under an rtx4090_calibration namespace and never replace or mutate an A100 bandwidth, setup, capacity, workload, or topology field."
+  },
+  "training_source": {
+    "role": "FIT_ONLY_NEVER_HOLDOUT",
+    "physical_run_id": "staged-four-path-fp16-calibration-141298-20260826T141218Z",
+    "source_slurm_job_id": "141298",
+    "calibration_path": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/staged-four-path-fp16-calibration-141298-20260826T141218Z/staged-four-path-calibration.json",
+    "calibration_sha256": "80959b42427e481d442b47eb804c4ae7ed46f43f6f69a654a086d8ab092325da",
+    "manifest_path": "/home/comp/zhanzhao/Mooncake/aegiskv/results/physical_profiles/rtx4090-pcie-host-staged-141298-v1/physical-profile-manifest.json",
+    "manifest_sha256": "224eb1e91caa517180f97328d451bd42e7023cf88c9f806d5a1de6a7cd300493",
+    "contract_path": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/staged-four-path-fp16-calibration-141298-20260826T141218Z/staged-fp16-contract.json",
+    "contract_sha256": "60d8e928c130c013e016603510bfc901b8f7de4276fe3611e16662f0d6058252",
+    "sample_identity_sha256": "717a1881f46f725df6d5c49411c6ca11283bab96a161ccb72f023dfe43ed80be",
+    "sample_count": 80,
+    "cell_count": 16,
+    "repeats_per_cell": 5,
+    "predeclared_train_holdout_split_present": false,
+    "split_audit": "Neither the physical manifest, staged contract, calibration JSON, nor gate report contains a train/holdout assignment or split hash. Assigning repeat ordinals after seeing all 80 measurements would be post hoc and is forbidden.",
+    "all_80_training_samples_rule": "If calibration proceeds, all checksum-valid job141298 samples are used for fitting; none may be relabeled as holdout."
+  },
+  "path_mapping": {
+    "source_to_peer_hbm": {
+      "simulator_curve": "rtx4090_calibration.source_to_peer_hbm_copy",
+      "physical_path_class": "pcie_pinned_host_staged"
+    },
+    "source_to_dram": {
+      "simulator_curve": "rtx4090_calibration.source_to_dram_copy",
+      "physical_path_class": "gpu_to_pinned_host_dram"
+    },
+    "peer_hbm_recovery": {
+      "simulator_curve": "rtx4090_calibration.peer_hbm_recovery",
+      "physical_path_class": "target_local_gpu_d2d"
+    },
+    "dram_recovery": {
+      "simulator_curve": "rtx4090_calibration.dram_recovery",
+      "physical_path_class": "host_dram_to_pinned_host_to_gpu"
+    }
+  },
+  "payload_bytes": [67108864, 268435456, 536870912, 1073741824],
+  "fit": {
+    "unit": "raw per-sample transfer_ms, not pre-aggregated GiB/s",
+    "independent_per_direction": true,
+    "formula": "predicted_transfer_ms = setup_ms[path] + payload_bytes * inverse_bandwidth_ms_per_byte[path]",
+    "constraints": "setup_ms >= 0 and inverse_bandwidth_ms_per_byte > 0",
+    "estimator": "nonnegative least squares over all 20 job141298 samples for each direction",
+    "derived_effective_gib_s": "(payload_bytes / 2^30) / (predicted_transfer_ms / 1000)",
+    "forbidden": [
+      "shared bandwidth or setup parameter across directions",
+      "payload-specific lookup table with no held-out interpolation model",
+      "using holdout values during fitting or refitting after evaluation",
+      "reusing A100 configured values as RTX4090 acceptance predictions"
+    ]
+  },
+  "holdout": {
+    "status": "NOT_MEASURED_NEW_INDEPENDENT_RUN_REQUIRED",
+    "collection_time": "after this protocol hash is frozen",
+    "hardware_contract": "same node class, two RTX4090 GPUs, pinned-host staged TCP engine, float16, TP1/PP1/system-DP2, and same four physical path classes as job141298",
+    "directions": ["source_to_peer_hbm", "source_to_dram", "peer_hbm_recovery", "dram_recovery"],
+    "payload_bytes": [67108864, 268435456, 536870912, 1073741824],
+    "repeats_per_cell": 5,
+    "required_sample_count": 80,
+    "required_cell_count": 16,
+    "required_new_lineage": ["new Slurm job ID", "new run ID", "new probe artifact hashes", "new per-sample checksums"],
+    "failure_rule": "Any missing direction/payload/repeat, checksum failure, topology mismatch, or job lineage overlap blocks calibration evaluation; do not silently drop the sample or reduce the denominator."
+  },
+  "holdout_statistics": {
+    "per_sample_error": "abs(predicted_transfer_ms - observed_transfer_ms) / observed_transfer_ms",
+    "required_per_direction_payload_rows": 16,
+    "each_row_reports": [
+      "five raw observed transfer_ms values",
+      "one frozen predicted transfer_ms",
+      "MAPE",
+      "median absolute percentage error",
+      "p95 absolute percentage error",
+      "signed mean percentage error",
+      "observed and predicted effective GiB/s"
+    ],
+    "reference_acceptance_gate": "All 16 direction/payload MAPE values <= 10%; report FAIL without refitting or sample exclusion if any cell exceeds 10%.",
+    "aggregate_reporting": "Also report per-direction MAPE over its 20 holdout samples and overall MAPE over all 80, but aggregate success cannot mask a failing direction/payload cell.",
+    "confidence_interval": "Nonparametric bootstrap 95% CI over the five repetitions within each fixed direction/payload cell, seed frozen before holdout collection."
+  },
+  "planned_artifacts": [
+    "training_samples.csv with all 80 job141298 rows labeled FIT_ONLY",
+    "fitted_rtx4090_service_curves.json with four independent setup/bandwidth pairs and source hashes",
+    "holdout_samples.csv with exactly 80 new rows and immutable lineage",
+    "holdout_errors_by_path_payload.csv with exactly 16 rows",
+    "audit.json, manifest.json, SHA256SUMS, PDF, and PNG"
+  ],
+  "execution_gate": {
+    "current_feasibility": "BLOCKED_NEW_INDEPENDENT_HOLDOUT_REQUIRED",
+    "existing_80_can_be_used_as_holdout": false,
+    "new_holdout_job_present": false,
+    "calibration_fit_started": false,
+    "holdout_evaluation_started": false
+  },
+  "evidence_boundary": "This protocol separates an RTX4090 calibration-only simulator namespace from the A100 40 GiB main DES. Job141298 supplies fitting data only because it has no predeclared train/holdout split. No matched holdout accuracy or 10% acceptance result exists until a new independent 80-sample run completes."
+}

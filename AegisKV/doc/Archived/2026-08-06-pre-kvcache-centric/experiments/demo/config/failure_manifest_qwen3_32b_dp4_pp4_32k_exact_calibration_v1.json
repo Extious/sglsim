@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "description": "Calibration-only one-failure manifest for the 00ca01c4 certified exact window. The victim and immutable backup DP are taken from the frozen solver plan; this is not a formal primary cell.",
+  "deployment": {
+    "nodes": 4,
+    "gpus_per_node": 4,
+    "dp_size": 4,
+    "pp_size": 4,
+    "failure_scope": "gpu",
+    "simulator_boundary": "pp_rank identifies the failed stage while the containing DP replica is unavailable during replacement"
+  },
+  "events": [
+    {
+      "event_id": "exact-calibration-rank0-v1",
+      "offset_s": 4.9,
+      "dp_rank": 0,
+      "pp_rank": 1,
+      "failure_scope": "gpu",
+      "duration_s": 0.3,
+      "victims": [
+        {
+          "backup_key": "00ca01c4-p1-m3",
+          "execution_dp_rank": 0,
+          "backup_dp_rank": 2,
+          "pp_rank": 1,
+          "failure_scope": "gpu"
+        }
+      ]
+    }
+  ],
+  "actual_injected_failure_count": 1,
+  "failure_hazard_policy_prior": 0.01,
+  "separation_note": "The 0.01 policy prior is an optimizer input and is not inferred from this realized one-event calibration manifest.",
+  "admission_safety_boundary": "The 4.9 s injection lies after p1-m3 completion and inside p1-m4 in both calibrated online and offline timelines. The no-failure exact calibration places p1-m4 on DP2 with backup DP3; no request uses DP0 as execution or backup during this short outage. This gate therefore tests the same request-completion retry poll in both clocks without claiming the bootstrap MILP models admission during an unavailable backup interval."
+}

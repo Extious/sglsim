@@ -1,0 +1,9 @@
+{
+  "extends": "../common/deployment.json",
+  "group": "S9",
+  "layer": "deployment",
+  "description": "Analytical-versus-DES timing verification; not physical calibration",
+  "protection": {"prefix_chunk_tokens": 1024},
+  "axes": {"model": ["qwen3-8b", "qwen3-32b"], "policy": ["aegiskv"], "effective_bandwidth_GB_per_s": [10, 20, 25]},
+  "figure": {"slug": "s9_transfer_model_verification", "kind": "analytical_verification"}
+}

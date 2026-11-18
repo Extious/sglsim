@@ -97,6 +97,12 @@ def run_detokenizer_process(
     ipc_registry: SimIpcRegistry,
     ready_event,
 ) -> None:
+    import signal
+
+    # The parent HTTP process performs the ordered shutdown and sends the
+    # detokenizer stop message.  Do not let terminal Ctrl-C interrupt the IPC
+    # read in this child first.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     configure_logger(server_args)
     if server_args.sim_config_path:
         os.environ["SGLSIM_CONFIG_PATH"] = server_args.sim_config_path

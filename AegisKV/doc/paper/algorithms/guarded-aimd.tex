@@ -1,0 +1,18 @@
+% Compiled by sections/03-system-design-v2.tex.
+% Design-SHA256: 915886a3fbca8270eb55c1e5867f4c01bff1b0edaa48ab0294972a3392a20682
+\begin{algorithm}[b]
+\caption{\textsc{GuardedAIMD}: Peer-HBM share}
+\label{alg:guarded-aimd}
+\begin{tabular}{@{}r@{\hspace{0.5em}}>{\raggedright\arraybackslash}p{\dimexpr\columnwidth-2.5em\relax}@{}}
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textit{Symbols.} $p$: Peer-HBM target; $\alpha_p$: shadow-HBM fraction; $q_p\in\{0,1\}$: HBM pressure; $z_p$: stable windows.}\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{$0<\gamma<1$: decrease factor; $\delta>0$: increase step; $K$: stable-window threshold; $[\alpha_p^{min},\alpha_p^{max}]$: bounds.}\\
+\multicolumn{2}{@{}>{\raggedright\arraybackslash}p{\columnwidth}@{}}{\textbf{ControlWindow}$(t)$}\\
+1 & \textbf{for} $p\in\mathcal P$ \textbf{do}\\
+2 & $\quad$\textbf{if} $q_p=1$ \textbf{then}\\
+3 & $\qquad\alpha_p\gets\max\{\alpha_p^{min},\gamma\alpha_p\}$; $z_p\gets0$.\\
+4 & $\quad$\textbf{else} $z_p\gets z_p+1$.\\
+5 & $\qquad z_p\ge K\Rightarrow(\alpha_p,z_p)\gets(\min\{\alpha_p^{max},\alpha_p+\delta\},0)$.\\
+6 & $\quad$\textbf{end if}; $\operatorname{Publish}(p,\alpha_p,t)$.\\
+7 & \textbf{end for}\\
+\end{tabular}
+\end{algorithm}

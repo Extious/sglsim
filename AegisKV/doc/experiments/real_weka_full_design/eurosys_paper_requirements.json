@@ -1,0 +1,353 @@
+{
+  "campaign_label": "eurosys-aegiskv-preregistered-evaluation-readiness",
+  "evidence_class": "sglsim_aegiskv_scale_campaign_requirements_v1",
+  "limits": {
+    "max_requirements": 3,
+    "max_total_cells": 1000000
+  },
+  "requirements": [
+    {
+      "calibration": {
+        "identity_sha256": null,
+        "mechanism_gate_sha256": null
+      },
+      "consumer_kind": "a100_dp2_consumer_preflight_v2",
+      "design_semantics": "source_owned_independent_hbm_dram_v2",
+      "hardware_label": "A100-1node-TP1-PP1-systemDP2",
+      "layout": {
+        "pp_size": 1,
+        "system_dp_size": 2,
+        "tp_size": 1,
+        "worker_count": 2
+      },
+      "lineage_identity_sha256": null,
+      "model": {
+        "config_sha256": null,
+        "dtype": "fp16",
+        "name": "Qwen/Qwen3-8B",
+        "revision": null,
+        "scale_label": "Qwen3-8B"
+      },
+      "paper_axes": {
+        "context_cap_tokens": 40960,
+        "phase_matrix": [
+          {
+            "phase": "pilot",
+            "policy_count": 2,
+            "run_count": 4,
+            "seed_count": 1,
+            "shape_count": 1
+          },
+          {
+            "phase": "central",
+            "policy_count": 7,
+            "run_count": 70,
+            "seed_count": 5,
+            "shape_count": 1
+          },
+          {
+            "phase": "scale",
+            "policy_count": 2,
+            "run_count": 60,
+            "seed_count": 3,
+            "shape_count": 5
+          },
+          {
+            "phase": "ablations",
+            "policy_count": 5,
+            "run_count": 50,
+            "seed_count": 5,
+            "shape_count": 1
+          }
+        ],
+        "token_projection_grid": [
+          {
+            "role": "primary",
+            "scale": 0.004
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.008
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.016
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.032
+          }
+        ],
+        "workload_shapes": [
+          {
+            "concurrency": 4,
+            "workflow_count": 15
+          },
+          {
+            "concurrency": 4,
+            "workflow_count": 30
+          },
+          {
+            "concurrency": 1,
+            "workflow_count": 60
+          },
+          {
+            "concurrency": 4,
+            "workflow_count": 60
+          },
+          {
+            "concurrency": 8,
+            "workflow_count": 60
+          }
+        ]
+      },
+      "physical_profile": {
+        "schema_class": "A100DP2PhysicalProfile",
+        "schema_version": 2,
+        "semantics": "source_owned_four_physical_paths_v1",
+        "sha256": null
+      },
+      "requirement_id": "a100-qwen3-8b-fp16-tp1-pp1-dp2",
+      "suite_binding": null,
+      "workload_axes": {
+        "capacity_points": null,
+        "concurrency_levels": [
+          1,
+          4,
+          8
+        ],
+        "failure_rates": null,
+        "seeds": null
+      }
+    },
+    {
+      "calibration": {
+        "identity_sha256": null,
+        "mechanism_gate_sha256": null
+      },
+      "consumer_kind": "v100_dp4_schema_v2_import",
+      "design_semantics": "source_owned_independent_hbm_dram_v2",
+      "hardware_label": "V100S-1node-TP1-PP1-systemDP4",
+      "layout": {
+        "pp_size": 1,
+        "system_dp_size": 4,
+        "tp_size": 1,
+        "worker_count": 4
+      },
+      "lineage_identity_sha256": null,
+      "model": {
+        "config_sha256": null,
+        "dtype": "fp16",
+        "name": "Qwen/Qwen3-8B",
+        "revision": null,
+        "scale_label": "Qwen3-8B"
+      },
+      "paper_axes": {
+        "context_cap_tokens": 40960,
+        "phase_matrix": [
+          {
+            "phase": "pilot",
+            "policy_count": 2,
+            "run_count": 4,
+            "seed_count": 1,
+            "shape_count": 1
+          },
+          {
+            "phase": "central",
+            "policy_count": 7,
+            "run_count": 70,
+            "seed_count": 5,
+            "shape_count": 1
+          },
+          {
+            "phase": "scale",
+            "policy_count": 2,
+            "run_count": 60,
+            "seed_count": 3,
+            "shape_count": 5
+          },
+          {
+            "phase": "ablations",
+            "policy_count": 5,
+            "run_count": 50,
+            "seed_count": 5,
+            "shape_count": 1
+          }
+        ],
+        "token_projection_grid": [
+          {
+            "role": "primary",
+            "scale": 0.004
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.008
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.016
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.032
+          }
+        ],
+        "workload_shapes": [
+          {
+            "concurrency": 4,
+            "workflow_count": 15
+          },
+          {
+            "concurrency": 4,
+            "workflow_count": 30
+          },
+          {
+            "concurrency": 1,
+            "workflow_count": 60
+          },
+          {
+            "concurrency": 4,
+            "workflow_count": 60
+          },
+          {
+            "concurrency": 8,
+            "workflow_count": 60
+          }
+        ]
+      },
+      "physical_profile": {
+        "schema_class": "V100DP4SchemaV2Import",
+        "schema_version": 2,
+        "semantics": "source_owned_four_physical_paths_v1",
+        "sha256": null
+      },
+      "requirement_id": "v100s-qwen3-8b-fp16-tp1-pp1-dp4",
+      "suite_binding": null,
+      "workload_axes": {
+        "capacity_points": null,
+        "concurrency_levels": [
+          1,
+          4,
+          8
+        ],
+        "failure_rates": null,
+        "seeds": null
+      }
+    },
+    {
+      "calibration": {
+        "identity_sha256": null,
+        "mechanism_gate_sha256": null
+      },
+      "consumer_kind": "future_model_layout_specific_consumer_v1",
+      "design_semantics": "source_owned_independent_hbm_dram_v2",
+      "hardware_label": null,
+      "layout": {
+        "pp_size": 4,
+        "system_dp_size": 4,
+        "tp_size": 1,
+        "worker_count": 16
+      },
+      "lineage_identity_sha256": null,
+      "model": {
+        "config_sha256": null,
+        "dtype": "bf16",
+        "name": "Qwen/Qwen3-32B",
+        "revision": null,
+        "scale_label": "Qwen3-32B"
+      },
+      "paper_axes": {
+        "context_cap_tokens": 32768,
+        "phase_matrix": [
+          {
+            "phase": "pilot",
+            "policy_count": 2,
+            "run_count": 4,
+            "seed_count": 1,
+            "shape_count": 1
+          },
+          {
+            "phase": "central",
+            "policy_count": 7,
+            "run_count": 70,
+            "seed_count": 5,
+            "shape_count": 1
+          },
+          {
+            "phase": "scale",
+            "policy_count": 2,
+            "run_count": 60,
+            "seed_count": 3,
+            "shape_count": 5
+          },
+          {
+            "phase": "ablations",
+            "policy_count": 5,
+            "run_count": 50,
+            "seed_count": 5,
+            "shape_count": 1
+          }
+        ],
+        "token_projection_grid": [
+          {
+            "role": "primary",
+            "scale": 0.004
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.008
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.016
+          },
+          {
+            "role": "context_extrapolation_sensitivity",
+            "scale": 0.032
+          }
+        ],
+        "workload_shapes": [
+          {
+            "concurrency": 4,
+            "workflow_count": 15
+          },
+          {
+            "concurrency": 4,
+            "workflow_count": 30
+          },
+          {
+            "concurrency": 1,
+            "workflow_count": 60
+          },
+          {
+            "concurrency": 4,
+            "workflow_count": 60
+          },
+          {
+            "concurrency": 8,
+            "workflow_count": 60
+          }
+        ]
+      },
+      "physical_profile": {
+        "schema_class": null,
+        "schema_version": 2,
+        "semantics": "source_owned_four_physical_paths_v1",
+        "sha256": null
+      },
+      "requirement_id": "qwen3-32b-bf16-tp1-pp4-dp4",
+      "suite_binding": null,
+      "workload_axes": {
+        "capacity_points": null,
+        "concurrency_levels": [
+          1,
+          4,
+          8
+        ],
+        "failure_rates": null,
+        "seeds": null
+      }
+    }
+  ],
+  "schema_version": 1
+}

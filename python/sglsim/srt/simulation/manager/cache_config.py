@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass
 
 from sglsim.srt.config import CacheConfig
@@ -72,9 +73,21 @@ def _kv_bytes_per_token(model_path: str, sched: SchedulerSimConfig) -> int | Non
         from sglsim.srt.time_predictor.aiconfigurator import _get_perf_model
 
         perf_model = _get_perf_model(sched, ModelInfo.from_model_path(model_path))
-        return int(
+        full_pipeline_bytes = int(
             perf_model.config.kvcache_quant_mode.value.memory
             * perf_model.get_kvcache_elements_per_token()
+        )
+        # AIConfigurator partitions KV heads for TP but reports all model
+        # layers even when the deployment is pipeline-parallel.  A physical PP
+        # rank stores KV only for its local (ceil-balanced) layer slice.
+        parsed = _model_profile(model_path)
+        if parsed is None:
+            return full_pipeline_bytes
+        num_layers = max(int(parsed["layers"]), 1)
+        local_layers = math.ceil(num_layers / max(int(sched.pp_size), 1))
+        return max(
+            int(math.ceil(full_pipeline_bytes * local_layers / num_layers)),
+            1,
         )
     except Exception as exc:
         logger.warning(
@@ -85,18 +98,30 @@ def _kv_bytes_per_token(model_path: str, sched: SchedulerSimConfig) -> int | Non
         return None
 
 
-def _model_dims(model_path: str) -> tuple[int, int, int] | None:
+def _model_profile(model_path: str) -> dict[str, int] | None:
     if model_path in _MOCK_MODEL_PATHS:
         return None
     try:
         from aiconfigurator.sdk.utils import get_model_config_from_model_path
 
         parsed = get_model_config_from_model_path(model_path)
-        return (
-            int(parsed["hidden_size"]),
-            int(parsed["layers"]),
-            int(parsed["vocab"]),
-        )
+        return {
+            "hidden_size": int(parsed["hidden_size"]),
+            "layers": int(parsed["layers"]),
+            "vocab": int(parsed["vocab"]),
+            "inter_size": int(parsed.get("inter_size", 4 * parsed["hidden_size"])),
+            "n": int(parsed.get("n", 1)),
+            "n_kv": int(parsed.get("n_kv", parsed.get("n", 1))),
+            "head_dim": int(
+                parsed.get(
+                    "d",
+                    int(parsed["hidden_size"]) // max(int(parsed.get("n", 1)), 1),
+                )
+            ),
+            "tie_word_embeddings": int(
+                bool(dict(parsed.get("raw_config") or {}).get("tie_word_embeddings", False))
+            ),
+        }
     except Exception as exc:
         logger.warning(
             "Failed to load model dims for model_path=%s: %s",
@@ -104,6 +129,62 @@ def _model_dims(model_path: str) -> tuple[int, int, int] | None:
             exc,
         )
         return None
+
+
+def _model_dims(model_path: str) -> tuple[int, int, int] | None:
+    profile = _model_profile(model_path)
+    if profile is None:
+        return None
+    return (
+        profile["hidden_size"],
+        profile["layers"],
+        profile["vocab"],
+    )
+
+
+def _estimate_per_rank_weight_bytes(
+    profile: dict[str, int],
+    sched: SchedulerSimConfig,
+    *,
+    bytes_per_param: int = 2,
+) -> int:
+    """Estimate the largest TP/PP rank's resident dense-model weights.
+
+    This mirrors the physical ownership boundary that matters to SGLang's KV
+    pool sizing: a PP rank owns only its local transformer layers, and a TP
+    rank owns a shard of their matrices.  The first/last PP stages additionally
+    own one vocabulary matrix (embedding or untied LM head), so the largest
+    stage includes one such matrix rather than charging every rank for the
+    complete model.
+    """
+
+    hidden = max(profile["hidden_size"], 1)
+    layers = max(profile["layers"], 1)
+    inter = max(profile["inter_size"], 1)
+    n_heads = max(profile["n"], 1)
+    n_kv = max(profile["n_kv"], 1)
+    head_dim = max(profile["head_dim"], 1)
+    tp_size = max(int(sched.tp_size), 1)
+    pp_size = max(int(sched.pp_size), 1)
+    local_layers = math.ceil(layers / pp_size)
+
+    # Q/K/V/O plus gated MLP matrices.  Matrix sharding is approximated as
+    # balanced across TP ranks; this is exact for the current TP=1 target.
+    attention_params = (
+        hidden * n_heads * head_dim
+        + 2 * hidden * n_kv * head_dim
+        + n_heads * head_dim * hidden
+    )
+    mlp_params = 3 * hidden * inter
+    norm_params = 2 * hidden
+    local_transformer_params = math.ceil(
+        local_layers * (attention_params + mlp_params + norm_params) / tp_size
+    )
+    # With untied embeddings, stage 0 and the last stage each own one matrix;
+    # with tied embeddings the same shared matrix is still resident on an edge
+    # stage.  Use one vocabulary matrix for the largest-rank estimate.
+    edge_vocab_params = math.ceil(profile["vocab"] * hidden / tp_size)
+    return int((local_transformer_params + edge_vocab_params) * bytes_per_param)
 
 
 def infer_l1_max_tokens(
@@ -117,14 +198,13 @@ def infer_l1_max_tokens(
         return 65536
 
     bytes_per_token = _kv_bytes_per_token(model_path, sched)
-    dims = _model_dims(model_path)
-    if bytes_per_token is None or dims is None:
+    profile = _model_profile(model_path)
+    if bytes_per_token is None or profile is None:
         return 65536
 
-    hidden_size, num_layers, vocab_size = dims
     hbm_bytes = int(hbm_capacity_gb * (1024**3))
     static_bytes = int(hbm_bytes * mem_fraction_static)
-    weight_bytes = _estimate_weight_bytes(hidden_size, num_layers, vocab_size)
+    weight_bytes = _estimate_per_rank_weight_bytes(profile, sched)
     kv_bytes = max(0, static_bytes - weight_bytes)
     if kv_bytes <= 0:
         return 4096
@@ -156,6 +236,7 @@ def resolve_cache_config(
     page_size = int(raw.get("page_size", _DEFAULT_PAGE_SIZE))
 
     explicit_l1 = raw.get("l1_capacity_pages")
+    explicit_aegis_total_l1 = raw.get("aegis_total_l1_capacity_pages")
     explicit_l2 = raw.get("l2_capacity_pages")
     explicit_l3 = raw.get("l3_capacity_pages")
 
@@ -233,6 +314,11 @@ def resolve_cache_config(
     return CacheConfig(
         page_size=page_size,
         l1_capacity_pages=l1_pages,
+        aegis_total_l1_capacity_pages=(
+            int(explicit_aegis_total_l1)
+            if explicit_aegis_total_l1 is not None
+            else None
+        ),
         l2_capacity_pages=l2_pages,
         l3_capacity_pages=l3_pages,
         hicache_write_policy=write_policy,

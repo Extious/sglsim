@@ -1,0 +1,87 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "request",
+  "group": "P11",
+  "extends": "../common/request.json",
+  "fixed": {
+    "workload": {
+      "kind": "weka_agentx_observed_dag",
+      "dataset_id": "weka-agentx-causal-v1",
+      "request_universe": "complete_observed_workflow_dags",
+      "selection": "disjoint_seed_partition_without_replacement",
+      "workflow_edges_preserved": true,
+      "prefix_identity_preserved": true,
+      "source_artifact": {
+        "path": "AegisKV/doc/Archived/2026-08-06-pre-kvcache-centric/presentations/presentation/experiments/sglsim_large/traces/cc-traces-weka-062126/traces.materialized.jsonl",
+        "sha256": "29b6a19e751ff5230771519aab755f80a0f43a4ba9cf96b72d3a6a437ec99276",
+        "size_bytes": 1847151435,
+        "workflow_count": 393,
+        "request_count": 98827
+      },
+      "dag_stratification": {
+        "unit": "requests_per_workflow",
+        "eligibility": "contains_observed_parallel_stage",
+        "method": "equal_cardinality_rank_tertiles_frozen_boundaries_v1",
+        "eligible_parallel_workflows": 126,
+        "partition_salt": "aegiskv-p11-weka-seed-partition-v1",
+        "workflows_per_seed_per_stratum": 1,
+        "selection_without_replacement": true,
+        "strata": [
+          {
+            "name": "small",
+            "minimum_requests_inclusive": 30,
+            "maximum_requests_inclusive": 162,
+            "expected_workflows": 42
+          },
+          {
+            "name": "medium",
+            "minimum_requests_inclusive": 163,
+            "maximum_requests_inclusive": 470,
+            "expected_workflows": 42
+          },
+          {
+            "name": "long",
+            "minimum_requests_inclusive": 475,
+            "maximum_requests_inclusive": 4114,
+            "expected_workflows": 42
+          }
+        ]
+      },
+      "arrival_model": "recorded_intra_workflow_timing_normalized_to_workflow_start",
+      "context_projection": {
+        "method": "head_preserving_clip_with_observed_hash_blocks_v1",
+        "context_tokens": 16384,
+        "output_cap_tokens": 2048,
+        "prefix_semantics": "longest_observed_hash_block_prefix_with_prior_same_agent_request"
+      },
+      "causal_slack_predictor": {
+        "kind": "workflow_disjoint_dual_head_gbdt_conformal_lcb_to_visible_cpm_v1",
+        "folds": 5,
+        "split_salt": "aegiskv-weka-crossfit-v1",
+        "interval_coverage": 0.95,
+        "future_information": false,
+        "calibration_unit": "workflow_max_absolute_residual",
+        "blend_tau_rounds": 2.0,
+        "gbdt": {
+          "estimators": 48,
+          "learning_rate": 0.06,
+          "max_depth": 3,
+          "min_leaf": 48,
+          "max_bins": 32,
+          "min_gain": 1e-9
+        },
+        "ticket_schema": "visible_residual_dag_cpm_slack_v1",
+        "unavailable_prediction": "explicit_unusable_ticket_fail_close_zero"
+      }
+    },
+    "artifact_lineage": {
+      "input_artifacts": [
+        "AegisKV/experiments/data/observed/weka_agentx_causal_v1"
+      ]
+    }
+  },
+  "axes": {
+    "seed": [2026082900, 2026082901, 2026082902, 2026082903, 2026082904, 2026082905, 2026082906, 2026082907, 2026082908, 2026082909],
+    "dag_stratum": ["small", "medium", "long"]
+  }
+}

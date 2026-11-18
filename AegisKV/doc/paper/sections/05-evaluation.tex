@@ -1,0 +1,94 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+We organize the evaluation to distinguish whether the Slack signal exists,
+whether the online policy makes useful decisions, and whether those decisions
+improve real failure outcomes without taxing healthy serving.  We ask the
+following questions.
+
+\begin{description}
+  \item[RQ1: Opportunity.] How often do parallel agent branches have enough
+  Slack diversity for protection or recovery order to matter, and how
+  accurately can Algorithm~1 estimate that Slack from causal information?
+
+  \item[RQ2: Failure benefit.] Under the same arrival trace and failure event,
+  how much does \system{} reduce failure-added workflow completion time,
+  recovery latency, and recomputed tokens?
+
+  \item[RQ3: Cost.] What HBM, DRAM, transfer-bandwidth, throughput,
+  TTFT, and TPOT overhead does protection add when no failure occurs?
+
+  \item[RQ4: Mechanism.] What are the Controller decision cost, heap refresh
+  rate, protection-commit latency, AIMD response, and recovery-path breakdown?
+
+  \item[RQ5: Robustness.] Do the conclusions hold across context lengths,
+  workflow shapes, failure positions, load, models, and supported parallel
+  layouts, and under duration-prediction error?
+\end{description}
+
+\subsection{Methodology}
+
+\paragraph{Systems and workloads.}
+End-to-end results require a real serving implementation with physical KV
+movement and hard worker termination.  SGLSim remains useful for controlled
+large-scale policy replay, but simulator outcomes are reported separately from
+hardware results.  Workloads combine public agent traces with controlled DAGs
+that vary fan-out width, branch imbalance, turn count, and context growth.  A
+workflow-disjoint train/calibration/test split prevents the duration model from
+seeing evaluation workflows.
+
+\paragraph{Paired failures.}
+Each failure run is paired with a no-failure run using the same requests,
+arrival times, random seeds, routing eligibility, and resource limits.  Failure
+time and failed domain are fixed before either run.  The primary metric is
+
+\begin{equation}
+  \Delta\mathrm{WCT}_w=
+  \left[\mathrm{WCT}^{\mathrm{fail}}_w-
+  \mathrm{WCT}^{\mathrm{nf}}_w\right]^+,
+  \label{eq:evaluation-delta-wct}
+\end{equation}
+
+which prevents a policy from appearing better merely because it changed the
+healthy schedule.  We report the distribution and mean of
+$\Delta\mathrm{WCT}$, tail recovery latency, recomputed and restored tokens,
+and the fraction of workflows whose terminal completion is delayed.  Healthy
+runs report throughput, TTFT, TPOT, HBM occupancy, Store traffic, and copy-engine
+utilization.  Confidence intervals resample complete workflows rather than
+individual requests from the same workflow.
+
+\paragraph{Baselines.}
+All policies receive the same capacity at each storage tier, compatible
+recovery targets, transfer limits, and failure schedule.  The minimum
+comparison set is:
+
+\begin{itemize}
+  \item no protection, which recomputes after failure;
+  \item the unmodified hierarchical Store policy, which provides DRAM/SSD
+  cache state without workflow Slack;
+  \item static DRAM protection and static peer-HBM protection under the same
+  byte budgets;
+  \item a size/recency policy and a binary-criticality policy over the same
+  candidates; and
+  \item \system{} with no Slack, no peer HBM, static $\alpha$, and FIFO recovery
+  as one-factor ablations.
+\end{itemize}
+
+Related systems are compared using author code when their failure model and
+layout are compatible; otherwise we report the semantic mismatch instead of
+renaming an approximation as that system.  Small fixed snapshots also use an
+exact offline placement oracle to measure \textsc{SlackLandlord}'s objective
+gap.  The oracle is a diagnostic baseline, not part of the online system.
+
+% Result gates (not rendered):
+% Present results in causal order: Algorithm 1 prediction and opportunity;
+% Algorithm 2 decision quality and overhead; Algorithm 3 step response;
+% end-to-end paired failures; sensitivity.  Every quantitative figure records
+% model/layout, hardware, workload count, failure rule, policy version, and
+% whether timing is measured, simulated, or modeled.
+% 1. Add numbers only from machine-readable artifacts with a frozen config.
+% 2. Do not promote the current Real-CC trace-plus-model counterfactual to an
+%    end-to-end failure result.
+% 3. Do not call SGLSim metadata movement a physical KV copy.
+% 4. Use at least the predeclared workflow count and paired confidence
+%    intervals before writing a headline result in the abstract/introduction.

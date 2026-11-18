@@ -1,0 +1,12 @@
+{
+  "extends": "../common/failure.json",
+  "group": "E1",
+  "layer": "failure",
+  "description": "One active replica fail-stop on a policy-independent AgentX shadow schedule",
+  "fault_model": {
+    "trigger": "active_agentx_workflow_critical_tail_at_shadow_schedule_median",
+    "trigger_mode": "critical_tail",
+    "ordering_stress": "none"
+  },
+  "axes": {"failure_scenario": ["worker_1"]}
+}

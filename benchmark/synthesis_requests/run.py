@@ -108,6 +108,8 @@ def run_experiment(
     server_extra_env: dict[str, str] = {}
     if client_cfg.gsp_alpha_policy_path:
         server_extra_env["SGLSIM_AEGIS_ALPHA_POLICY"] = client_cfg.gsp_alpha_policy_path
+    if client_cfg.gsp_aegis_online_alpha_adapter:
+        server_extra_env["SGLSIM_AEGIS_ONLINE_ALPHA_ADAPTER"] = "1"
 
     process = start_server(
         build_server_command(
@@ -134,6 +136,7 @@ def run_experiment(
             server_cfg.port,
             prepared,
             client_cfg,
+            server_cfg,
         )
         csv_path = write_request_details_csv(run_dir, rows)
         write_metrics_json(run_dir, rows)

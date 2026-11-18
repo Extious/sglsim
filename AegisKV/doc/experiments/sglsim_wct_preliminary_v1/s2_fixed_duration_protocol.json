@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-wct-s2-fixed-duration-v1-20260826",
+  "parent_protocol": "protocol.json",
+  "parent_design_semantics": "source_owned_independent_hbm_dram_v2",
+  "purpose": "remove concurrency-dependent trace-horizon and AIMD-window confounding from S2",
+  "workflow_count_by_active_requests_per_gpu": {
+    "1": 1024,
+    "2": 2048,
+    "4": 4096,
+    "8": 8192,
+    "16": 16384
+  },
+  "policies": ["Native Mooncake", "AegisKV"],
+  "paired_seeds": [2026082600, 2026082601, 2026082602],
+  "fault_probes_per_seed": 24,
+  "minimum_aimd_windows_per_cell": 3,
+  "maximum_same_seed_horizon_relative_range": 0.10,
+  "maximum_same_seed_aimd_window_count_range": 1,
+  "pressure_exposure_contract": "same number of 30-second control opportunities per paired seed within the audited tolerance; pressure fraction is reported, not forced equal, because concurrency is the treatment axis",
+  "evidence_boundary": "SGLSim metadata DES preliminary fixed-duration sensitivity; not physical A100 evidence. Failure-rate aggregation remains the parent protocol's sparse-rate first-order Poisson mixture."
+}

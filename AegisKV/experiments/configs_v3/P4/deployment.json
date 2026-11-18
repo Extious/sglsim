@@ -1,0 +1,27 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "deployment",
+  "group": "P4",
+  "extends": "../common/deployment.json",
+  "fixed": {
+    "aegiskv": {
+      "algorithm_variants": {
+        "full": {"slack_ordering": true, "dynamic_placement": true, "aimd": true},
+        "no_algorithm_1": {
+          "slack_ordering": false,
+          "dynamic_placement": true,
+          "aimd": true,
+          "runtime_adapter": "aegis_l1_l2.disable_slack_ordering",
+          "runtime_value": true,
+          "ordering_slack_ms": 0
+        },
+        "static_placement": {"slack_ordering": true, "dynamic_placement": false, "aimd": true},
+        "no_algorithm_3": {"slack_ordering": true, "dynamic_placement": true, "aimd": false}
+      },
+      "static_placement_is_capacity_matched": true
+    }
+  },
+  "axes": {
+    "algorithm_variant": ["full", "no_algorithm_1", "static_placement", "no_algorithm_3"]
+  }
+}

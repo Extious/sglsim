@@ -1,0 +1,49 @@
+{
+  "schema_version": "aegiskv.physical-deployment.v1",
+  "layer": "deployment",
+  "description": "Exact topology and calibration gate for the modeled four-node DGX A100-40GB deployment",
+  "topology": {
+    "node_count": 4,
+    "gpus_per_node": 8,
+    "gpu_name_required_substrings": ["A100", "40GB"],
+    "gpu_memory_mib_min": 39000,
+    "gpu_memory_mib_max": 42000,
+    "compute_capability": "8.0",
+    "host_memory_gib_min_per_node": 1024,
+    "host_memory_gib_reserved_for_aegiskv_min_per_node": 512,
+    "network_line_rate_gbit_per_s_min": 200,
+    "exclusive_allocation_required": true,
+    "zero_foreign_gpu_processes_required": true,
+    "all_pairs_intra_node_p2p_required": true,
+    "all_pairs_inter_node_rdma_required": true
+  },
+  "models": {
+    "qwen3-8b": {"model_id": "Qwen/Qwen3-8B", "dtype": "bfloat16", "tp_size": 1, "dp_size": 32, "max_context_tokens": 40960},
+    "qwen3-32b": {"model_id": "Qwen/Qwen3-32B", "dtype": "bfloat16", "tp_size": 4, "dp_size": 8, "max_context_tokens": 40960}
+  },
+  "runtime_identity": {
+    "same_sglang_git_sha_on_all_nodes": true,
+    "same_mooncake_git_sha_on_all_nodes": true,
+    "same_container_digest_on_all_nodes": true,
+    "immutable_model_snapshot_revision_required": true,
+    "current_design_sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac"
+  },
+  "calibration_profile": {
+    "minimum_independent_repeats": 5,
+    "prefill_token_points": [256, 1024, 4096, 16384, 40960],
+    "decode_token_points": [1, 64, 256],
+    "required_transfer_paths": ["source_to_peer_hbm", "source_to_store_dram", "peer_hbm_to_replacement", "store_dram_to_replacement"],
+    "required_cost_components": ["setup_ms", "steady_state_bytes_per_ms", "first_transfer_warmup_ms"],
+    "required_failure_delays": ["process_exit_detection_ms", "route_rebind_ms", "queue_outage_ms"],
+    "holdout_max_absolute_relative_error": 0.10,
+    "same_topology_only": true
+  },
+  "authorization": {
+    "static_plan_materialization": true,
+    "topology_preflight_may_authorize_calibration_collection": true,
+    "topology_preflight_alone_may_authorize_matched_replay": false,
+    "calibrated_profile_required_before_matched_replay": true,
+    "physical_result_required_before_performance_claim": true,
+    "automatic_job_submission": false
+  }
+}

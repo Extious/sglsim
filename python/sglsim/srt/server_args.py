@@ -30,6 +30,32 @@ class PortArgs:
     def scheduler_input_ipc_name_for_dp(self, dp_rank: int) -> str:
         return f"{self.scheduler_input_ipc_name}-dp{dp_rank}"
 
+    def scheduler_input_ipc_name_for_stage(
+        self, dp_rank: int, pp_rank: int
+    ) -> str:
+        """Return the external/ring request endpoint for one PP stage.
+
+        PP0 preserves the existing DP ingress endpoint so the Router continues
+        to publish one request to the chosen replica.  Later PP stages receive
+        only ordered metadata forwarded through the pipeline runtime.
+        """
+
+        if dp_rank < 0 or pp_rank < 0:
+            raise ValueError("dp_rank and pp_rank must be nonnegative")
+        if pp_rank == 0:
+            return self.scheduler_input_ipc_name_for_dp(dp_rank)
+        return f"{self.scheduler_input_ipc_name}-dp{dp_rank}-pp{pp_rank}"
+
+    def pp_proxy_ipc_name_for_stage(self, dp_rank: int, pp_rank: int) -> str:
+        if dp_rank < 0 or pp_rank < 0:
+            raise ValueError("dp_rank and pp_rank must be nonnegative")
+        return f"{self.scheduler_input_ipc_name}-dp{dp_rank}-pp{pp_rank}-proxy"
+
+    def pp_output_ipc_name_for_stage(self, dp_rank: int, pp_rank: int) -> str:
+        if dp_rank < 0 or pp_rank < 0:
+            raise ValueError("dp_rank and pp_rank must be nonnegative")
+        return f"{self.scheduler_input_ipc_name}-dp{dp_rank}-pp{pp_rank}-output"
+
     def detokenizer_reply_ipc_name_for_dp(self, dp_rank: int) -> str:
         return f"{self.detokenizer_ipc_name}-reply-dp{dp_rank}"
 
@@ -55,10 +81,14 @@ class ServerArgs:
     log_level: str = "info"
     log_level_http: str | None = None
     simulate_detokenizer_time: bool = False
+    scheduler_telemetry: bool = False
+    # Smoke/fast path: keep configured PP latency metadata but spawn only one
+    # Scheduler process per DP (no physical PP worker mesh).
+    logical_pp: bool = False
 
     def __post_init__(self) -> None:
         # Align with SGLang: pipeline-parallel scheduling does not use overlap mode.
-        if self.pp_size > 1:
+        if self.pp_size > 1 and not self.logical_pp:
             self.disable_overlap_schedule = True
 
     @staticmethod
@@ -120,6 +150,23 @@ class ServerArgs:
                 "detok time and an async completion path)."
             ),
         )
+        parser.add_argument(
+            "--scheduler-telemetry",
+            action="store_true",
+            help=(
+                "Collect per-DP scheduler/pipeline rows for online-vs-offline "
+                "calibration. Disabled by default to preserve the normal "
+                "wall-clock hot path."
+            ),
+        )
+        parser.add_argument(
+            "--logical-pp",
+            action="store_true",
+            help=(
+                "Use one Scheduler process per DP even when pp_size>1. "
+                "Intended for fast offline smoke; not a physical PP topology."
+            ),
+        )
 
     @classmethod
     def from_cli_args(cls, ns: argparse.Namespace) -> ServerArgs:
@@ -141,4 +188,8 @@ class ServerArgs:
             simulate_detokenizer_time=bool(
                 getattr(ns, "simulate_detokenizer_time", False)
             ),
+            scheduler_telemetry=bool(
+                getattr(ns, "scheduler_telemetry", False)
+            ),
+            logical_pp=bool(getattr(ns, "logical_pp", False)),
         )

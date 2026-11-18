@@ -19,6 +19,7 @@ class SchedulerConfig:
 class CacheConfig:
     page_size: int = 16
     l1_capacity_pages: int = 1024
+    aegis_total_l1_capacity_pages: int | None = None
     l2_capacity_pages: int = 0
     l3_capacity_pages: int = 0
     hicache_write_policy: str = "write_through_selective"

@@ -1,0 +1,17 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S8",
+  "layer": "request",
+  "description": "The exact S1 central request universes reused for failure-domain comparison",
+  "workload": {
+    "arrival_window_ms": 180000,
+    "warmup_ms": 90000,
+    "model": "Qwen/Qwen3-8B",
+    "context_tokens": 16384,
+    "identity_gate": "request and raw hashes must equal S1 central cells"
+  },
+  "axes": {
+    "paired_seed": [2026082600, 2026082601, 2026082602, 2026082603, 2026082604, 2026082605, 2026082606, 2026082607, 2026082608, 2026082609]
+  },
+  "matrix_note": "No new request execution beyond S1"
+}

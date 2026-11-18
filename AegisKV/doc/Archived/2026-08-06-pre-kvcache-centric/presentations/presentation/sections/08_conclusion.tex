@@ -1,0 +1,41 @@
+% !TeX root = ../paper_outline.tex
+\section{结论}
+
+\begin{frame}{AegisKV | 完整设计闭环}
+  \tiny
+  \renewcommand{\arraystretch}{1.03}
+  \begin{tabularx}{\textwidth}{p{0.15\textwidth}p{0.28\textwidth}X}
+    \toprule
+    模块 & 决策 & 系统作用 \\
+    \midrule
+    算法 1
+      & 在固定工作流 DAG 的剩余子图上预测智能体时长并计算请求松弛时间
+      & 把工作流依赖转换成可延迟的时间预算 \\
+    算法 2
+      & 对 Router 已固定的 Backup Rank，在当前 $\alpha_n,\beta_n$ 下选择 KV 块的 L1/L2/Recompute 动作
+      & 在 DP rank 内输出备份 plan、ACK 状态与逐层 $D/U/O$ \\
+    算法 3
+      & 在每个 DP rank 内根据正常负载和上一窗口算法 2 的需求反馈计算 $\alpha_n,\beta_n$
+      & 输出本地下一窗口的 L1/L2 容量预算 \\
+    Router reroute
+      & 用当前负载、Radix Tree 与预推送 Recovery Hint 比较各健康 Rank
+      & 零查询选择预计完成时间最短的 Retry Rank \\
+    Recovery data plane
+      & 只消费 ACK/version-valid chunks，恢复最长连续 prefix 后重算 tail
+      & 使 metadata、copy 或 controller failure 只影响性能，不影响正确性 \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.05cm}
+  \begin{block}{系统性质}
+    \tiny
+    \textbf{工作流感知：}保护优先级来自 DAG 松弛时间；
+    \textbf{Cost-aware：}恢复、copy 与容量均使用可测量的量；
+    \textbf{Failure-safe：}目标 DP 的 ACK/version 构成提交点，其他状态回退 Recompute；
+    \textbf{Zero-query retry：}Recovery Hint 在正常路径异步推送，failure 路径不增加查询 RTT。
+  \end{block}
+
+  \vspace{0.02cm}
+  \takeaway{算法 2 决定窗口 $k$ 的备份动作和需求；算法 3 将该需求与服务
+  安全上限结合，决定窗口 $k+1$ 的 $\alpha_n,\beta_n$。}
+\end{frame}

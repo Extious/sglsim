@@ -59,6 +59,8 @@ def test_decode_log_running_req_can_exceed_one_with_multiple_reqs():
 
 def test_multi_dp_streaming_submit_completes():
     engine = Engine(ServerArgs(dp_size=2))
+    assert engine._dp_controller is not None
+    assert len(engine._dp_controller.workers) == 2
     engine.start_background_scheduler()
     for i in range(4):
         engine.submit(
@@ -74,6 +76,9 @@ def test_multi_dp_streaming_submit_completes():
     engine.shutdown()
     assert len(result.request_stats) == 4
     assert all(s.status == "completed" for s in result.request_stats.values())
+    assert {
+        s.aegis_assigned_dp_rank for s in result.request_stats.values()
+    } == {0, 1}
 
 
 def test_multi_dp_completes_requests_in_subprocess():

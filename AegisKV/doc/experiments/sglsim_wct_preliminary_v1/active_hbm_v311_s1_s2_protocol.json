@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-v311-s1-s2-high-information-preliminary-20260827",
+  "status": "PREREGISTERED_BEFORE_S1_S2_PILOT_NO_WIN_GATE",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "sources": {
+    "current_design_path": "/home/comp/zhanzhao/Mooncake/aegiskv/design/current_design.md",
+    "current_design_sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac",
+    "v31_des_path": "active_hbm_v31.py",
+    "v31_des_sha256": "dca2c99abcc7913d48021b499103f0ae6917529e058db2a97e85e2831206a495",
+    "core_runner_path": "run_preliminary.py",
+    "core_runner_sha256": "0bb1dfb06c21dabb3e6460c6005ecea3ee1baa52db225f07b26660bb36a192fb",
+    "capacity_protocol_path": "active_hbm_v3_protocol.json",
+    "capacity_protocol_sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f",
+    "base_protocol_path": "results/mechanism_pilot_v2/composite_protocol.json",
+    "base_protocol_sha256": "d095d7680694e51db52f186ec2f7831093d9f3dfc117ef994ee0685fdde3df8f",
+    "execution_plan_path": "sglsim_s1_s9_minimum_execution_plan.json",
+    "execution_plan_sha256": "d5ec9081ad0733f96349bbe451ff0a8bcb66f1e34438039b1a21cf15a63f4519",
+    "topology_recovery_path": "active_hbm_v312.py",
+    "topology_recovery_sha256": "59cc237feae699ece7558473441c00336b98a88cfd0ae3d8a36dc32ba8afeb25",
+    "poisson_injection_path": "poisson_fault_injection_v1.py",
+    "poisson_injection_sha256": "d05926cd8ffbfa0ea2930d20017766219d8074c74e34389e744d552243c627c3"
+  },
+  "display_to_internal_policy": {
+    "Native Mooncake": "Native Mooncake",
+    "Static": "Static FCFS",
+    "DejaVu": "DejaVu",
+    "KevlarFlow": "KevlarFlow",
+    "GhostServe": "GhostServe",
+    "AegisKV": "AegisKV"
+  },
+  "hardware_topology": {
+    "gpu": "NVIDIA A100 40 GiB modeled capacity",
+    "hbm_bytes_per_gpu": 42949672960,
+    "gpus_per_node": 8,
+    "system_dp": 16,
+    "node_count": 2,
+    "rank_to_node_formula": "floor(global_gpu_rank / 8)",
+    "same_node_peer_rule": "another GPU on source_node",
+    "cross_node_peer_rule": "same local GPU index on (source_node + 1) mod 2",
+    "local_dram_rule": "CPU DRAM on source_node",
+    "remote_dram_rule": "CPU DRAM on (source_node + 1) mod 2",
+    "path_assignment": "even source ranks use same-node Peer-HBM and local DRAM; odd source ranks use cross-node Peer-HBM and remote DRAM",
+    "copy_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "recovery_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "bandwidth_profile_id": "sglsim_a100_40gib_modeled_directional_v1",
+    "bandwidth_calibration_status": "MODELED_NOT_PHYSICALLY_CALIBRATED_A100",
+    "source_worker_gpu_domain_size": 1,
+    "source_node_domain_size": 8
+  },
+  "policy_failover_contract": {
+    "replacement_delay_ms": 60000.0,
+    "fence_activation_delay_ms": 500.0,
+    "timing_status": "MODELED_UNMEASURED_SENSITIVITY_INPUTS",
+    "policy_modes": {
+      "Native Mooncake": {
+        "source_worker_gpu": "replacement_wait",
+        "source_node": "replacement_wait"
+      },
+      "Static FCFS": {
+        "source_worker_gpu": "prebound_fence_activation",
+        "source_node": "topology_conditioned_committed_replica"
+      },
+      "DejaVu": {
+        "source_worker_gpu": "prebound_fence_activation",
+        "source_node": "topology_conditioned_committed_replica"
+      },
+      "KevlarFlow": {
+        "source_worker_gpu": "prebound_fence_activation",
+        "source_node": "topology_conditioned_committed_replica"
+      },
+      "GhostServe": {
+        "source_worker_gpu": "prebound_fence_activation",
+        "source_node": "topology_conditioned_committed_replica"
+      },
+      "AegisKV": {
+        "source_worker_gpu": "prebound_fence_activation",
+        "source_node": "topology_conditioned_committed_replica"
+      }
+    },
+    "contract_basis": "The five protection architectures have a preregistered destination/redundancy component in this simulator and use the same modeled worker fence/activation delay. Modeled Native Mooncake has Store data but no prebound failover worker and waits for replacement. For a source-node failure, same-node Peer-HBM and local DRAM are invalidated; an actually committed cross-node Peer-HBM or remote DRAM replica enables modeled fence activation, otherwise replacement is required. These delays are not physical measurements."
+  },
+  "common": {
+    "model": "Qwen3-8B TP1/PP1",
+    "context_tokens": 40960,
+    "max_output_tokens_for_dispatch_reservation": 4096,
+    "arrival_cutoff_ms": 90000.0,
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "same_workflow_probe_and_failure_domain_hashes_across_policies": true,
+    "capacity_invariant": "weight + runtime reserve + active serving KV reservation + Peer-HBM backup <= 40 GiB",
+    "copy_and_recovery_directions_independent": true,
+    "performance_direction_or_win_threshold": false
+  },
+  "pilot": {
+    "paired_seeds": [2026082600],
+    "arrival_cutoff_ms": 5000.0,
+    "active_requests_per_gpu": 16,
+    "fault_probes_per_domain": 4,
+    "expected_cells": 12
+  },
+  "S1": {
+    "display_policies": [
+      "Native Mooncake",
+      "Static",
+      "DejaVu",
+      "KevlarFlow",
+      "GhostServe",
+      "AegisKV"
+    ],
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "active_requests_per_gpu": 16,
+    "fault_probes_per_domain": 24,
+    "expected_cells": 36,
+    "primary": "same-probe all-workflow WCT CDF on the common workflow/probe/failure-domain universe",
+    "statistics": "per-seed p50/p95/p99 and Student-t 95% CI; pooled empirical CDF is descriptive"
+  },
+  "S2": {
+    "display_policies": ["Native Mooncake", "AegisKV"],
+    "active_requests_per_gpu": [1, 2, 4, 8, 16],
+    "failure_rates_per_1000_gpu_shard_hour": [0.0, 5.952, 20.833],
+    "fault_probes_per_cell": 24,
+    "reported_factor_cells": 90,
+    "unique_des_cells": 90,
+    "rate_estimator": "rate-specific Poisson fail-stop events are injected into the fixed 90 s DES; accepted events update serving completion, lane queues, replica validity, protection capacity, routing and recovery before later events",
+    "fault_event_seed_derivation": "paired seed XOR 0xF4117E5 XOR round(rate * 1000000)",
+    "failure_type_weights": {"source_worker_gpu": 0.5, "source_node": 0.5},
+    "domain_repair_ms": 60000.0,
+    "duplicate_semantics": "a hit on an already-down worker or node is an auditable no-op until repair_at_ms and never applies WCT or replica damage twice",
+    "rate_estimator_boundary": "The 60 s domain repair, 500 ms fence activation and 60 s replacement inputs are modeled/unmeasured. Low physical rates may realize zero events in three seeds; such cells are retained without seed filtering.",
+    "statistics": "paired-seed mean and Student-t 95% CI for all-workflow total WCT; changed-only values are diagnostics only"
+  },
+  "hard_gates": {
+    "display_and_internal_policy_mapping_exact": true,
+    "source_node_exactly_eight_ranks_and_worker_exactly_one": true,
+    "topology_targets_resolve_to_existing_nodes": true,
+    "same_and_cross_node_bandwidths_distinct": true,
+    "same_workflow_probe_and_failure_domain_hashes": true,
+    "capacity_violations": 0,
+    "projection_matches_actual_admission": true,
+    "fault_replay_monotone": true,
+    "empty_fault_replay_exact": true,
+    "no_realized_output_oracle": true,
+    "no_performance_selection": true
+  },
+  "evidence_boundary": "Preliminary metadata DES. Native Mooncake and architecture failover activation/replacement are modeled approximations. Bandwidths are modeled, not A100 measurements. Negative and degraded regions must be retained."
+}

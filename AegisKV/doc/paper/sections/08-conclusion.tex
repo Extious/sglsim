@@ -1,0 +1,9 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\system{} uses dynamic workflow Slack to connect normal-period KV protection
+with failure-time recovery.  \textsc{SlackLandlord} manages continuous KV
+prefixes online, while \textsc{GuardedAIMD} caps optional peer-HBM protection
+without moving safety out of the Worker allocator.  Together, they prioritize
+the KV state whose recovery delay is visible to workflow completion while
+reusing existing storage and transfer paths.

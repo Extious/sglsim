@@ -1,0 +1,30 @@
+{
+  "schema_version": "aegiskv.request-config.v2",
+  "layer": "request",
+  "description": "Pinned TraceLab sessions with declared Qwen3 context projection",
+  "sources": ["tracelab_paper", "tracelab_repo", "tracelab_release", "tracelab_artifact_audit", "nvidia_aiperf_tracelab", "servegen_nsdi26", "qwen3_8b_config", "qwen3_32b_config"],
+  "workload": {
+    "profile": "tracelab_session",
+    "dataset_id": "tracelab-v0.0.2",
+    "artifact": "data/cache/syfi_coding_trace-v0.0.2.duckdb",
+    "sha256": "a7bab286bc640844560850965ccf47975cf66407154132abaab90f27ec9be744",
+    "sampling_unit": "provider_session",
+    "strata": ["provider", "session_round_count_bin"],
+    "session_round_count_bins": [4, 17, 65, 257],
+    "sessions_per_provider_bin": 3,
+    "max_rounds_per_session": 32,
+    "arrival_model": "controlled_poisson_session_start_plus_capped_observed_within_session_gaps",
+    "session_arrival_rate_per_s": 1.0,
+    "within_session_gap_cap_ms": 30000,
+    "within_session_gap_scale": 1.0,
+    "arrival_evidence_class": "controlled_load_model_not_fixed_schedule_replay",
+    "context_projection": "rank_preserving_scale_to_half_cap_median_then_clip",
+    "source_median_input_tokens": 132092,
+    "context_tokens": 16384,
+    "output_cap_tokens": 2048,
+    "preserve_prefix_fraction": true,
+    "workflow_completion_unit": "provider_session",
+    "sequential_session_route_affinity": true
+  },
+  "axes": {"seed": [2026082900, 2026082901, 2026082902, 2026082903, 2026082904]}
+}

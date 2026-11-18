@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-active-hbm-v313-s7-failure-target-v2-frozen-20260827",
+  "status": "FROZEN_BEFORE_ANY_V2_RAW",
+  "paper_ready": false,
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "parent_s7_v1": {
+    "protocol_path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v313_s7_directional_protocol.json",
+    "protocol_sha256": "12886d15d5e498da351e8e8028dcb0032fe2b90d0fd1e5def75558460d64bff6",
+    "inheritance": "All 168 cells, workload, topology, A100 40 GiB capacity, directional bandwidth, repair, policy, seed, copy, recovery, replay, and no-selection gates are inherited without relaxation."
+  },
+  "design_preregistration": {
+    "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v313_s7_failure_target_v2_protocol.json",
+    "sha256": "d926aa9a53342ccb23d06b7c529e02402589bb01774e8617dd701d61d87687c1",
+    "status": "PREREGISTERED_DESIGN_ONLY_NO_V2_RAW_STARTED"
+  },
+  "frozen_failure_target_contract": {
+    "role": "SECONDARY_DIAGNOSTIC_WITH_ALL_WORKFLOW_PRIMARY_UNCHANGED",
+    "reference_trace": "One policy-free nominal trace per seed using the common workflow universe, source-rank placement, serving lanes, service model, and 90-180 s measurement cohort; no protection admission, copy, reclaim, failover, recovery, policy, direction, bandwidth, or repair treatment is present.",
+    "probe_timestamp": "Twelve seed-derived equal-width stratified timestamps over [90000,180000] ms.",
+    "source_rank": "At each timestamp choose uniformly from ranks with at least one nominally active measurement-cohort source task; choice occurs before any policy/treatment run.",
+    "worker_target": "Sorted unique measurement-cohort workflow IDs with an active nominal task on the selected source rank.",
+    "node_target": "Sorted unique measurement-cohort workflow IDs with an active nominal task on one of the eight ranks in the selected source node.",
+    "empty_target": "FAIL_CLOSE without timestamp/rank resampling or outcome-bearing substitution.",
+    "identity_hash": "SHA-256 canonical JSON of seed, failure_type, probe_id, timestamp_ms, source_rank, and sorted_workflow_ids.",
+    "cross_policy_treatment_gate": "The reference trace, base probe tuple, target IDs, target count, and target identity hash are byte-identical across both policies and every registered treatment for each seed/failure_type/probe.",
+    "probe_metric": "For the fixed target IDs, mean workflow completion_ms minus arrival_ms under healthy and same-probe fault replay; added WCT is their difference.",
+    "cell_aggregation": "Equal mean over all 12 probe-level target-set means; no weighting by target-set size.",
+    "seed_statistics": "Pair policies within each seed/condition; Student-t 95% CI over three paired seeds (df=2).",
+    "changed_only": "Never used as a cross-policy denominator."
+  },
+  "execution_matrix": {
+    "policies": ["Native Mooncake", "AegisKV"],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "bandwidth_directions": [
+      "source_to_peer_hbm_copy",
+      "source_to_dram_copy",
+      "peer_hbm_recovery",
+      "dram_recovery"
+    ],
+    "bandwidth_values_gb_s": [1.0, 5.0, 10.0, 25.0, 50.0],
+    "repair_failure_domains": ["source_worker_gpu", "source_node"],
+    "repair_durations_ms": [10000.0, 30000.0, 60000.0, 120000.0],
+    "registered_cells": 168,
+    "probes_per_cell": 12,
+    "registered_probe_rows": 2016,
+    "paired_seed_rows": 84,
+    "paired_ci_rows": 28
+  },
+  "figure_grammar": {
+    "filename_stem": "s7_v313_failure_target_v2_observed",
+    "size_inches": [7.0, 5.45],
+    "layout": "2x3: four directional bandwidth panels and worker/node repair panels; each panel retains all-workflow primary and fixed-target secondary paired mean plus 95% CI",
+    "minimum_font_pt": 7.0,
+    "png_minimum_width_px": 1800,
+    "panel_text_boundary": "No preliminary, seed, hash, or evidence prose in panels; provenance remains in manifest/audit."
+  },
+  "sources": {
+    "runner": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s7_failure_target_v2.py",
+      "sha256": "a849f156e6b20a774d972529c2a91274cfefcb91cc4d45f72ae566164e40694e"
+    },
+    "failure_target_mechanism_test": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/test_active_hbm_v313_s7_failure_target_v2.py",
+      "sha256": "d3dda4de72c6f2e310cf2ac266e4080e91ba56f7e92488a9a9ad885c27ae186d"
+    },
+    "design_protocol_test": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/test_active_hbm_v313_s7_failure_target_v2_protocol.py",
+      "sha256": "ababdae89bdc09e20fe2a35f2f19054fa128906508471b076fad871fc294aaa8"
+    }
+  },
+  "hard_gates": [
+    "all inherited v3.1.3 capacity/copy/replay tests and S7 directional tests pass",
+    "exactly 168 cells and 2016 failure-target probe rows",
+    "all target sets are nonempty; empty set fails closed without resampling",
+    "per-probe target identity hashes are identical across policies and treatments",
+    "worker/GPU failure invalidates exactly one rank and source-node exactly its eight-rank node",
+    "all-workflow primary and fixed-target secondary metrics are both emitted",
+    "fault replay never lowers WCT under either denominator",
+    "capacity, physical target, copy, reclaim, and replay accounting conserve",
+    "all four directions, five bandwidths, four repair values, two domains, three seeds, and both policies are retained",
+    "no performance-direction, minimum-gain, sign, seed, cell, probe, or path-selection gate",
+    "single-page vector PDF, PNG width at least 1800 px, minimum extracted font at least 7 pt"
+  ],
+  "selection_policy": "S7_V2_NONE; no outcome-based selection is allowed.",
+  "evidence_boundary": "Three-seed metadata-DES sensitivity with a policy-independent fixed-target secondary denominator. The all-workflow denominator remains primary. A100 directional bandwidth, 500 ms activation, and replacement durations remain modeled/unmeasured; Native Mooncake remains a modeled Router+Store approximation. This is not paper-ready physical evidence."
+}

@@ -1,0 +1,8 @@
+{
+  "extends": "../common/failure.json",
+  "group": "S7",
+  "layer": "failure",
+  "description": "Worker unavailability duration and transfer bandwidth sensitivity",
+  "fault_model": {"trigger": "early_active_worker_from_shadow_schedule", "trigger_mode": "early_active", "failure_time_fraction": 0.25},
+  "axes": {"failure_scenario": ["node_1"], "repair_time_ms": [1000, 5000, 15000, 30000]}
+}

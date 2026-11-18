@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "experiment_id": "active_hbm_v313_s4_s5_targeted_v2",
+  "status": "PREREGISTERED_BEFORE_EXECUTION",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "sources": {
+    "current_design": {
+      "path": "/home/comp/zhanzhao/Mooncake/aegiskv/design/current_design.md",
+      "sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac"
+    },
+    "v313_replay": {
+      "path": "active_hbm_v313.py",
+      "sha256": "1f1facd8fc020e000a5ad66805d155102488c62ed38a60dece9049bbf0c9732b"
+    },
+    "s4_s5_v1_extension": {
+      "path": "active_hbm_v313_s4s5.py",
+      "sha256": "c2d7d3aa971c2a81f29f75a02bd91577422f3070cfcdee4f6c0e8f0e42c1dbe5"
+    },
+    "s4_s5_v2_extension": {
+      "path": "active_hbm_v313_s4s5_v2.py",
+      "sha256": "3da72a2ac1b8f586a84de52b65dde3458f44dff5cc032c718c783fe631850734"
+    },
+    "s4_s5_v2_test": {
+      "path": "test_active_hbm_v313_s4s5_v2.py",
+      "sha256": "d0093127a46103edde96e004e660ab3d2582a188576d843b7af2a15cd5cb6646"
+    },
+    "targeted_protocol_test": {
+      "path": "test_active_hbm_v313_s4_s5_targeted_v2_protocol.py",
+      "sha256": "5c2c90f72c72e3502aa502eb92a6505c28ea7ad920d0c59224a7893371492ab0"
+    },
+    "targeted_runner": {
+      "path": "run_active_hbm_v313_s4_s5_targeted_v2.py",
+      "sha256": "8660266fafd001759260b43390bfebb63094c5b4997096b08fa3a77b38cb0528"
+    },
+    "v1_runner_utility": {
+      "path": "run_active_hbm_v313_s4_s5_pilot.py",
+      "sha256": "f6eb9fea5589a96816a240c56c2c1bb4dec497b711300a5879e222bf6c3d697d"
+    },
+    "capacity_protocol": {
+      "path": "active_hbm_v3_protocol.json",
+      "sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f"
+    },
+    "composite_protocol": {
+      "path": "results/mechanism_pilot_v2/composite_protocol.json",
+      "sha256": "d095d7680694e51db52f186ec2f7831093d9f3dfc117ef994ee0685fdde3df8f"
+    },
+    "topology_protocol": {
+      "path": "active_hbm_v311_s1_s2_protocol.json",
+      "sha256": "121621a0c2cd1cfe14e0e60c315b5d010b036679dc0164e6c776936316592b1d"
+    }
+  },
+  "common": {
+    "model": "Qwen3-8B TP1/PP1",
+    "gpu": "NVIDIA A100 40 GiB modeled capacity",
+    "system_dp": 16,
+    "seeds": [2026082600, 2026082601, 2026082602],
+    "topology_and_paths": {
+      "gpus_per_node": 8,
+      "node_count": 2,
+      "copy_bandwidth_gb_s": {
+        "peer_hbm_same_node": 50.0,
+        "peer_hbm_cross_node": 10.0,
+        "dram_local": 16.0,
+        "dram_remote": 10.0
+      },
+      "recovery_bandwidth_gb_s": {
+        "peer_hbm_same_node": 50.0,
+        "peer_hbm_cross_node": 10.0,
+        "dram_local": 16.0,
+        "dram_remote": 10.0
+      },
+      "calibration_status": "MODELED_NOT_PHYSICALLY_CALIBRATED_A100"
+    },
+    "policy_failover": {
+      "replacement_delay_ms": 60000.0,
+      "fence_activation_delay_ms": 500.0,
+      "timing_status": "MODELED_UNMEASURED_SENSITIVITY_INPUTS",
+      "policy_modes": {
+        "Native Mooncake": {
+          "source_worker_gpu": "replacement_wait",
+          "source_node": "replacement_wait"
+        },
+        "AegisKV": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        },
+        "AegisKV no Algorithm 1": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        },
+        "AegisKV no Algorithm 2": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        },
+        "AegisKV no Algorithm 3": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        }
+      }
+    },
+    "fairness": "within every algorithm and seed, Full and its one ablation replay the exact same workload universe, source-worker/GPU fault probes, topology, physical capacity and path parameters",
+    "no_result_shape_or_win_threshold": true
+  },
+  "s4": {
+    "purpose": "mechanism-targeted single-factor ablations; each panel registers an algorithm-specific mechanism metric and still reports healthy and fault-conditioned WCT",
+    "algorithm1": {
+      "full_policy": "AegisKV",
+      "ablation_policy": "AegisKV no Algorithm 1",
+      "context_tokens": 16384,
+      "active_requests_per_gpu": 4,
+      "arrival_cutoff_ms": 90000.0,
+      "fault_probes_per_seed": 24,
+      "residual_dag": "four visible parallel agent branches joining at one sink",
+      "branch_role_predicted_output_tokens": [4096, 1024, 256, 256],
+      "slack_formula": "max_branch_predicted_service_ms - branch_predicted_service_ms using frozen model coefficients and offered-load slowdown; no realized output/service",
+      "target_metrics": [
+        "critical-branch fraction of Peer-HBM copy bytes",
+        "copy bytes by critical/medium/high slack class",
+        "healthy and worker-fault mean/p99 WCT with paired seed CI"
+      ],
+      "success_gate": "causal slack has at least three distinct values; Full records nonzero slack and the ablation records zero slack"
+    },
+    "algorithm2": {
+      "full_policy": "AegisKV",
+      "ablation_policy": "AegisKV no Algorithm 2",
+      "context_tokens": 4096,
+      "active_requests_per_gpu": 1,
+      "arrival_cutoff_ms": 60000.0,
+      "fault_probes_per_seed": 16,
+      "benefit_classes": ["both_benefit", "hbm_benefit", "dram_benefit", "neither_benefit"],
+      "benefit_class_by_branch": {
+        "0": "both_benefit",
+        "1": "hbm_benefit",
+        "2": "dram_benefit",
+        "3": "neither_benefit"
+      },
+      "expected_full_outcome_by_class": {
+        "both_benefit": "HBM_AND_DRAM",
+        "hbm_benefit": "HBM_ONLY",
+        "dram_benefit": "DRAM_ONLY",
+        "neither_benefit": "BYPASS"
+      },
+      "capacity_rule": "all four classes keep the same 40-GiB physical target, 10-GiB initial Peer-HBM quota and 64-GiB DRAM pool; the mask represents nonpositive recovery benefit or route eligibility, not a capacity change",
+      "ablation_rule": "coupled all-or-nothing admission accepts both-benefit only when both tiers fit and fail-closes a one-tier benefit; it keeps the same controller, copies, capacity and AIMD",
+      "target_metrics": [
+        "residency fraction by preregistered benefit class",
+        "per-tier copy bytes and admission/rejection",
+        "healthy and worker-fault WCT with paired seed CI"
+      ],
+      "success_gate": "Full covers the four exact class outcomes in every seed; ablation emits only HBM_AND_DRAM or BYPASS"
+    },
+    "algorithm3": {
+      "full_policy": "AegisKV",
+      "ablation_policy": "AegisKV no Algorithm 3",
+      "context_tokens": 16384,
+      "control_horizon_ms": 420000.0,
+      "control_opportunities_ms": [30000.0, 60000.0, 90000.0, 120000.0, 150000.0, 180000.0, 210000.0, 240000.0, 270000.0, 300000.0, 330000.0, 360000.0, 390000.0, 420000.0],
+      "fault_probes_per_seed": 24,
+      "phases": [
+        {"name": "low", "start_ms": 0.0, "end_ms": 90000.0, "offered_active_requests_per_gpu": 1, "seed_xor": 2712847316},
+        {"name": "high", "start_ms": 90000.0, "end_ms": 180000.0, "offered_active_requests_per_gpu": 8, "seed_xor": 299917636},
+        {"name": "recovery", "start_ms": 180000.0, "end_ms": 420000.0, "offered_active_requests_per_gpu": 1, "seed_xor": 1432778632}
+      ],
+      "target_metrics": [
+        "per-target and mean alpha trajectory",
+        "pressure/stable windows, quota, reclaim and post-control dispatch",
+        "healthy and worker-fault mean/p99 WCT with paired seed CI"
+      ],
+      "success_gate": "Full executes all 14 per-target control windows; ablation schedules the same opportunities and executes zero alpha updates"
+    },
+    "paired_ci": "paired seed-level t interval with df=2",
+    "no_requirement_that_every_algorithm_improve_total_wct": true
+  },
+  "s5": {
+    "purpose": "test additive recovery after an analytically bounded offered-load drop, without searching recovery loads",
+    "reuse_algorithm3_full_cells": true,
+    "context_tokens": 16384,
+    "request_max_output_tokens": 4096,
+    "kv_bytes_per_token": 147456,
+    "analytic_bound": {
+      "request_p99_serving_kv_bytes_formula": "(16384 prompt + 4096 p99/max output) * 147456 bytes/token",
+      "request_p99_serving_kv_bytes": 3019898880,
+      "request_p99_serving_kv_gib": 2.8125,
+      "shared_serving_plus_backup_budget_bytes": 21414241484,
+      "shared_serving_plus_backup_budget_gib": 19.943566512316465,
+      "maximum_alpha": 0.3,
+      "maximum_peer_hbm_quota_bytes": 12884901888,
+      "maximum_peer_hbm_quota_gib": 12.0,
+      "serving_headroom_at_max_quota_bytes": 8529339596,
+      "capacity_safe_active_requests_formula": "floor((shared budget - 0.30 * 40 GiB) / request p99 serving bytes)",
+      "capacity_safe_active_requests": 2,
+      "controller_pressure_active_threshold": 2,
+      "guard_rule": "use one offered active request per GPU, leaving one request of concurrency guard below both the capacity-safe ceiling and controller active>2 threshold",
+      "load_search_performed": false
+    },
+    "recovery_offered_active_requests_per_gpu": 1,
+    "schedule": "same frozen low C1 0-90s, high C8 90-180s, recovery C1 180-420s used by the Algorithm-3 pair",
+    "window_ms": 30000.0,
+    "stable_windows_before_increase": 3,
+    "recovery_control_window_count": 8,
+    "coverage_rationale": "eight recovery windows cover two complete K=3 stable-window cycles plus two guard windows",
+    "behavior_gate": "each seed must show a high-phase alpha decrease, at least one target-stable recovery observation, and at least one recovery-phase increase in mean alpha; otherwise publish FAIL_DIAGNOSTIC and inspect target pressure trace",
+    "occupancy_fields": "event-state serving HBM, physical-target Peer-HBM backup and Store DRAM at each control window; no event-fraction inference",
+    "no_load_seed_or_window_selection": true
+  },
+  "paper_ready": false,
+  "evidence_boundary": "Three-seed mechanism-targeted preliminary DES. Workload roles, tier-benefit classes, capacity equation and schedule are preregistered without win thresholds. Directional bandwidth, service and failover remain modeled/unmeasured."
+}

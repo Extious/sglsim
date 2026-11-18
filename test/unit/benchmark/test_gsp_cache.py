@@ -61,6 +61,21 @@ def test_cache_key_changes_with_seed():
     )
 
 
+def test_cache_key_changes_with_trace_jsonl_content(tmp_path: Path):
+    trace_path = tmp_path / "trace.jsonl"
+    trace_path.write_text('{"rid":"a","prompt":"first"}\n', encoding="utf-8")
+    client = _client(
+        dataset_name="claude-code-trace-jsonl",
+        trace_jsonl_path=str(trace_path),
+        trace_limit=1,
+    )
+    first_key = cache_key(client, _server())
+
+    trace_path.write_text('{"rid":"a","prompt":"second"}\n', encoding="utf-8")
+
+    assert cache_key(client, _server()) != first_key
+
+
 def test_workload_cache_roundtrip(cache_dir):
     client = _client()
     server = _server()

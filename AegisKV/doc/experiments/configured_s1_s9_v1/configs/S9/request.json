@@ -1,0 +1,16 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S9",
+  "layer": "request",
+  "description": "Payload sweep for the preregistered independent holdout",
+  "workload": {
+    "probe": "physical KV transfer microbenchmark",
+    "repeat_count_per_cell": 5,
+    "join_key": ["path", "payload_mib"]
+  },
+  "axes": {
+    "payload_mib": [64, 256, 512, 1024]
+  },
+  "matrix_note": "Four payloads per transfer direction"
+}
+

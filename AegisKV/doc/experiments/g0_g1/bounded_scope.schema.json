@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegiskv.local/schema/bounded-scope-v3.json",
+  "title": "AegisKV bounded-Slack opportunity sampling frame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_class",
+    "dataset_id",
+    "split_id",
+    "sampling_policy_id",
+    "workflow_disjoint_test",
+    "workflow_id",
+    "decision_id",
+    "workflow_template",
+    "model",
+    "layout_digest",
+    "failure_domain",
+    "eligible_declared_parallel_region",
+    "failure_exposed_active_kv_bytes_total",
+    "proof_scope_status",
+    "proof_scope_unavailable_reason",
+    "proof_scope_kind",
+    "observed_at_ms",
+    "graph_version",
+    "proof_scope_complete",
+    "witness_contract_id",
+    "witness_contract_valid_until_ms",
+    "completion_barrier_id",
+    "uses_future_information",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "schema_version": {"const": 3},
+    "evidence_class": {
+      "enum": ["synthetic_development", "held_out_formal"]
+    },
+    "dataset_id": {"type": "string", "minLength": 1},
+    "split_id": {"type": "string", "minLength": 1},
+    "sampling_policy_id": {"type": "string", "minLength": 1},
+    "workflow_disjoint_test": {"type": "boolean"},
+    "workflow_id": {"type": "string", "minLength": 1},
+    "decision_id": {"type": "string", "minLength": 1},
+    "workflow_template": {"type": "string", "minLength": 1},
+    "model": {"type": "string", "minLength": 1},
+    "layout_digest": {"type": "string", "minLength": 1},
+    "failure_domain": {"type": "string", "minLength": 1},
+    "eligible_declared_parallel_region": {"type": "boolean"},
+    "failure_exposed_active_kv_bytes_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "proof_scope_status": {"enum": ["AVAILABLE", "UNAVAILABLE"]},
+    "proof_scope_unavailable_reason": {
+      "oneOf": [
+        {
+          "enum": [
+            "NO_DECLARED_PARALLEL_REGION",
+            "NO_REVEALED_PROOF_SCOPE",
+            "INCOMPLETE_SCOPE",
+            "MISSING_HARD_DURATION_BOUND",
+            "STALE_GRAPH_OR_BOUND_VERSION",
+            "UNENFORCEABLE_SERVICE_ENVELOPE",
+            "UNFENCED_WITNESS_CONTRACT",
+            "WITNESS_CONTRACT_TOO_SHORT",
+            "UNSUPPORTED_JOIN_SEMANTICS",
+            "UNSUPPORTED_LAYOUT"
+          ]
+        },
+        {"type": "null"}
+      ]
+    },
+    "proof_scope_kind": {
+      "oneOf": [
+        {
+          "enum": [
+            "COMPLETE_RESIDUAL_DAG",
+            "CLOSED_MANDATORY_AND_JOIN"
+          ]
+        },
+        {"type": "null"}
+      ]
+    },
+    "observed_at_ms": {"type": "number", "minimum": 0},
+    "graph_version": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {"type": "null"}
+      ]
+    },
+    "proof_scope_complete": {"type": "boolean"},
+    "witness_contract_id": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {"type": "null"}
+      ]
+    },
+    "witness_contract_valid_until_ms": {
+      "oneOf": [
+        {"type": "number", "minimum": 0},
+        {"type": "null"}
+      ]
+    },
+    "completion_barrier_id": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {"type": "null"}
+      ]
+    },
+    "uses_future_information": {"const": false},
+    "nodes": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/node"}
+    },
+    "edges": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/edge"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"proof_scope_status": {"const": "AVAILABLE"}}
+      },
+      "then": {
+        "properties": {
+          "proof_scope_unavailable_reason": {"type": "null"},
+          "proof_scope_kind": {
+            "enum": [
+              "COMPLETE_RESIDUAL_DAG",
+              "CLOSED_MANDATORY_AND_JOIN"
+            ]
+          },
+          "graph_version": {"type": "string", "minLength": 1},
+          "proof_scope_complete": {"const": true},
+          "witness_contract_id": {"type": "string", "minLength": 1},
+          "witness_contract_valid_until_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "nodes": {"minItems": 1}
+        }
+      },
+      "else": {
+        "properties": {
+          "proof_scope_unavailable_reason": {
+            "enum": [
+              "NO_DECLARED_PARALLEL_REGION",
+              "NO_REVEALED_PROOF_SCOPE",
+              "INCOMPLETE_SCOPE",
+              "MISSING_HARD_DURATION_BOUND",
+              "STALE_GRAPH_OR_BOUND_VERSION",
+              "UNENFORCEABLE_SERVICE_ENVELOPE",
+              "UNFENCED_WITNESS_CONTRACT",
+              "WITNESS_CONTRACT_TOO_SHORT",
+              "UNSUPPORTED_JOIN_SEMANTICS",
+              "UNSUPPORTED_LAYOUT"
+            ]
+          },
+          "proof_scope_kind": {"type": "null"},
+          "proof_scope_complete": {"const": false},
+          "witness_contract_id": {"type": "null"},
+          "witness_contract_valid_until_ms": {"type": "null"},
+          "completion_barrier_id": {"type": "null"},
+          "nodes": {"maxItems": 0},
+          "edges": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "proof_scope_kind": {"const": "COMPLETE_RESIDUAL_DAG"}
+        },
+        "required": ["proof_scope_kind"]
+      },
+      "then": {
+        "properties": {"completion_barrier_id": {"type": "null"}}
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "proof_scope_kind": {"const": "CLOSED_MANDATORY_AND_JOIN"}
+        },
+        "required": ["proof_scope_kind"]
+      },
+      "then": {
+        "properties": {
+          "completion_barrier_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "agent_id",
+        "need_state",
+        "failure_exposed_kv_bytes",
+        "duration"
+      ],
+      "properties": {
+        "node_id": {"type": "string", "minLength": 1},
+        "agent_id": {"type": "string", "minLength": 1},
+        "need_state": {"enum": ["ACTIVE", "DEFERRED"]},
+        "failure_exposed_kv_bytes": {"type": "integer", "minimum": 0},
+        "duration": {"$ref": "#/$defs/duration"}
+      }
+    },
+    "duration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lower_ms",
+        "upper_ms",
+        "graph_version",
+        "service_envelope_version",
+        "bound_id",
+        "source",
+        "uses_future_information"
+      ],
+      "properties": {
+        "lower_ms": {"type": "number", "minimum": 0},
+        "upper_ms": {"type": "number", "minimum": 0},
+        "graph_version": {"type": "string", "minLength": 1},
+        "service_envelope_version": {"type": "string", "minLength": 1},
+        "bound_id": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "uses_future_information": {"const": false}
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "target_id"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "target_id": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

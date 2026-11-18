@@ -1,0 +1,90 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\usetheme{Simple}
+
+\usepackage[UTF8,fontset=fandol]{ctex}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,multirow}
+\usepackage{graphicx,xcolor,xurl,hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,fit,positioning,shapes.geometric}
+
+\graphicspath{{Figures/}{experiments/sglsim_large/traces/cc-traces-weka-062126/analysis/workflow_examples/}}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{equation number}[numbered]
+\setbeamertemplate{navigation symbols}{}
+
+\definecolor{AegisBlue}{RGB}{38,91,145}
+\definecolor{AegisBlueLight}{RGB}{232,242,251}
+\definecolor{AegisOrange}{RGB}{188,112,38}
+\definecolor{AegisOrangeLight}{RGB}{255,241,224}
+\definecolor{AegisGreen}{RGB}{41,126,91}
+\definecolor{AegisGreenLight}{RGB}{226,245,236}
+\definecolor{AegisPurple}{RGB}{104,78,157}
+\definecolor{AegisPurpleLight}{RGB}{242,238,250}
+\definecolor{AegisRed}{RGB}{181,66,61}
+\definecolor{AegisRedLight}{RGB}{252,232,230}
+\definecolor{AegisGray}{RGB}{77,87,99}
+\definecolor{AegisGrayLight}{RGB}{246,247,249}
+
+\newcommand{\AegisKV}{AegisKV}
+\newcommand{\code}[1]{\texttt{\footnotesize #1}}
+\newcommand{\tightitems}{\setlength{\itemsep}{2pt}\setlength{\parskip}{0pt}}
+\newcommand{\boundary}[1]{%
+  \begin{beamercolorbox}[rounded=true,sep=0.75ex,wd=0.98\textwidth]{block body}
+    \scriptsize\textbf{边界：}#1
+  \end{beamercolorbox}}
+\newcommand{\takeaway}[1]{%
+  \begin{beamercolorbox}[rounded=true,sep=0.75ex,wd=0.98\textwidth]{block body}
+    \footnotesize\textbf{结论：}#1
+  \end{beamercolorbox}}
+\newcommand{\layercard}[3]{%
+  \begin{beamercolorbox}[wd=\textwidth,rounded=true,sep=0.9ex]{block body}
+    {\color{#1}\textbf{#2}}\par\vspace{0.3ex}\scriptsize #3
+  \end{beamercolorbox}}
+
+\newcounter{paperalgline}
+\newenvironment{paperalgo}[1]{%
+  \setcounter{paperalgline}{0}
+  \begin{minipage}{\textwidth}
+  \hrule height 0.5pt\vspace{0.3ex}
+  {\footnotesize\textbf{#1}\par}\vspace{0.2ex}\hrule height 0.35pt\vspace{0.35ex}
+  \scriptsize\begin{tabular}{@{}r@{\hspace{0.45em}}p{0.88\textwidth}@{}}
+}{%
+  \end{tabular}\vspace{0.3ex}\hrule height 0.5pt
+  \end{minipage}
+}
+\newcommand{\algline}[1]{\stepcounter{paperalgline}\arabic{paperalgline}: & #1 \\}
+
+\def\meetingname{AegisKV Complete System Design}
+\title{\AegisKV{}：面向 Agent Workflow 的 Slack-Aware KV 恢复系统}
+\subtitle{Workflow Slack · Recovery Placement · L1/L2 Backup Right-Sizing}
+\author[Zhao]{Zhan Zhao}
+\institute[HKBU]{Hong Kong Baptist University}
+\date[2026.07.20]{\meetingname\\2026 年 7 月 20 日}
+
+\hfuzz=20pt
+\hbadness=10000
+\vfuzz=20pt
+\vbadness=10000
+\emergencystretch=2em
+
+% Keep the deck compact: section titles appear in the outline, but do not
+% consume a standalone transition page.
+\AtBeginSection[]{}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+\input{sections/01_introduction.tex}
+\input{sections/02_background_related.tex}
+\input{sections/03_motivation.tex}
+\input{sections/04_formulation.tex}
+\input{sections/05_architecture.tex}
+\input{sections/06_implementation.tex}
+\input{sections/07_evaluation.tex}
+\input{sections/08_conclusion.tex}
+\input{sections/09_appendix.tex}
+
+\end{document}

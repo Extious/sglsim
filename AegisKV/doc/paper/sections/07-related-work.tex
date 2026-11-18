@@ -1,0 +1,45 @@
+\section{Related Work}
+\label{sec:related-work}
+
+\paragraph{KV memory systems.}
+PagedAttention and SGLang provide page and prefix management inside an LLM
+runtime~\cite{kwon2023vllm,zheng2024sglang}.  Mooncake and HiCache extend KV
+storage across host memory and distributed backends
+~\cite{qin2025mooncake,xie2025hicache}; SYMPHONY, Strata, and Bidaw further
+optimize disaggregation and hierarchical placement
+~\cite{agarwal2026symphony,xie2026strata,hu2026bidaw}.  \system{} uses these
+mechanisms as storage and transfer substrates.  Its focus is the workflow value
+used to choose which failure-recoverable state occupies their limited fast
+capacity.
+
+\paragraph{Agent-aware serving.}
+Parrot, KVFlow, Pythia, and Agentix expose application structure or
+predictability to scheduling and cache reuse
+~\cite{lin2024parrot,pan2025kvflow,yu2026pythia,luo2026agentix}.  TokenCake,
+Continuum, PBKV, and TokenDance use criticality, waiting time, predicted reuse,
+or synchronized execution to manage KV for agent workloads
+~\cite{bian2026tokencake,li2026continuum,zheng2026pbkv,bian2026tokendance}.
+These systems establish that workflow information benefits normal serving.
+\system{} instead asks how one dynamic Slack value should govern both
+pre-failure protection and post-failure recovery.
+
+\paragraph{Fault-tolerant LLM serving.}
+D\'ej\`aVu streams KV state for recovery, while GhostServe and RaidServe protect
+or reconstruct serving state with GPU/host redundancy
+~\cite{strati2024dejavu,jayakody2026ghostserve,xu2026raidserve}.  KevlarFlow,
+LUMEN, Concordia, AnchorTP, Tarragon, and ReviveMoE address complementary
+recovery, checkpointing, or reconfiguration problems
+~\cite{qian2026kevlarflow,cao2026lumen,gan2026concordia,xu2026anchortp,
+zhang2026tarragon,li2026revivemoe}.  CacheFlow accelerates the physical
+restore/load/recompute path~\cite{nian2026cacheflow}.  \system{} does not claim
+a new copy engine or general reconfiguration mechanism; it supplies the online
+workflow priority and KV-management policy that select and order such work.
+
+\paragraph{Classical mechanisms.}
+Landlord provides a credit/rent view of online variable-size caching
+~\cite{young2002online}, and real-time systems have long used Slack to place
+checkpoints and schedule recovery~\cite{melhem2004interplay,acharya2008dynamic}.
+\system{} does not claim either idea in isolation.  \textsc{SlackLandlord}
+specializes the credit to continuous KV recovery harm and reuses the same Slack
+after a serving failure; \textsc{GuardedAIMD} adds a slow feedback envelope
+around optional peer-HBM capacity while local allocation remains authoritative.

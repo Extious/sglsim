@@ -1,0 +1,97 @@
+{
+  "experiment_id": "real-weka-full-aegiskv-four-path-v2",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "dataset": {
+    "name": "semianalysisai/cc-traces-weka-062126",
+    "expected_full_profile": {
+      "workflow_count": 393,
+      "request_count": 98827,
+      "input_tokens": 21635381376,
+      "output_tokens": 106474498
+    }
+  },
+  "workload": {
+    "workflow_mean_interarrival_ms": 300000.0,
+    "global_interarrival_note": "The corpus has per-workflow relative time but no cross-workflow arrival clock; deterministic exponential interarrival is an explicit load projection."
+  },
+  "model": {
+    "revision": "Qwen/Qwen3-8B",
+    "kv_abi": "qwen3-8b-bf16-kv-v1",
+    "kv_bytes_per_token": 147456,
+    "mapping_note": "Invalidated legacy template identity only. The V100 importer must replace this with the hash-bound physical FP16 KV ABI and a preregistered executable token projection."
+  },
+  "cluster": {
+    "dp_size": 4,
+    "pp_size": 1,
+    "tp_size": 1
+  },
+  "capacity": {
+    "hbm_bytes_per_target": 8589934592,
+    "dram_bytes_total": 68719476736,
+    "dram_partitioning": "Four independent Store DRAM placement partitions, one per route target, sum to 64 GiB."
+  },
+  "chunking": {
+    "prefix_tokens": 4096,
+    "decode_tokens": 256
+  },
+  "algorithm1": {
+    "primary_slack_field": "slack_q50_ms",
+    "folds": 5,
+    "split_salt": "aegiskv-weka-crossfit-v1",
+    "interval_coverage": 0.9,
+    "blend_tau_rounds": 2.0,
+    "gbdt": {
+      "estimators": 48,
+      "learning_rate": 0.06,
+      "max_depth": 3,
+      "min_leaf": 48,
+      "max_bins": 32
+    }
+  },
+  "aimd": {
+    "initial_alpha": 1.0,
+    "minimum_alpha": 0.25,
+    "maximum_alpha": 1.0,
+    "decrease_factor": 0.5,
+    "increase_step": 0.1,
+    "stable_windows": 3,
+    "window_ms": 300000.0,
+    "pressure_mode": "active_source_request_count_proxy",
+    "pressure_calibrated": false,
+    "pressure_active_source_requests": 32,
+    "pressure_note": "Diagnostic-only proxy over each Worker's own source-rank primary load. It is not physical headroom or allocation/reclaim-stall calibration and cannot support a quantitative AIMD claim."
+  },
+  "faults": {
+    "global_cut_request_start_quantile": 0.6,
+    "target_to_source_gap_ms": 1000.0,
+    "rank_skew_ms": 5.0,
+    "evaluation_snapshot_count": 512,
+    "snapshot_fraction_within_request": 0.5,
+    "note": "One target fail-stop per target is followed one second later by one source fail-now snapshot per source rank. In addition, 512 request-stratified non-destructive process fail-now snapshots provide a larger paired optimization sample."
+  },
+  "calibration": {
+    "status": "INVALIDATED_TCP_TRANSPORT",
+    "invalidation_reason": "The purported Peer-HBM calibration used Mooncake TCP for every sampled GPU-memory transfer; it did not exercise CUDA P2P/D2D.",
+    "invalidation_evidence": "../transport-invalidation-rtx4090-20260823.json",
+    "bundle_result_label": "RTX4090-2node-PP2-systemDP2",
+    "bundle_semantics": "four_independent_physical_paths_v1",
+    "peer_hbm_protection_gate": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/fallback-4090-peer-hbm-127126-20260822T143123Z/peer-hbm-calibration-gate-report.json",
+    "direct_dram_protection_gate": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/fallback-4090-aegis-hbm-127136-20260822T143328Z/aegis-hbm-integration-gate-report.json",
+    "hbm_recovery_gate": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/fallback-4090-aegis-hbm-recovery-127154-20260822T143740Z/aegis-hbm-recovery-gate-report.json",
+    "dram_recovery_gate": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/fallback-4090-mooncake-dram-127117-20260822T142836Z/mooncake-dram-calibration-gate-report.json",
+    "recompute_gate": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/fallback-4090-recompute-127110-20260822T142658Z/recompute-calibration-gate-report.json",
+    "peer_hbm_protection_setup_ms": 0.0,
+    "direct_dram_protection_setup_ms": 0.0,
+    "hbm_recovery_setup_ms": 0.0,
+    "dram_recovery_setup_ms": 0.0,
+    "maximum_calibrated_context_tokens": 4096
+  },
+  "statistics": {
+    "bootstrap_resamples": 4000,
+    "bootstrap_seed": 20260820
+  },
+  "audit": {
+    "event_log_limit": 64,
+    "progress_every_chunks": 250000
+  }
+}

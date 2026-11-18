@@ -1,0 +1,15 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S8",
+  "layer": "failure",
+  "description": "Exact worker/GPU and node domains reused from S1",
+  "fault_model": {
+    "enabled": true,
+    "source_worker_gpu": "exactly one global GPU rank",
+    "source_node": "all eight global ranks on floor(source_rank / 8)",
+    "domains_per_cell": ["source_worker_gpu", "source_node"],
+    "identity_gate": "failure probe hashes must equal S1"
+  },
+  "axes": {},
+  "matrix_note": "Same-probe comparison"
+}

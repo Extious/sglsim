@@ -1,0 +1,114 @@
+\documentclass[sigplan,review,anonymous]{acmart}
+
+% EuroSys 2027 review configuration.  Compile with TEXINPUTS/BSTINPUTS as
+% documented in README.md so that the downloaded ACM template is used.
+\setcopyright{none}
+\settopmatter{printfolios=true,printacmref=false,printccs=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+\raggedbottom
+\acmConference[EuroSys '27]{European Conference on Computer Systems}%
+  {April 19--23, 2027}{Rabat, Morocco}
+\acmYear{2027}
+\copyrightyear{2027}
+\acmDOI{}
+\acmISBN{}
+\acmSubmissionID{ANON-000}
+
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{url}
+% EuroSys requires at least 10 pt text on 12 pt leading, including references.
+% acmart inherits an 8 pt bibliography from amsart, so restore the body size.
+\renewcommand{\bibliofont}{\normalsize}
+% The project-local TinyTeX tree may not have user font maps configured.  Keep
+% microtype protrusion but disable font expansion so the draft is reproducible
+% without mutating the system TeX installation.
+\microtypesetup{expansion=false}
+\setlength{\emergencystretch}{1.5em}
+
+\newcommand{\system}{\textsc{AegisKV}}
+\newcommand{\HBM}{\textsc{HBM}}
+\newcommand{\DRAM}{\textsc{DRAM}}
+\newcommand{\SSD}{\textsc{SSD}}
+
+% A compact, dependency-free pseudocode float for the two controller algorithms.
+\floatstyle{ruled}
+\newfloat{algorithm}{tbp}{loa}
+\floatname{algorithm}{Algorithm}
+
+\begin{document}
+
+\title{AegisKV: Slack-Aware KV Management for Fault-Tolerant Agentic LLM Serving}
+
+\author{Anonymous Author(s)}
+\affiliation{%
+  \institution{Anonymous Institution}
+  \country{Anonymous}%
+}
+
+\begin{CCSXML}
+<ccs2012>
+ <concept>
+  <concept_id>10010520.10010575.10010755</concept_id>
+  <concept_desc>Computer systems organization~Reliability</concept_desc>
+  <concept_significance>500</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>10011007.10010940.10010971</concept_id>
+  <concept_desc>Software and its engineering~Software fault tolerance</concept_desc>
+  <concept_significance>300</concept_significance>
+ </concept>
+</ccs2012>
+\end{CCSXML}
+\ccsdesc[500]{Computer systems organization~Reliability}
+\ccsdesc[300]{Software and its engineering~Software fault tolerance}
+\keywords{large language model serving, KV cache, fault tolerance,
+agentic workflow, recovery}
+
+\begin{abstract}
+Agentic applications turn one user task into a dependency graph of long,
+multi-turn model requests.  A GPU failure can discard a large amount of live
+key--value (KV) state, yet protecting every byte in the fastest tier imposes
+substantial memory and transfer cost on healthy serving.  More importantly,
+equal-sized KV prefixes need not have equal recovery value: a delay on a
+workflow-critical branch extends completion time, whereas a parallel branch
+may absorb the same delay.  We present \system{}, which uses workflow Slack to
+connect normal-period KV management with failure-time recovery.  At request and
+tool boundaries, the application predicts remaining agent durations with GBDT
+and computes branch Slack with CPM.  The serving control plane converts the
+result into the reduction in Slack-exposed recovery delay.  Its
+\textsc{SlackLandlord} policy uses this value to admit and evict variable-size,
+continuous KV chunks in DRAM and optional peer HBM, while
+\textsc{GuardedAIMD} adapts only the peer-HBM capacity envelope to foreground
+memory pressure.  On failure, the same remaining Slack orders adoption,
+loading, and recomputation on a compatible target.  Complete-chunk commit,
+version checks, and output fencing preserve correctness when copies or workers
+fail.  The design handles one fail-stop serving domain at a time and builds on
+existing KV storage and transfer paths.
+% Add one quantitative outcome sentence here only after the paired physical
+% evaluation has a frozen configuration, sample count, and confidence interval.
+\end{abstract}
+
+\maketitle
+
+\input{sections/01-introduction}
+\input{sections/02-background-motivation}
+\input{sections/03-system-design-v2}
+\input{sections/04-implementation}
+\input{sections/05-evaluation}
+\input{sections/06-discussion}
+\input{sections/07-related-work}
+\input{sections/08-conclusion}
+
+% Keep the technical draft separate from references during iterative page
+% checks.  EuroSys permits 12 technical pages followed by unlimited references.
+\clearpage
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

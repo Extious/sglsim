@@ -1,0 +1,39 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S7",
+  "layer": "deployment",
+  "description": "Directional transfer and repair sensitivity deployment",
+  "topology": {
+    "hardware": "NVIDIA A100 40 GiB modeled capacity",
+    "layout": "Qwen3-8B TP1/PP1",
+    "system_dp": 16,
+    "node_count": 2,
+    "directional_profile": "sglsim_a100_40gib_modeled_directional_v1"
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "native_boundary": "modeled Router+Store approximation"
+  },
+  "axes": {
+    "policy": ["Native Mooncake", "AegisKV"]
+  },
+  "planned_cells": 168,
+  "unique_cells": 168,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s7_failure_target_v2.py",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s7_failure_target_v2_full/paired_ci.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s7_failure_target_v2_full/audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s7_failure_target_v2_full/manifest.json",
+    "expected_rows": 28,
+    "plot_kind": "bandwidth_repair_sensitivity",
+    "figure_slug": "bandwidth_repair_sensitivity"
+  },
+  "evidence": {
+    "class": "modeled_metadata_des_preliminary",
+    "paper_ready": false,
+    "known_gaps": ["directional A100 bandwidth and replacement timing are modeled, not physically calibrated"]
+  },
+  "matrix_note": "2 policies x 3 seeds x ((4 paths x 5 bandwidths) + (2 domains x 4 durations))"
+}

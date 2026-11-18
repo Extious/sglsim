@@ -1,0 +1,47 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S3",
+  "layer": "deployment",
+  "description": "Scale sweep for Qwen3-8B TP1/PP1 and gated Qwen3-32B TP1/PP4",
+  "topology": {
+    "hardware": "NVIDIA A100 40 GiB modeled capacity",
+    "gpus_per_node": 8,
+    "placement": "contiguous global ranks per eight-GPU node"
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "qwen3_32b_profile": "analytic modeled profile; not a physical A100 measurement"
+  },
+  "axes": {},
+  "matrix_components": [
+    {
+      "name": "qwen3_8b_tp1_pp1",
+      "cells": 108,
+      "formula": "2 policies x 2 topologies x (5 scale + 5 context - 1 shared center) x 3 paired seeds"
+    },
+    {
+      "name": "qwen3_32b_tp1_pp4",
+      "cells": 300,
+      "formula": "2 policies x 2 topologies x 5 DP scales x 5 contexts x 3 paired seeds"
+    }
+  ],
+  "planned_cells": 408,
+  "unique_cells": 408,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s3_scale_context.py",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s3_two_model_combined_visual_v2/s3_two_model_figure_source.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s3_two_model_combined_visual_v2/audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s3_two_model_combined_visual_v2/lineage.json",
+    "expected_rows": 80,
+    "plot_kind": "scale_context",
+    "figure_slug": "scale_context"
+  },
+  "evidence": {
+    "class": "modeled_metadata_des_preliminary_complete_with_analytic_32b_profile",
+    "paper_ready": false,
+    "known_gaps": ["Qwen3-32B service profile and failover delays are analytic, not physical A100 measurements"]
+  },
+  "matrix_note": "108 Qwen3-8B cells plus 300 Qwen3-32B cells"
+}

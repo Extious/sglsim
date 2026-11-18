@@ -1,0 +1,274 @@
+{
+  "schema_version": 2,
+  "status": "PLANNED_NOT_RUN",
+  "common": {
+    "paired_seeds": 3,
+    "fixed_arrival_ms": 180000,
+    "warmup_ms": 90000,
+    "primary_statistics": "mean and Student-t 95% CI across paired seeds; per-seed paired differences",
+    "cdf_statistics": "pooled raw workflow observations plus seed-stratified bootstrap sensitivity",
+    "identity_gates": "workflow, probe, failure-domain, model/config, source, and raw hashes",
+    "evidence_boundary": "metadata DES unless separately matched to physical data",
+    "hardware_topology": {
+      "gpu": "NVIDIA A100 40 GiB modeled capacity",
+      "hbm_bytes_per_gpu": 42949672960,
+      "gpus_per_node": 8,
+      "rank_to_node_formula": "floor(global_gpu_rank / 8)",
+      "same_node_peer_rule": "another GPU on the source node",
+      "cross_node_peer_rule": "same local GPU index on (source_node + 1) mod node_count",
+      "local_dram_rule": "CPU DRAM attached to source_node",
+      "remote_dram_rule": "CPU DRAM attached to (source_node + 1) mod node_count",
+      "path_bandwidth_rule": "same-node and cross-node Peer-HBM, and local and remote DRAM, retain separate copy and recovery bandwidth fields; cross-node paths must never inherit same-node values",
+      "modeled_bandwidth_profile": {
+        "profile_id": "sglsim_a100_40gib_modeled_directional_v1",
+        "source_path": "protocol.json",
+        "source_sha256": "7535a7bf7162f036d0154a67f25608bcb43c0f59526593f4f06e37515fcca9c9",
+        "copy_bandwidth_gb_s": {
+          "peer_hbm_same_node": 50.0,
+          "peer_hbm_cross_node": 10.0,
+          "dram_local": 16.0,
+          "dram_remote": 10.0
+        },
+        "recovery_bandwidth_gb_s": {
+          "peer_hbm_same_node": 50.0,
+          "peer_hbm_cross_node": 10.0,
+          "dram_local": 16.0,
+          "dram_remote": 10.0
+        },
+        "calibration_status": "MODELED_NOT_PHYSICALLY_CALIBRATED_A100",
+        "required_sensitivity": "S7 must vary the directional values without altering S1/S2 lineage; no A100 measurement claim is permitted."
+      },
+      "fault_domains": {
+        "source_worker_gpu": "exactly one global GPU rank",
+        "source_node": "all eight global GPU ranks on floor(source_rank / 8)"
+      }
+    }
+  },
+  "architecture_registry": {
+    "primary_architectures": [
+      "Native Mooncake",
+      "Static",
+      "DejaVu",
+      "KevlarFlow",
+      "GhostServe",
+      "AegisKV"
+    ],
+    "count": 6,
+    "internal_policy_map": {
+      "Native Mooncake": "Native Mooncake",
+      "Static": "Static FCFS",
+      "DejaVu": "DejaVu",
+      "KevlarFlow": "KevlarFlow",
+      "GhostServe": "GhostServe",
+      "AegisKV": "AegisKV"
+    },
+    "excluded_from_primary_comparison": {
+      "RAIDServe": "In the current TP1 component model it is implementation-equivalent to modeled Native Mooncake; it may appear only in a supplemental equivalence table, not as independent evidence.",
+      "Recompute Only": "It is a recovery mechanism, not an architecture baseline, and must not be used to inflate the architecture count."
+    }
+  },
+  "figures": {
+    "S1": {
+      "question": "architecture WCT CDF at the central registered workload",
+      "architectures": [
+        "Native Mooncake",
+        "Static",
+        "DejaVu",
+        "KevlarFlow",
+        "GhostServe",
+        "AegisKV"
+      ],
+      "failure_domains": ["source_worker_gpu", "source_node"],
+      "execution_topology": {
+        "model": "Qwen3-8B TP1/PP1",
+        "system_dp": 16,
+        "total_gpu_count": 16,
+        "node_count": 2,
+        "replicas_per_node": 8,
+        "placement": "one TP1/PP1 replica per GPU; contiguous ranks 0-7 on node 0 and 8-15 on node 1"
+      },
+      "matrix": "6 architectures x 2 failure domains x 3 seeds",
+      "cells": 36,
+      "statistics": "healthy and same-probe all-workflow CDF; p50/p95/p99 with seed bootstrap CI",
+      "reuse": "central S8 cells"
+    },
+    "S2": {
+      "question": "concurrency curves at three failure rates",
+      "policies": ["Native Mooncake", "AegisKV"],
+      "active_requests_per_gpu": [1, 2, 4, 8, 16],
+      "failure_rates_per_1000_gpu_shard_hour": [0.0, 5.952, 20.833],
+      "execution_topology": {
+        "model": "Qwen3-8B TP1/PP1",
+        "system_dp": 16,
+        "total_gpu_count": 16,
+        "node_count": 2,
+        "replicas_per_node": 8,
+        "placement": "identical to S1; rate cells share paired workflow/fault-probe universes before rate aggregation"
+      },
+      "matrix": "2 policies x 5 concurrency levels x 3 rates x 3 seeds",
+      "cells": 90,
+      "statistics": "paired mean WCT and 95% CI; rate-specific executed Poisson failure traces, not a heatmap or changed-only subset"
+    },
+    "S3": {
+      "question": "GPU scale and context sensitivity for two explicitly configured models",
+      "contexts_tokens": [4096, 8192, 16384, 32768, 40960],
+      "policies": ["Native Mooncake", "AegisKV"],
+      "models": [
+        {
+          "model_id": "Qwen/Qwen3-8B",
+          "display": "Qwen3-8B TP1/PP1",
+          "layout": {"tp": 1, "pp": 1},
+          "system_dp": [16, 32, 64, 128, 256],
+          "topology_by_system_dp": {
+            "total_gpu_formula": "system_dp",
+            "node_count": [2, 4, 8, 16, 32],
+            "replicas_per_node": 8,
+            "placement": "one TP1/PP1 replica per GPU, contiguous global ranks per 8-GPU node"
+          },
+          "cells": 150,
+          "weight_bytes_per_rank": [16381470720],
+          "weight_bytes_source": "active_hbm_v3_protocol.json frozen local safetensors metadata",
+          "kv": {
+            "layers_per_pp_rank": 36,
+            "kv_heads": 8,
+            "head_dim": 128,
+            "dtype_bytes": 2,
+            "bytes_per_token_per_rank_formula": "2 * 36 * 8 * 128 * 2",
+            "bytes_per_token_per_rank": 147456,
+            "bytes_per_token_whole_pipeline": 147456
+          },
+          "capacity": {
+            "total_hbm_bytes_per_rank": 42949672960,
+            "usable_hbm_bytes_per_rank": 37795712204,
+            "runtime_reserve_bytes_per_rank": 5153960756,
+            "serving_plus_backup_budget_bytes_per_rank": [21414241484]
+          },
+          "service_and_recompute": {
+            "status": "READY_PRELIMINARY_METADATA_DES",
+            "prefill_setup_ms": 4.0,
+            "prefill_ms_per_token": 0.06,
+            "decode_ms_per_token": 0.34,
+            "recompute_formula": "prefill_setup_ms + tokens * prefill_ms_per_token",
+            "boundary": "registered synthetic DES coefficients; not an A100 physical profile"
+          }
+        },
+        {
+          "model_id": "Qwen/Qwen3-32B",
+          "display": "Qwen3-32B TP1/PP4",
+          "layout": {"tp": 1, "pp": 4, "layers_per_pp_rank": 16},
+          "system_dp": [4, 8, 16, 32, 64],
+          "topology_by_system_dp": {
+            "gpus_per_pipeline_replica": 4,
+            "total_gpu_count": [16, 32, 64, 128, 256],
+            "node_count": [2, 4, 8, 16, 32],
+            "pipeline_replicas_per_node": 2,
+            "placement": "each TP1/PP4 pipeline occupies four contiguous GPUs within one 8-GPU node; two complete pipeline replicas per node",
+            "fault_scope": "source_worker_gpu loses one PP stage GPU; source_node loses all eight GPUs and therefore two complete PP4 pipeline replicas"
+          },
+          "cells": 150,
+          "official_sources": {
+            "config_url": "https://huggingface.co/Qwen/Qwen3-32B/raw/main/config.json",
+            "config_sha256": "97e295b63283935788fac5e4f8860862a56d4089538cafc93f0431f2ebe483bb",
+            "safetensors_index_url": "https://huggingface.co/Qwen/Qwen3-32B/raw/main/model.safetensors.index.json",
+            "safetensors_index_sha256": "bed42c6c55274bc08a1f616bceb3bcb84b3f02cb6584c573bd18c6519291ecd0"
+          },
+          "weight_bytes_total": 65524246528,
+          "weight_bytes_per_pp_rank": [17158971392, 15603146752, 15603146752, 17158981632],
+          "weight_partition_note": "four contiguous 16-layer PP stages with embedding/head tensors assigned to their boundary stages; stage totals sum exactly to the official safetensors total",
+          "kv": {
+            "layers_total": 64,
+            "layers_per_pp_rank": 16,
+            "kv_heads": 8,
+            "head_dim": 128,
+            "dtype": "bfloat16",
+            "dtype_bytes": 2,
+            "bytes_per_token_per_rank_formula": "2 * 16 * 8 * 128 * 2",
+            "bytes_per_token_per_rank": 65536,
+            "bytes_per_token_whole_pipeline": 262144
+          },
+          "capacity": {
+            "total_hbm_bytes_per_rank": 42949672960,
+            "usable_hbm_bytes_per_rank": 37795712204,
+            "runtime_reserve_bytes_per_rank": 5153960756,
+            "serving_plus_backup_budget_bytes_per_pp_rank": [20636740812, 22192565452, 22192565452, 20636730572],
+            "bottleneck_pp_rank": 3
+          },
+          "service_and_recompute": {
+            "status": "BLOCKED_REQUIRES_MATCHED_A100_40GB_PROFILE",
+            "required_service_formula": "prefill_setup_ms + context_tokens * prefill_ms_per_token + output_tokens * decode_ms_per_token + registered PP bubble/serialization",
+            "required_recompute_formula": "prefill_setup_ms + recomputed_tokens * prefill_ms_per_token with the same matched profile",
+            "forbidden_substitutions": [
+              "Qwen3-8B coefficients",
+              "archived A100 80GB or old-semantics coefficients"
+            ],
+            "execution_gate": "Do not execute or publish the Qwen3-32B S3 cells until the matched A100 40GB TP1/PP4 service and recompute profile is frozen and hashed."
+          }
+        }
+      ],
+      "matrix": "(Qwen3-8B TP1/PP1: 2 policies x 5 DP scales x 5 contexts x 3 seeds) + (Qwen3-32B TP1/PP4: same dimensions after its profile gate passes)",
+      "cells": 300,
+      "statistics": "healthy and same-probe WCT mean/CI, throughput, queue and capacity mechanisms; model/layout reported separately"
+    },
+    "S4": {
+      "question": "Algorithms 1/2/3 ablation under a preregistered mechanism-active cell",
+      "matrix": "5 policies x 2 failure domains x 3 seeds",
+      "cells": 30,
+      "statistics": "normalized all-workflow total WCT with paired 95% CI plus coverage counters; changed-only diagnostic excluded from ranking"
+    },
+    "S5": {
+      "question": "alpha, pressure/load, and HBM/DRAM occupancy timelines",
+      "matrix": "AegisKV x 5 load levels x 3 seeds",
+      "cells": 15,
+      "statistics": "per-control-window mean/range and capacity integrals; inclusive and fixed steady cohort",
+      "required_raw": "event-level used_bytes, active serving, queue integral, alpha and release/dispatch counts"
+    },
+    "S6": {
+      "question": "real shared-prefix reuse effect",
+      "matrix": "2 policies x 4 reuse fractions x 3 seeds",
+      "cells": 24,
+      "statistics": "reuse hit, copy amplification, evictions, recovery hit and time-integrated GiB with CI",
+      "gate": "reuse must be shared-prefix identity, not merely shortened context"
+    },
+    "S7": {
+      "question": "four transfer paths and repair sensitivity",
+      "matrix": "bandwidth: 2 policies x 4 paths x 5 bandwidths x 3 seeds; repair: 2 policies x 2 domains x 4 durations x 3 seeds",
+      "cells": 168,
+      "statistics": "all-workflow total WCT and recovery-service CI; separate copy and load directions"
+    },
+    "S8": {
+      "question": "source worker/GPU versus source-node failure",
+      "architectures": [
+        "Native Mooncake",
+        "Static",
+        "DejaVu",
+        "KevlarFlow",
+        "GhostServe",
+        "AegisKV"
+      ],
+      "failure_domains": ["source_worker_gpu", "source_node"],
+      "matrix": "6 architectures x 2 domains x 3 seeds",
+      "cells": 36,
+      "statistics": "same-probe all-workflow WCT and added-WCT CI; exact 1-rank versus 8-rank domain audit",
+      "reuse": "S1 central cells"
+    },
+    "S9": {
+      "question": "simulation versus matched physical calibration for all four transfer directions",
+      "paths": [
+        "source_to_peer_hbm",
+        "source_to_dram",
+        "peer_hbm_recovery",
+        "dram_recovery"
+      ],
+      "payload_mib": [64, 256, 512, 1024],
+      "join_key": ["path", "payload_mib"],
+      "matrix": "4 directional paths x 4 payloads",
+      "cells": 16,
+      "statistics": "matched throughput, ratio and absolute percentage error by join key (path,payload_mib)",
+      "physical_source": "/home/comp/zhanzhao/Mooncake/aegiskv/results/physical_profiles/rtx4090-pcie-host-staged-141298-v1/rtx4090-pcie-host-staged-four-path-profile.csv",
+      "boundary": "physical RTX4090 and matched simulator profile; never labeled A100 measurement"
+    }
+  },
+  "nominal_cells_before_reuse": 715,
+  "minimum_unique_cells": 679,
+  "minimum_unique_cells_note": "S1 and S8 share the same 36 central architecture cells. No S4 reuse is deducted; any later reuse requires exact protocol and identity-gate equality."
+}

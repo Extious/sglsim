@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-wct-extension-preliminary-v1-20260826",
+  "parent_protocol": "protocol.json",
+  "parent_design_semantics": "source_owned_independent_hbm_dram_v2",
+  "model": "Qwen3-8B",
+  "paired_seeds": [2026082600, 2026082601, 2026082602],
+  "arrival_cutoff_ms": 90000.0,
+  "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0],
+  "active_requests_per_gpu": 4,
+  "fault_probes_per_seed": 8,
+  "s3": {
+    "scale_system_dp": [16, 32, 64, 128, 256],
+    "scale_context_tokens": 16384,
+    "context_tokens": [4096, 8192, 16384, 32768, 40960],
+    "context_system_dp": 64,
+    "policies": ["Native Mooncake", "AegisKV"]
+  },
+  "s6": {
+    "reuse_fractions": [0.0, 0.25, 0.5, 0.75],
+    "system_dp": 64,
+    "context_tokens": 16384,
+    "policy": "AegisKV",
+    "occupancy_definition": "integral of controller pool used_bytes over the common 90-second arrival horizon; pending and committed reservations consume capacity; reported GiB values are byte-ms integrals divided by time, never inferred from event proportions"
+  },
+  "s5": {
+    "system_dp": 64,
+    "context_tokens": 16384,
+    "policy": "AegisKV",
+    "reuse_fraction": 0.0,
+    "timeline_contract": "persist event-level HBM/DRAM used_bytes plus control-step alpha-after, pressure fraction, active requests per GPU, and tier used_bytes at 30/60/90 seconds"
+  },
+  "s7": {
+    "topologies": [
+      {"name": "same+local", "peer_hbm": "same_node", "dram": "local"},
+      {"name": "same+remote", "peer_hbm": "same_node", "dram": "remote"},
+      {"name": "cross+local", "peer_hbm": "cross_node", "dram": "local"},
+      {"name": "cross+remote", "peer_hbm": "cross_node", "dram": "remote"}
+    ],
+    "repair_delay_ms": [30000.0, 60000.0],
+    "system_dp": 64,
+    "context_tokens": 16384,
+    "policies": ["Native Mooncake", "AegisKV"]
+  },
+  "s7_target": {
+    "fabric_bandwidth_gb_s": [1.0, 5.0, 10.0, 25.0, 50.0],
+    "repair_delay_ms": [10000.0, 30000.0, 60000.0, 120000.0],
+    "reference_bandwidth_gb_s": 10.0,
+    "reference_repair_delay_ms": 60000.0,
+    "system_dp": 64,
+    "context_tokens": 16384,
+    "policies": ["Native Mooncake", "AegisKV"],
+    "topology": {"name": "forced-cross+remote", "peer_hbm": "cross_node", "dram": "remote"}
+  },
+  "evidence_boundary": "SGLSim metadata DES preliminary with paired three-seed fixed-arrival cells; not physical A100 measurements and not paper-ready. Native Mooncake is a modeled Router+Store approximation."
+}

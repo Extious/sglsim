@@ -1,0 +1,68 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "request",
+  "group": "common",
+  "fixed": {
+    "workload": {
+      "kind": "tracelab_projected_session",
+      "dataset_id": "syfi-coding-trace-v0.0.2",
+      "request_universe": "provider_sessions",
+      "selection": "deterministic_by_seed",
+      "workflow_edges_preserved": true,
+      "prefix_identity_preserved": true,
+      "causal_slack_contract": {
+        "schema": "aegiskv.global-des-causal-workload.v1",
+        "mode": "visible_sequential_singleton_zero_v1",
+        "future_information": false,
+        "missing_metadata": "fail_close_zero",
+        "background": {
+          "topology": "single_visible_agent_to_next_join",
+          "graph_version": "tracelab-visible-sequential-v1",
+          "predicted_remaining_ms": 1.0,
+          "positive_slack_forbidden": true,
+          "evidence_class": "observed_arrivals_modeled_sequential_topology"
+        },
+        "parameter_provenance": {
+          "topology": "TraceLab provider sessions expose sequential requests and no observed parallel DAG; the singleton residual frontier therefore has exact zero CPM total float.",
+          "predicted_remaining_ms": "A positive placeholder used only to make the singleton residual node structurally complete; it cannot create positive Slack and is not a latency measurement."
+        }
+      }
+    },
+    "arrival": {
+      "clock": "global_virtual_time",
+      "mode": "trace_replay",
+      "central_load_multiplier": 1.0,
+      "preserve_request_order": true,
+      "closed_loop": false,
+      "timestamp_unit": "ns"
+    },
+    "context": {
+      "central_tokens": 16384,
+      "maximum_tokens": 40960,
+      "output_tokens_mode": "trace_or_preregistered",
+      "truncate_over_limit": false
+    },
+    "seed": {
+      "namespace": "aegiskv-paper-global-des-v3",
+      "pairing_key": [
+        "group",
+        "seed",
+        "request_universe"
+      ],
+      "rng_algorithm": "python_random_mt19937",
+      "implicit_seed_forbidden": true
+    },
+    "artifact_lineage": {
+      "input_artifacts": [
+        "AegisKV/experiments/data/cache/syfi_coding_trace-v0.0.2.duckdb"
+      ],
+      "request_universe_hash_required": true,
+      "input_sha256_required": true,
+      "resolved_three_layer_snapshot_required": true,
+      "simulator_git_revision_required": true,
+      "model_revision_required": true,
+      "immutable_run_id_required": true
+    }
+  },
+  "axes": {}
+}

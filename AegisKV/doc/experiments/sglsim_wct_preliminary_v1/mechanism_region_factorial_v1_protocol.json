@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-mechanism-region-factorial-v1-20260826",
+  "status": "PREREGISTERED_BEFORE_FACTORIAL_RESULTS",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "parent_mechanism_protocol": "mechanism_pilot_v2_protocol.json",
+  "parent_mechanism_protocol_sha256": "509a6c591be02f19a2d6c359974dc2e7c6a65da5ebb3f17f6bcb107dfeb0238f",
+  "core_runner": "run_preliminary.py",
+  "core_runner_sha256": "2d709bfe32fa4d3c0e9653dacb1d7508da460db1efaa22f1c7a32c58452791a9",
+  "purpose": "map the full registered concurrency/context/failure-type mechanism region instead of selecting a favorable cell for S1, S4, or S8",
+  "matrix": {
+    "active_requests_per_gpu": [2, 4, 8, 16],
+    "context_tokens": [8192, 16384, 40960],
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "policies": [
+      "Native Mooncake",
+      "AegisKV",
+      "AegisKV no Algorithm 1",
+      "AegisKV no Algorithm 2",
+      "AegisKV no Algorithm 3"
+    ],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "phase1_seed": 2026082600,
+    "arrival_cutoff_ms": 90000.0,
+    "fault_probes_per_cell": 24,
+    "system_dp": 16,
+    "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0]
+  },
+  "phase2_expansion_gate": {
+    "uses_performance_direction_or_win_threshold": false,
+    "required_phase1_mechanism_coverage": [
+      "Full has nonzero Algorithm-1 slack inputs",
+      "Full executes exactly three Algorithm-3 control windows",
+      "At least one Full cell observes pressure and capacity rejection or eviction",
+      "noAlg1 has zero Algorithm-1 slack inputs",
+      "noAlg2 uses the declared Static-FCFS component-disabled adaptation",
+      "noAlg3 executes zero Algorithm-3 control windows",
+      "Both failure types have nonzero causally changed workflow observations",
+      "All fault replays are WCT-monotone and all empty replays reproduce healthy completion"
+    ],
+    "action_on_pass": "run the entire matrix for the remaining two paired seeds",
+    "action_on_fail": "fail-close and report the uncovered mechanism region without selecting a substitute cell"
+  },
+  "estimands": {
+    "primary": "failure-conditioned WCT and added WCT among causally changed workflows, by full factorial cell",
+    "healthy": "DES WCT including each policy's modeled own-transfer normal-path burden",
+    "ablation": "paired Full/ablation relative difference at every cell; no pooled superiority threshold",
+    "mechanism": "slack, admission, eviction, occupancy, recovery hit, alpha, pressure, and copy queue counters"
+  },
+  "fidelity_notes": {
+    "Native Mooncake": "modeled Store-only approximation; 60 s replacement is modeled and unmeasured",
+    "AegisKV": "worker failure uses modeled unmeasured 500 ms prebound fence activation; same-node source-node failure uses modeled unmeasured 60 s replacement",
+    "AegisKV no Algorithm 2": "Static-FCFS two-tier component-disabled adaptation, not a surgical production Algorithm-2 deletion",
+    "bandwidth": "main model remains A100 40 GiB with semantically separate copy and load tables; values are modeled, not physical A100 calibration"
+  },
+  "evidence_boundary": "Preliminary metadata DES mechanism-region evidence. No result is paper-ready physical evidence, and preview figures must not replace the stable PDF figures without a later evidence review."
+}

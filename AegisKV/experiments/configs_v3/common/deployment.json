@@ -1,0 +1,307 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "deployment",
+  "group": "common",
+  "fixed": {
+    "cluster": {
+      "central_node_count": 4,
+      "gpus_per_node": 8,
+      "gpu_type": "NVIDIA-A100-SXM4-40GB",
+      "gpu_hbm_capacity_bytes": 42949672960,
+      "host_dram_capacity_bytes_per_node": 1099511627776
+    },
+    "models": {
+      "qwen3-8b": {
+        "model_id": "Qwen/Qwen3-8B",
+        "revision_required": true,
+        "parameter_count": 8200000000,
+        "weight_dtype_bytes": 2,
+        "weight_bytes_total": 16400000000,
+        "num_layers": 36,
+        "num_kv_heads": 8,
+        "head_dim": 128,
+        "kv_dtype_bytes": 2,
+        "kv_bytes_per_token_total": 147456,
+        "max_context_tokens": 40960,
+        "tp_size": 1,
+        "pp_size": 1,
+        "dp_size_by_node_count": {
+          "1": 8,
+          "2": 16,
+          "4": 32,
+          "8": 64
+        }
+      },
+      "qwen3-32b": {
+        "model_id": "Qwen/Qwen3-32B",
+        "revision_required": true,
+        "parameter_count": 32800000000,
+        "weight_dtype_bytes": 2,
+        "weight_bytes_total": 65600000000,
+        "num_layers": 64,
+        "num_kv_heads": 8,
+        "head_dim": 128,
+        "kv_dtype_bytes": 2,
+        "kv_bytes_per_token_total": 262144,
+        "max_context_tokens": 40960,
+        "tp_size": 4,
+        "pp_size": 1,
+        "dp_size_by_node_count": {
+          "1": 2,
+          "2": 4,
+          "4": 8,
+          "8": 16
+        }
+      }
+    },
+    "central_model": "qwen3-8b",
+    "placement": {
+      "kind": "dense_cartesian_rank_map_v1",
+      "rank_order": [
+        "dp_rank",
+        "pp_rank",
+        "tp_rank"
+      ],
+      "gpu_order": [
+        "node_id",
+        "local_gpu_id"
+      ],
+      "linear_rank_formula": "((dp_rank * pp_size) + pp_rank) * tp_size + tp_rank",
+      "node_formula": "linear_rank // gpus_per_node",
+      "local_gpu_formula": "linear_rank % gpus_per_node",
+      "require_unique_gpu_per_rank_tuple": true,
+      "require_all_gpus_assigned": true,
+      "p0_synthetic_topologies": [
+        {"id": "synthetic-tp1-pp1", "tp_size": 1, "pp_size": 1},
+        {"id": "synthetic-tp4-pp1", "tp_size": 4, "pp_size": 1},
+        {"id": "synthetic-tp1-pp2", "tp_size": 1, "pp_size": 2}
+      ]
+    },
+    "gpu_hbm": {
+      "ledger_accounts": [
+        "weights",
+        "runtime_reserve",
+        "primary_kv",
+        "radix_prefix_kv",
+        "aegis_pending",
+        "aegis_committed",
+        "free"
+      ],
+      "runtime_reserve_bytes_per_gpu": 6442450944,
+      "primary_kv_budget_bytes_per_gpu": 8589934592,
+      "radix_prefix_budget_bytes_per_gpu": 1073741824,
+      "central_aegis_budget_gib_per_gpu": 6,
+      "free_is_derived": true,
+      "overcommit_forbidden": true
+    },
+    "node_dram": {
+      "ledger_accounts": [
+        "runtime_reserve",
+        "hicache_primary",
+        "aegis_pending",
+        "aegis_committed",
+        "free"
+      ],
+      "runtime_reserve_bytes_per_node": 137438953472,
+      "hicache_primary_budget_bytes_per_node": 274877906944,
+      "central_aegis_budget_gib_per_node": 512,
+      "per_node_aegis_dram_quota_bytes": 549755813888,
+      "per_node_aegis_dram_quota_tokens": {
+        "qwen3-8b": 3728270,
+        "qwen3-32b": 2097152
+      },
+      "quota_binding_rule": "selected_gib_to_bytes_then_floor_by_logical_kv_bytes_v1",
+      "pool_scope": "per_node",
+      "global_aggregate_pool_forbidden": true,
+      "free_is_derived": true,
+      "overcommit_forbidden": true
+    },
+    "copy_resources": {
+      "gpu_copy_engines": {
+        "d2d_per_gpu": 1,
+        "d2h_per_gpu": 1,
+        "h2d_per_gpu": 1,
+        "full_duplex": false
+      },
+      "dram_lanes_per_node": {
+        "read": 1,
+        "write": 1,
+        "bandwidth_bytes_per_s": 40000000000,
+        "setup_ns": 1000,
+        "contention": "exclusive_reservation_calendar"
+      },
+      "links": {
+        "pcie": {
+          "peak_bandwidth_bytes_per_s": 25000000000,
+          "setup_ns": 2000,
+          "contention": "exclusive_reservation_calendar"
+        },
+        "nvlink_nvswitch": {
+          "peak_bandwidth_bytes_per_s": 100000000000,
+          "setup_ns": 1000,
+          "contention": "exclusive_reservation_calendar"
+        },
+        "nic_rdma": {
+          "peak_bandwidth_bytes_per_s": 25000000000,
+          "setup_ns": 3000,
+          "contention": "exclusive_reservation_calendar"
+        },
+        "cross_node_fabric": {
+          "peak_bandwidth_bytes_per_s": 25000000000,
+          "central_effective_bandwidth_bytes_per_s": 20000000000,
+          "setup_ns": 5000,
+          "contention": "exclusive_reservation_calendar"
+        }
+      },
+      "path_resources": {
+        "same_node_peer_hbm": [
+          "source_d2d_engine",
+          "nvlink_nvswitch",
+          "target_d2d_engine"
+        ],
+        "cross_node_peer_hbm": [
+          "source_d2d_engine",
+          "source_pcie",
+          "source_nic",
+          "cross_node_fabric",
+          "target_nic",
+          "target_pcie",
+          "target_d2d_engine"
+        ],
+        "source_to_node_dram": [
+          "source_d2h_engine",
+          "source_pcie",
+          "destination_dram_write_lane"
+        ],
+        "node_dram_to_recovery_gpu": [
+          "source_dram_read_lane",
+          "target_pcie",
+          "target_h2d_engine"
+        ]
+      }
+    },
+    "aegiskv": {
+      "central_policy": "aegiskv",
+      "ownership": "source_owned",
+      "tier_admission": {
+        "peer_hbm": "independent",
+        "node_dram": "independent",
+        "same_source_production_buffer": true
+      },
+      "allowed_copy_edges": [
+        "source_primary_to_peer_hbm",
+        "source_primary_to_node_dram",
+        "peer_hbm_to_recovery_gpu",
+        "node_dram_to_recovery_gpu"
+      ],
+      "forbidden_copy_edges": [
+        "peer_hbm_to_node_dram",
+        "node_dram_to_peer_hbm"
+      ],
+      "tier_states": [
+        "PENDING",
+        "COMMITTED",
+        "ABORTED",
+        "EVICTED",
+        "LOST"
+      ],
+      "all_pp_tp_shards_ack_before_commit": true,
+      "prefix_chunk_tokens": 4096,
+      "sealed_decode_chunk_tokens": 256,
+      "slack_landlord": {
+        "enabled": true,
+        "static_placement_supported": true
+      },
+      "aimd": {
+        "enabled": true,
+        "initial_alpha": 0.5,
+        "minimum_alpha": 0.1,
+        "maximum_alpha": 1.0,
+        "additive_increase": 0.05,
+        "multiplicative_decrease": 0.5,
+        "window_ms": 1000,
+        "quota_applies_only_to_aegis_hbm": true
+      }
+    },
+    "global_des": {
+      "kernel": "single_authoritative_min_heap",
+      "time_unit": "ns",
+      "event_sort_key": [
+        "timestamp_ns",
+        "priority",
+        "sequence"
+      ],
+      "priority_order": [
+        "failure_inject",
+        "route_fence",
+        "transfer_complete",
+        "batch_complete",
+        "request_arrival",
+        "rank_ready",
+        "control_window",
+        "resource_snapshot"
+      ],
+      "sequence_is_strictly_monotonic": true,
+      "lockstep_rank_clock_forbidden": true,
+      "resource_available_at_calendars": true,
+      "required_invariants": [
+        "global_event_order",
+        "deterministic_event_hash",
+        "per_gpu_hbm_capacity",
+        "per_node_dram_capacity",
+        "kv_extent_conservation",
+        "legal_state_transition",
+        "all_shards_ack_before_commit",
+        "no_hbm_to_dram_edge",
+        "independent_hbm_dram_admission",
+        "non_lockstep_dp_overlap"
+      ]
+    },
+    "provenance": {
+      "hardware_timing": {
+        "evidence_class": "modeled_not_calibrated",
+        "calibration_claim_permitted": false,
+        "modeled_execution_authorized": true,
+        "assumption_id": "a100-sxm4-40gb-nvlink-pcie-rdma-modeled-v1",
+        "source": "configs_v3/common/deployment.json#fixed/cluster+copy_resources",
+        "integrity_rule": "canonical_json_sha256_of_cluster_and_copy_resources_v1"
+      },
+      "simulator_revision": {
+        "required": true,
+        "binding_strategy": "runtime_implementation_content_sha256_v1",
+        "hardcoded_dirty_tree_revision_forbidden": true
+      },
+      "model_revisions": {
+        "required": true,
+        "binding_strategy": "frozen_json_then_cli_exact_snapshot_v1",
+        "missing_revision_fail_closed": true,
+        "revisions": {
+          "qwen3-8b": "b968826d9c46dd6066d109eabc6255188de91218",
+          "qwen3-32b": "9216db5781bf21249d130ec9da846c4624c16137"
+        },
+        "revision_sources": {
+          "qwen3-8b": "https://huggingface.co/Qwen/Qwen3-8B/commits/b968826d9c46dd6066d109eabc6255188de91218",
+          "qwen3-32b": "https://huggingface.co/Qwen/Qwen3-32B/commits/9216db5781bf21249d130ec9da846c4624c16137"
+        }
+      }
+    },
+    "output_contract": {
+      "evidence_class": "planned_offline_virtual_time_simulation",
+      "execution_claim_permitted": false,
+      "required_artifacts": {
+        "events.jsonl": "global_event",
+        "rank_steps.jsonl": "dp_pp_scheduler_step",
+        "gpu_hbm_timeseries.jsonl": "timestamp_gpu",
+        "node_dram_timeseries.jsonl": "timestamp_node",
+        "kv_extents.jsonl": "extent_tier_shard_state",
+        "transfers.jsonl": "transfer_job",
+        "requests.jsonl": "request",
+        "failures.jsonl": "failure",
+        "audit.json": "cell_invariants",
+        "manifest.json": "immutable_lineage"
+      },
+      "derived_plot_tables_may_not_replace_raw_events": true
+    }
+  },
+  "axes": {}
+}

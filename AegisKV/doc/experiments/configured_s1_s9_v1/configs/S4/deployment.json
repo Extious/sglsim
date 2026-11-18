@@ -1,0 +1,39 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S4",
+  "layer": "deployment",
+  "description": "Algorithm 1/2/3 ablation at the central topology",
+  "topology": {
+    "hardware": "NVIDIA A100 40 GiB modeled capacity",
+    "layout": "Qwen3-8B TP1/PP1",
+    "system_dp": 16,
+    "node_count": 2
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "algorithms": ["Algorithm 1 prediction", "Algorithm 2 protection control", "Algorithm 3 recovery"]
+  },
+  "axes": {
+    "algorithm": ["Algorithm 1", "Algorithm 2", "Algorithm 3"],
+    "variant": ["full", "ablation"]
+  },
+  "planned_cells": 18,
+  "unique_cells": 18,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s4_s5_targeted_v2.py",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s4_s5_targeted_v2/s4_paired_wct_ci.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s4_s5_targeted_v2/s4_audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s4_s5_targeted_v2/manifest.json",
+    "expected_rows": 12,
+    "plot_kind": "algorithm_ablation",
+    "figure_slug": "algorithm_ablation"
+  },
+  "evidence": {
+    "class": "modeled_metadata_des_preliminary",
+    "paper_ready": false,
+    "known_gaps": []
+  },
+  "matrix_note": "3 algorithms x full/ablation pair x 3 seeds"
+}

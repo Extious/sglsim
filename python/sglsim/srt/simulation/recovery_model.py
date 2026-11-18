@@ -32,12 +32,16 @@ def _default_restore_overhead_ms(
     recompute_tokens = max(token_count - restored_tokens, 0)
     if action == "recompute" or restored_tokens <= 0:
         return DEFAULT_RECOMPUTE_SETUP_MS + token_count * DEFAULT_RECOMPUTE_MS_PER_TOKEN
-    if action == "gpu_replica":
+    if action in {"gpu_replica", "l1_backup"}:
         return (
             DEFAULT_GPU_SETUP_MS
             + restored_tokens * DEFAULT_GPU_MS_PER_TOKEN
             + recompute_tokens * DEFAULT_RECOMPUTE_MS_PER_TOKEN
         )
+    if action == "l1_l2_backup":
+        # The rank-local controller supplies the exact combined timing.  This
+        # fallback conservatively uses the L2 path when called independently.
+        action = "l2_backup"
     return (
         DEFAULT_HOST_SETUP_MS
         + restored_tokens * DEFAULT_HOST_MS_PER_TOKEN
@@ -128,7 +132,13 @@ def aegis_restore_timing_source() -> str:
 
 def aegis_restore_data_plane(action: str) -> str:
     action = str(action or "").strip().lower()
-    if action in {"host_restore", "gpu_replica"}:
+    if action in {
+        "host_restore",
+        "gpu_replica",
+        "l1_backup",
+        "l2_backup",
+        "l1_l2_backup",
+    }:
         return "metadata_materialization"
     if action == "recompute":
         return "recompute"
@@ -165,7 +175,11 @@ def aegis_restore_overhead_ms(
             restored_tokens=restored_tokens,
         )
 
-    copy_path = "p2p_gpu0_to_gpu1" if action == "gpu_replica" else "h2d_pinned"
+    copy_path = (
+        "p2p_gpu0_to_gpu1"
+        if action in {"gpu_replica", "l1_backup"}
+        else "h2d_pinned"
+    )
     copy_points = list(table.get(copy_path, ()))
     if not copy_points:
         return _default_restore_overhead_ms(
@@ -174,7 +188,11 @@ def aegis_restore_overhead_ms(
             restored_tokens=restored_tokens,
         )
 
-    setup_ms = DEFAULT_GPU_SETUP_MS if action == "gpu_replica" else DEFAULT_HOST_SETUP_MS
+    setup_ms = (
+        DEFAULT_GPU_SETUP_MS
+        if action in {"gpu_replica", "l1_backup"}
+        else DEFAULT_HOST_SETUP_MS
+    )
     return (
         setup_ms
         + _interpolated_copy_ms(copy_points, restored_tokens)

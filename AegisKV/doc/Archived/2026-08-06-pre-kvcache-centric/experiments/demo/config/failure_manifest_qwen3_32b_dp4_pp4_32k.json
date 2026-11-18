@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "description": "Four fixed-rank GPU failures for the Qwen3-32B DP=4 PP=4 Real-CC <=32K experiment.",
+  "deployment": {
+    "nodes": 4,
+    "gpus_per_node": 4,
+    "dp_size": 4,
+    "pp_size": 4,
+    "failure_scope": "gpu",
+    "simulator_boundary": "pp_rank identifies the failed stage; current SGLSim makes the containing DP replica unavailable during replacement"
+  },
+  "events": [
+    {"event_id": "failure-01", "offset_s": 45.0, "dp_rank": 0, "pp_rank": 1, "duration_s": 12.0},
+    {"event_id": "failure-02", "offset_s": 120.0, "dp_rank": 1, "pp_rank": 3, "duration_s": 12.0},
+    {"event_id": "failure-03", "offset_s": 195.0, "dp_rank": 2, "pp_rank": 0, "duration_s": 12.0},
+    {"event_id": "failure-04", "offset_s": 270.0, "dp_rank": 3, "pp_rank": 2, "duration_s": 12.0}
+  ]
+}

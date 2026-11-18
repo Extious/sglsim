@@ -1,0 +1,78 @@
+<mxfile host="app.diagrams.net" modified="2026-08-10T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="kv-publication-comparison" name="KV publication comparison">
+    <mxGraphModel dx="1024" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="650" pageHeight="370" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="phase_prefill" value="Prefill" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#D9EAF7;strokeColor=#4C78A8;strokeWidth=1.8;fontSize=20;fontStyle=1;fontColor=#20364D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="215" y="12" width="105" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="phase_decode" value="Decode / Thinking" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FDE8C8;strokeColor=#D78B00;strokeWidth=1.8;fontSize=20;fontStyle=1;fontColor=#6E4600;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="320" y="12" width="215" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="phase_finish" value="Finish" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#E8EAF0;strokeColor=#7B8794;strokeWidth=1.8;fontSize=20;fontStyle=1;fontColor=#364152;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="535" y="12" width="100" height="42" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="failure_text" value="GPU failure  t_f" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;fontColor=#B42318;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="375" y="62" width="160" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="vllm_lane" value="" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F8FBFF;strokeColor=#B8CBE5;strokeWidth=1.5;" parent="1" vertex="1">
+          <mxGeometry x="10" y="94" width="630" height="94" as="geometry"/>
+        </mxCell>
+        <mxCell id="vllm_name" value="vLLM +&lt;br&gt;Mooncake" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=22;fontStyle=1;fontColor=#224B75;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="24" y="103" width="178" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="vllm_scope" value="shown Prefill-publish path" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=15;fontColor=#52677D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="24" y="158" width="178" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="vllm_prefix" value="shared-Store&lt;br&gt;prefix" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#DDF2E5;strokeColor=#43A047;strokeWidth=1.8;fontSize=16;fontStyle=1;fontColor=#246B36;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="215" y="116" width="105" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="vllm_tail" value="live Decode tail" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FDE9E7;strokeColor=#D95C59;strokeWidth=1.8;dashed=1;dashPattern=5 3;fontSize=16;fontStyle=1;fontColor=#8C332F;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="320" y="116" width="135" height="54" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sglang_lane" value="" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FCFAFF;strokeColor=#CCB9DE;strokeWidth=1.5;" parent="1" vertex="1">
+          <mxGeometry x="10" y="199" width="630" height="102" as="geometry"/>
+        </mxCell>
+        <mxCell id="sglang_name" value="SGLang&lt;br&gt;HiCache" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=22;fontStyle=1;fontColor=#53346E;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="24" y="207" width="178" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="sglang_scope" value="shown write-through path" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=15;fontColor=#6C5A7A;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="24" y="260" width="178" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="sglang_prefix" value="available prefix" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#DDF2E5;strokeColor=#43A047;strokeWidth=1.8;fontSize=16;fontStyle=1;fontColor=#246B36;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="215" y="221" width="105" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="sglang_tail" value="live Decode tail" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FDE9E7;strokeColor=#D95C59;strokeWidth=1.8;dashed=1;dashPattern=5 3;fontSize=16;fontStyle=1;fontColor=#8C332F;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="320" y="221" width="135" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="finish_event" style="edgeStyle=none;html=1;endArrow=none;dashed=1;dashPattern=4 3;strokeColor=#7A5A9A;strokeWidth=1.8;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="535" y="212" as="sourcePoint"/>
+            <mxPoint x="535" y="270" as="targetPoint"/>
+            <Array as="points"><mxPoint x="535" y="241"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="finish_event_text" value="write-through ACK" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=15;fontStyle=1;fontColor=#65447F;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="468" y="275" width="164" height="18" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="failure_line" style="edgeStyle=none;html=1;endArrow=none;dashed=1;dashPattern=6 4;strokeColor=#C62828;strokeWidth=2.2;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="455" y="86" as="sourcePoint"/>
+            <mxPoint x="455" y="293" as="targetPoint"/>
+            <Array as="points"><mxPoint x="455" y="190"/></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="takeaway" value="Retry = reuse prefix + recompute live tail" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FFF4E0;strokeColor=#D9A441;strokeWidth=1.7;fontSize=20;fontStyle=1;fontColor=#694B16;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="65" y="319" width="520" height="36" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

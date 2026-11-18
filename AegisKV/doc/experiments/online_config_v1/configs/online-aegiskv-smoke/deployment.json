@@ -1,0 +1,62 @@
+{
+  "schema_version": "aegiskv.online-experiment.v1",
+  "description": "Online wall-clock metadata deployment with two SGLSim DP schedulers.",
+  "experiment_name": "online-aegiskv-smoke",
+  "model_path": "mock-model",
+  "host": "127.0.0.1",
+  "port": 30100,
+  "platform": {
+    "accelerator": {
+      "name": "a100_sxm",
+      "hbm_capacity_gb": 80
+    },
+    "disk_read_bandwidth_gb": 8,
+    "disk_write_bandwidth_gb": 8,
+    "memory_read_bandwidth_gb": 64,
+    "memory_write_bandwidth_gb": 64,
+    "num_device_per_node": 8
+  },
+  "cache": {
+    "page_size": 1,
+    "enable_hierarchical_cache": true,
+    "hicache_ratio": 2.0,
+    "hicache_size_gb": 0,
+    "l3_capacity_pages": 0,
+    "kv_capacity_scale_factor": 1.0,
+    "hicache_write_policy": "write_through_selective"
+  },
+  "predictor": {
+    "name": "aiconfigurator",
+    "database_mode": "SILICON",
+    "prefill_scale_factor": 1.0,
+    "decode_scale_factor": 1.0,
+    "forward_scale": 1.0
+  },
+  "scheduler": {
+    "tp_size": 1,
+    "pp_size": 1,
+    "dp_size": 2,
+    "max_running_requests": null,
+    "load_balance_method": "round_robin",
+    "enable_routing_key_affinity": true,
+    "decode_log_interval": 8,
+    "backend_name": "sglang",
+    "backend_version": "0.5.10",
+    "mem_fraction_static": 0.5,
+    "init_new_token_ratio": 0.65,
+    "disable_overlap_schedule": false
+  },
+  "communication": {
+    "mode": "alpha_beta"
+  },
+  "aegiskv": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "policy": "aegiskv",
+    "ablation": "",
+    "gpu_budget_fraction": 0.5,
+    "critical_pressure": 1.0,
+    "alpha_policy_path": "",
+    "online_alpha_adapter": false,
+    "backup_kv": true
+  }
+}

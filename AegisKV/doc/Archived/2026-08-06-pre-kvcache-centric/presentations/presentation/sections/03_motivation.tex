@@ -1,0 +1,58 @@
+% !TeX root = ../paper_outline.tex
+\section{算法 1：工作流松弛时间估计}
+
+\begin{frame}{算法 1 | 工作流示例：多轮节点、扇出/扇入与松弛时间}
+  \centering
+  \resizebox{0.98\linewidth}{!}{%
+  \begin{tikzpicture}[
+    x=1cm,y=1cm,
+    n/.style={draw=AegisGray,fill=AegisGrayLight,rounded corners=2pt,
+              minimum width=2.02cm,minimum height=1.18cm,align=left,
+              inner sep=4pt,font=\tiny},
+    cp/.style={n,draw=AegisRed,fill=AegisRedLight,very thick},
+    arr/.style={-{Stealth[length=1.8mm]},thick,draw=AegisGray},
+    cparr/.style={-{Stealth[length=1.8mm]},very thick,draw=AegisRed}
+  ]
+    \node[cp] (m) at (0,0)
+      {\textbf{主规划者}\\T3 委派：1s\\T4 跟进：2s\\\textbf{剩余 3s · 松弛 0s}};
+
+    \node[n] (a) at (3.05,2.0)
+      {\textbf{A · 研究者-1}\\T1 搜索：4s\\T2 阅读：3s\\T3 汇总：2s\\\textbf{剩余 9s · 松弛 4s}};
+    \node[n] (b) at (3.05,0)
+      {\textbf{B · 研究者-2}\\T1 搜索：2s\\T2 验证：4s\\T3 等待：0s\\\textbf{剩余 6s · 松弛 6s}};
+    \node[cp] (c) at (3.05,-2.0)
+      {\textbf{C · 编码}\\T1 检查：3s\\T2 修改：5s\\T3 测试：4s\\\textbf{剩余 12s · 松弛 0s}};
+
+    \node[n] (d) at (6.15,1.15)
+      {\textbf{D · 审阅者}\\T1 审阅：3s\\T2 反馈：2s\\\textbf{剩余 5s · 松弛 4s}};
+    \node[cp] (e) at (6.15,-1.15)
+      {\textbf{E · 汇总者}\\T1 合并：2s\\T2 修订：4s\\\textbf{剩余 6s · 松弛 0s}};
+
+    \node[cp] (f) at (9.15,0)
+      {\textbf{F · 定稿者}\\T1 撰写：2s\\T2 校验：1s\\\textbf{剩余 3s · 松弛 0s}};
+
+    \draw[arr] (m) -- (a);
+    \draw[arr] (m) -- (b);
+    \draw[cparr] (m) -- (c);
+    \draw[arr] (a) -- (d);
+    \draw[arr] (b) -- (d);
+    \draw[arr] (b) -- (e);
+    \draw[cparr] (c) -- (e);
+    \draw[arr] (d) -- (f);
+    \draw[cparr] (e) -- (f);
+  \end{tikzpicture}
+  }
+
+  \vspace{0.08cm}
+  \scriptsize
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \textbf{图中结果：}最长路径为 Main $\rightarrow$ C $\rightarrow$ E $\rightarrow$ F，
+      剩余 WCT 为 24s；红色节点的松弛时间为 0。
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{运行时更新：}任一轮次完成、执行片段状态或时长分布变化后，
+      在同一个固定 DAG 的剩余子图上重新计算关键路径与节点松弛时间。
+    \end{column}
+  \end{columns}
+\end{frame}

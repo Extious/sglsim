@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-active-hbm-v3-paired-central-20260827",
+  "status": "PREREGISTERED_BEFORE_PAIRED_PILOT_RESULTS",
+  "purpose": "Evaluate the no-oracle active-serving/Peer-HBM shared-capacity mechanism on a common workflow universe and common fault probes; changed-only metrics are secondary diagnostics.",
+  "parent_capacity_protocol": "active_hbm_v3_protocol.json",
+  "parent_capacity_protocol_sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f",
+  "v3_des": "active_hbm_v3.py",
+  "v3_des_sha256": "56b331e98032fe1ffa0d4a873458feb332e55550c1840e4d858a1081fd781a05",
+  "core_runner": "run_preliminary.py",
+  "core_runner_sha256": "0bb1dfb06c21dabb3e6460c6005ecea3ee1baa52db225f07b26660bb36a192fb",
+  "matrix": {
+    "model": "Qwen3-8B TP1 PP1",
+    "system_dp": 16,
+    "context_tokens": 40960,
+    "active_requests_per_gpu": 16,
+    "arrival_cutoff_ms": 90000.0,
+    "fault_probes_per_cell": 24,
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "policies": [
+      "Native Mooncake",
+      "AegisKV",
+      "AegisKV no Algorithm 1",
+      "AegisKV no Algorithm 2",
+      "AegisKV no Algorithm 3"
+    ],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "expected_cells": 30
+  },
+  "primary_estimands": [
+    "all_workflow_wct_mean_ms over workflow_count times fault_probe_count observations",
+    "all_workflow_added_wct_mean_ms over the identical denominator",
+    "healthy_wct_mean_ms over the common workflow universe"
+  ],
+  "secondary_diagnostic_estimands": [
+    "changed_workflow_fraction",
+    "changed-only WCT and added-WCT within each policy",
+    "capacity, queue, protection, control, and recovery mechanism counters"
+  ],
+  "hard_gates": {
+    "same_workflow_universe_sha256_across_policies_for_each_seed": true,
+    "same_fault_probe_tuple_sha256_across_policies_for_each_seed_and_failure_type": true,
+    "raw_id_and_probe_hashes_match_summary": true,
+    "all_workflow_observations_equals_workflow_count_times_probe_count": true,
+    "fixed_arrival_and_paired_seeds": true,
+    "fault_wct_never_below_healthy_wct": true,
+    "empty_fault_replay_exact_within_ms": 1e-7,
+    "capacity_violation_count": 0,
+    "dispatch_uses_no_realized_output_oracle": true,
+    "request_max_output_tokens": 4096,
+    "no_performance_win_threshold": true
+  },
+  "modeled_unmeasured_timing_inputs": {
+    "aegis_worker_fence_activation_ms": 500.0,
+    "native_replacement_ms": 60000.0
+  },
+  "evidence_boundary": "Preliminary metadata DES mechanism diagnostic, not a physical A100 measurement and not paper-ready. Native Mooncake is a modeled approximation. The 500 ms activation and 60 s replacement inputs are modeled/unmeasured; the single 60 s point is not a physical performance claim."
+}

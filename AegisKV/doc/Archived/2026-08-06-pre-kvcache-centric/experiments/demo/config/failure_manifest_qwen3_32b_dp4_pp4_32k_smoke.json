@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "description": "Smoke-only early GPU failure for Qwen3-32B DP=4 PP=4 recovery-path validation; not formal evidence.",
+  "deployment": {
+    "nodes": 4,
+    "gpus_per_node": 4,
+    "dp_size": 4,
+    "pp_size": 4,
+    "failure_scope": "gpu",
+    "simulator_boundary": "pp_rank identifies the failed stage; current SGLSim makes the containing DP replica unavailable during replacement"
+  },
+  "events": [
+    {
+      "event_id": "smoke-failure-01",
+      "offset_s": 6.0,
+      "dp_rank": 0,
+      "pp_rank": 1,
+      "duration_s": 3.0
+    }
+  ]
+}

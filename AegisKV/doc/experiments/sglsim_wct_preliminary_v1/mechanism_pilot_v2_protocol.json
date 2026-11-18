@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-mechanism-pilot-v2-20260826",
+  "status": "PREREGISTERED_BEFORE_RESULTS",
+  "parent_protocol": "protocol.json",
+  "parent_protocol_sha256": "7535a7bf7162f036d0154a67f25608bcb43c0f59526593f4f06e37515fcca9c9",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "purpose": "mechanism-first high-pressure audit of serving burden, source-owned recovery, failure type, and Algorithms 1/2/3; no direction-of-effect or victory threshold is registered",
+  "primary_estimand": "DES WCT among workflows whose completion changes under a paired one-fault replay, split by source_worker_gpu versus source_node",
+  "secondary_estimands": [
+    "healthy DES WCT including modeled normal-path source-copy burden",
+    "added WCT among causally changed workflows",
+    "capacity admission, eviction, copy queue, committed recovery, recompute, and AIMD trigger counts",
+    "official-rate sparse Poisson mixture retained only as a secondary derived statistic"
+  ],
+  "evidence_boundary": "SGLSim metadata DES preliminary mechanism evidence. Both the 500 ms fence-plus-activation and 10/30/60 s replacement inputs are explicitly modeled and unmeasured. The main 60 s cell is a mechanism upper-bound input, not a paper-ready advantage claim. Main hardware remains an A100 40 GiB model; RTX4090 physical data is used only by the separate calibration diagnostic.",
+  "locked_matrix": {
+    "model": "qwen3_8b",
+    "system_dp": 16,
+    "context_tokens": 40960,
+    "active_requests_per_gpu": 16,
+    "arrival_cutoff_ms": 90000.0,
+    "fault_probes_per_seed": 24,
+    "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0],
+    "policies": [
+      "Native Mooncake",
+      "AegisKV",
+      "AegisKV no Algorithm 1",
+      "AegisKV no Algorithm 2",
+      "AegisKV no Algorithm 3"
+    ],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "probe_type_schedule": ["source_worker_gpu", "source_node"],
+    "topology": {
+      "peer_hbm": "same_node",
+      "dram": "remote"
+    }
+  },
+  "overrides": {
+    "models": {
+      "qwen3_8b": {
+        "center_system_dp": 16
+      }
+    },
+    "workload": {
+      "center_context_tokens": 40960,
+      "center_active_requests_per_gpu": 16,
+      "active_requests_per_gpu": [16]
+    },
+    "hardware": {
+      "copy_bandwidth_gb_s": {
+        "peer_hbm_same_node": 50.0,
+        "peer_hbm_cross_node": 10.0,
+        "dram_local": 16.0,
+        "dram_remote": 10.0
+      },
+      "load_bandwidth_gb_s": {
+        "peer_hbm_same_node": 50.0,
+        "peer_hbm_cross_node": 10.0,
+        "dram_local": 16.0,
+        "dram_remote": 10.0
+      }
+    },
+    "failure_model": {
+      "probe_type_schedule": ["source_worker_gpu", "source_node"],
+      "policy_failover": {
+        "replacement_delay_ms": 60000.0,
+        "replacement_delay_provenance": "modeled unmeasured sensitivity input; no Mooncake physical downtime source",
+        "fence_activation_delay_ms": 500.0,
+        "fence_activation_provenance": "modeled unmeasured mechanism input; not an A100 or production Mooncake measurement",
+        "policy_modes": {
+          "Native Mooncake": {
+            "source_worker_gpu": "replacement_wait",
+            "source_node": "replacement_wait"
+          },
+          "AegisKV": {
+            "source_worker_gpu": "prebound_fence_activation",
+            "source_node": "replacement_wait"
+          },
+          "AegisKV no Algorithm 1": {
+            "source_worker_gpu": "prebound_fence_activation",
+            "source_node": "replacement_wait"
+          },
+          "AegisKV no Algorithm 2": {
+            "source_worker_gpu": "prebound_fence_activation",
+            "source_node": "replacement_wait"
+          },
+          "AegisKV no Algorithm 3": {
+            "source_worker_gpu": "prebound_fence_activation",
+            "source_node": "replacement_wait"
+          }
+        }
+      }
+    },
+    "normal_path_copy_burden": {
+      "mode": "own_transfer_service",
+      "semantics": "Each request is charged the registered visible fraction of its own admitted source-copy transfer critical path. Copy-lane wait remains in commit timing and is reported separately, but is not repeatedly charged to every queued request as serving burden.",
+      "visible_fraction_of_copy_critical_path": 0.05,
+      "maximum_fraction_of_request_service": 0.10,
+      "schedule_fixed_point": {
+        "enabled": true,
+        "maximum_iterations": 12,
+        "tolerance_ms": 1e-06
+      }
+    },
+    "runtime_overrides": {
+      "topology": {
+        "peer_hbm": "same_node",
+        "dram": "remote"
+      },
+      "record_occupancy_trace": true
+    }
+  },
+  "postregistration_sensitivity_diagnostic": {
+    "status": "LOCKED_BEFORE_PILOT_RESULTS_AFTER_INDEPENDENT_AUDIT",
+    "policy": "Native Mooncake",
+    "replacement_delay_ms": [10000.0, 30000.0, 60000.0],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "reuse_primary_60000ms_cells": true,
+    "fixed_arrivals_and_probes": true,
+    "no_performance_win_gate": true,
+    "evidence_boundary": "All three replacement durations are modeled and unmeasured. This is a sensitivity diagnostic, not Mooncake downtime measurement."
+  },
+  "registered_checks": {
+    "no_performance_win_gate": true,
+    "empty_fault_replay_preserves_base_completion": true,
+    "fault_replay_never_reduces_wct": true,
+    "fixed_arrival_and_three_control_opportunities": true,
+    "paired_seed_and_probe_identity": true,
+    "copy_and_load_bandwidth_tables_are_separate": true,
+    "worker_gpu_failover_contract_differs_from_native": true,
+    "same_node_source_node_failure_invalidates_peer_hbm": true,
+    "alg1_slack_alg2_admission_alg3_aimd_switches_are_exercised": true,
+    "capacity_pressure_or_rejection_is_exercised": true
+  }
+}

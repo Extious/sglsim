@@ -76,6 +76,36 @@ def test_build_prepared_request_carries_aegis_policy_metadata():
     assert payload["simulation"]["backup_kv"] is True
 
 
+def test_failover_peer_retry_targets_gpu_replica_rank():
+    prepared = PreparedRequest(
+        rid="7",
+        prompt="q",
+        prompt_len=10,
+        output_len=2,
+        body=b"",
+        model_path="mock-model",
+        agent_id="agent-7",
+        critical_agent=True,
+        dp_size=4,
+    )
+
+    simulation = _failover_replay_simulation(
+        prepared,
+        turn_idx=0,
+        sim_stats={
+            "aegis_candidate_failed_dp_rank": 0,
+            "aegis_candidate_pre_failure_output_tokens": 1,
+            "aegis_candidate_pre_failure_total_tokens": 11,
+            "aegis_gpu_replica_dp_rank": 3,
+        },
+        retry_policy="peer",
+    )
+
+    assert simulation["force_dp_rank"] == 3
+    assert simulation["retry_dp_rank"] == 3
+    assert simulation["gpu_replica_dp_rank"] == 3
+
+
 def test_multi_turn_session_posts_chat_per_turn(monkeypatch):
     calls: list[dict] = []
 
@@ -156,8 +186,7 @@ def test_staged_workflow_client_respects_stage_barriers(monkeypatch):
         port,
         prepared,
         semaphore,
-        failover_replay,
-        failover_replay_critical_only,
+        failover_control,
         failover_injection,
         failover_retry_rank_offset,
         failover_retry_policy,
@@ -206,6 +235,10 @@ def test_staged_workflow_client_respects_stage_barriers(monkeypatch):
             failover_injection="soft",
             failover_retry_rank_offset=1,
             failover_retry_policy="",
+            failure_injection_count=None,
+            failure_target_stage_id=None,
+            failure_target_stage_local_agent_index=None,
+            failure_target_turn_idx=None,
         )
     )
 
@@ -221,6 +254,109 @@ def test_staged_workflow_client_respects_stage_barriers(monkeypatch):
     assert max(
         positions[("start", rid, 1)] for rid in ("s1a", "s1b", "s1c")
     ) < min(positions[("end", rid, 1)] for rid in ("s1a", "s1b", "s1c"))
+
+
+def test_failover_replay_injection_count_limits_retries(monkeypatch):
+    def response_for(prepared: PreparedRequest, *, replay: bool) -> dict:
+        return {
+            "sim_stats": {
+                "status": "completed",
+                "output_length": prepared.output_len,
+                "aegis_candidate_retry": not replay,
+                "aegis_candidate_failed_dp_rank": 0,
+                "aegis_candidate_pre_failure_output_tokens": 1,
+                "aegis_candidate_pre_failure_total_tokens": 32,
+                "aegis_failover_replay": replay,
+                "aegis_cross_rank_retry": replay,
+                "stage_id": prepared.stage_id,
+                "stage_width": prepared.stage_width,
+                "stage_local_agent_index": prepared.stage_local_agent_index,
+                "agent_id": prepared.agent_id,
+            }
+        }
+
+    def fake_post_completion(host, port, prepared, timeout_s=7200.0):
+        return response_for(prepared, replay=False), 0.01
+
+    def fake_replay(host, port, prepared, *, failed_rank, injection, timeout_s=7200.0):
+        return response_for(prepared, replay=True), 0.02, True
+
+    monkeypatch.setattr(
+        "benchmark.synthesis_requests.client.post_completions_sync",
+        fake_post_completion,
+    )
+    monkeypatch.setattr(
+        "benchmark.synthesis_requests.client.post_completion_failover_replay_sync",
+        fake_replay,
+    )
+
+    def req(rid: str) -> PreparedRequest:
+        return PreparedRequest(
+            rid=rid,
+            prompt="q",
+            prompt_len=8,
+            output_len=2,
+            body=json.dumps({"simulation": {}}).encode("utf-8"),
+            model_path="mock-model",
+            agent_id=rid,
+            critical_agent=True,
+            dp_size=2,
+        )
+
+    rows = asyncio.run(
+        _run_client_async(
+            "127.0.0.1",
+            30000,
+            [req("a"), req("b")],
+            max_concurrency=1,
+            failover_replay=True,
+            failover_replay_critical_only=True,
+            failover_injection="soft",
+            failover_retry_rank_offset=1,
+            failover_retry_policy="peer",
+            failure_injection_count=1,
+            failure_target_stage_id=None,
+            failure_target_stage_local_agent_index=None,
+            failure_target_turn_idx=None,
+        )
+    )
+
+    assert [row.rid for row in rows] == ["a", "a-retry", "b"]
+    assert sum(row.aegis_failover_replay for row in rows) == 1
+
+
+def test_failover_replay_uses_assigned_rank_when_candidate_failed_rank_missing():
+    prepared = PreparedRequest(
+        rid="9",
+        prompt="q",
+        prompt_len=40960,
+        output_len=128,
+        body=b"",
+        model_path="mock-model",
+        agent_id="wf-s1-a1",
+        critical_agent=False,
+        stage_id=1,
+        stage_width=3,
+        stage_local_agent_index=1,
+        failure_after_output_tokens=128,
+        dp_size=8,
+    )
+    sim = _failover_replay_simulation(
+        prepared,
+        turn_idx=0,
+        sim_stats={
+            "aegis_candidate_failed_dp_rank": -1,
+            "aegis_assigned_dp_rank": 3,
+            "aegis_candidate_pre_failure_output_tokens": 0,
+            "aegis_candidate_pre_failure_total_tokens": 0,
+            "input_length": 40960,
+            "output_length": 128,
+        },
+        retry_policy="peer",
+    )
+    assert sim["failed_dp_rank"] == 3
+    assert sim["failure_after_output_tokens"] == 128
+    assert sim["pre_failure_total_tokens"] == 40960 + 128
 
 
 def test_failover_replay_retry_rank_offset_defaults_to_peer_rank():

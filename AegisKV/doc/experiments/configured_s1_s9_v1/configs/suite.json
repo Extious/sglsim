@@ -1,0 +1,18 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "description": "Configuration-driven AegisKV S1-S9 experiment and figure suite",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "groups": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"],
+  "nominal_cells_before_reuse": 843,
+  "minimum_unique_cells": 783,
+  "reuse_rule": "S8 consumes the same 60 registered ten-seed cells as S1",
+  "reference_threads": [
+    {
+      "thread_id": "01a005a8-95b8-7c41-af1b-50d06b711944",
+      "used_for": ["Application/control-plane/Worker responsibility split", "physical-pilot evidence boundaries"],
+      "not_merged_into_sglsim_figures": "one-node RTX4090 DP=2 and separate two-node PP=2 Mooncake pilots"
+    }
+  ],
+  "semantic_precedence": "The current source_owned_independent_hbm_dram_v2 design overrides historical Peer-HBM-requires-DRAM and target-owned writeback semantics.",
+  "evidence_boundary": "S1-S8 consume the current audited active_hbm_v313 SGLSim metadata-DES outputs. S9 consumes an independent RTX4090 physical holdout joined to its frozen fitted simulator. No output is promoted to paper_ready or A100 physical evidence."
+}

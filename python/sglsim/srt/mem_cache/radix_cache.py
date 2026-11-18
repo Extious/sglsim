@@ -96,6 +96,28 @@ class RadixCache:
         TreeNode.counter = 0
         self.__init__(self.page_size)
 
+    def clear_device_residency(self) -> int:
+        """Drop all GPU-resident KV while preserving the radix and Host KV.
+
+        A transient GPU failure destroys L1 KV, but it does not destroy the
+        process-independent Host tier.  Keeping the tree and ``host_value``
+        fields allows a recovered rank to discover and load back its L2 copy.
+        This operation is only valid while the rank has no active requests.
+        """
+
+        cleared_tokens = 0
+        for node in self._nodes.values():
+            if node is self.root_node:
+                continue
+            if node.value is not None:
+                cleared_tokens += len(node.key)
+                node.value = None
+            node.lock_ref = 0
+        self.root_node.value = []
+        self.root_node.lock_ref = 1
+        self.reconcile_accounting()
+        return cleared_tokens
+
     def get_node(self, node_id: int | None) -> TreeNode | None:
         if node_id is None:
             return None
@@ -467,6 +489,12 @@ class RadixCache:
                 continue
             if not node.backuped:
                 backup_fn(node)
+            # Pinned SGLang blocks write-back eviction until D2H completion.
+            # The online simulator materializes host metadata synchronously,
+            # whereas offline GlobalDES keeps it provisional until the ACK.
+            # In that mode, retain the source L1 pages and retry after ACK.
+            if not node.backuped:
+                continue
             pages, count = self._evict_backuped(node, device_pool_pages)
             freed.extend(pages)
             num_evicted += count

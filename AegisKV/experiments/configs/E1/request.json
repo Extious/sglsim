@@ -1,0 +1,52 @@
+{
+  "extends": "../common/request.json",
+  "group": "E1",
+  "layer": "request",
+  "description": "External-validity replay of public AgentX/Weka multi-agent DAGs with causal Slack only",
+  "sources": ["agentx_methodology", "aiperf_weka", "agentx_artifact_audit", "weka_causal_source", "qwen3_8b_config"],
+  "workload": {
+    "profile": "weka_agentx_causal",
+    "dataset_id": "semianalysisai/cc-traces-weka-062126",
+    "artifact": "../doc/Archived/2026-08-06-pre-kvcache-centric/presentations/presentation/experiments/sglsim_large/traces/cc-traces-weka-062126/traces.materialized.jsonl",
+    "sha256": "29b6a19e751ff5230771519aab755f80a0f43a4ba9cf96b72d3a6a437ec99276",
+    "size_bytes": 1847151435,
+    "source_workflow_count": 393,
+    "source_request_count": 98827,
+    "sampling_unit": "weka_agentx_workflow",
+    "workflows_per_seed": 2,
+    "minimum_requests_per_workflow": 2,
+    "maximum_requests_per_workflow": 128,
+    "require_observed_parallel_stage": true,
+    "sampling_mode": "disjoint_seed_partition_without_replacement",
+    "sampling_seed_base": 2026082900,
+    "sampling_partition_salt": "aegiskv-agentx-external-validity-v1",
+    "arrival_model": "recorded_intra_workflow_fixed_schedule_plus_fixed_workflow_starts",
+    "fixed_workflow_start_interval_ms": 2000,
+    "arrival_evidence_class": "artifact_observation_with_controlled_fixed_workflow_interleave",
+    "context_projection": "rank_preserving_scale_to_half_cap_median_then_clip",
+    "source_median_input_tokens": 142016,
+    "context_tokens": 16384,
+    "output_cap_tokens": 2048,
+    "prefix_semantics": "longest_hash_block_prefix_with_prior_same_agent_request",
+    "workflow_completion_unit": "weka_agentx_workflow",
+    "causal_slack_predictor": {
+      "kind": "workflow_disjoint_dual_head_gbdt_plus_cpm",
+      "folds": 5,
+      "split_salt": "aegiskv-weka-crossfit-v1",
+      "interval_coverage": 0.95,
+      "calibration_unit": "workflow_max_absolute_residual",
+      "blend_tau_rounds": 2.0,
+      "gbdt": {
+        "estimators": 48,
+        "learning_rate": 0.06,
+        "max_depth": 3,
+        "min_leaf": 48,
+        "max_bins": 32,
+        "min_gain": 1e-9
+      },
+      "future_information": false,
+      "unmodeled_request_behavior": "fail_close_zero"
+    }
+  },
+  "axes": {"seed": [2026082900, 2026082901, 2026082902, 2026082903, 2026082904, 2026082905, 2026082906, 2026082907, 2026082908, 2026082909]}
+}

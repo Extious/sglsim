@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sglsim-aegiskv-targeted-benefit-v1-20260826",
+  "status": "LOCKED_CONFIRMATORY_FOLLOWUP_AFTER_EXPLORATORY_DIAGNOSTIC",
+  "paper_ready": false,
+  "parent_protocol": "protocol.json",
+  "parent_design_semantics": "source_owned_independent_hbm_dram_v2",
+  "purpose": "Measure the failure-conditioned WCT regime AegisKV is designed for without changing or replacing the broad preliminary matrix.",
+  "selection_disclosure": "This rectangular follow-up was locked after inspecting the broad campaign and exploratory diagnostics. It is targeted preliminary evidence, not an independently preregistered primary result.",
+  "model": {
+    "name": "Qwen3-8B FP16",
+    "system_dp": 64,
+    "tp": 1,
+    "pp": 1,
+    "context_tokens": 40960,
+    "output_distribution_from_parent": true
+  },
+  "hardware_model": {
+    "gpu": "A100 40GB",
+    "peer_hbm_topology": "same_node",
+    "peer_hbm_bandwidth_gb_s": 50.0,
+    "dram_topology": "remote",
+    "dram_bandwidth_gb_s": [5.0, 10.0, 16.0],
+    "coverage_note": "AegisKV retains the same remote DRAM path as Native Mooncake and adds same-node Peer-HBM for isolated worker/GPU failure."
+  },
+  "failure_model": {
+    "types": ["source_worker_gpu"],
+    "probe_count_per_cell": 24,
+    "replacement_delay_ms": [0.0, 500.0],
+    "interpretation": "Warm replacement is already available; WCT isolates KV recovery and queue propagation. The 500 ms cells include a common takeover cost for every policy."
+  },
+  "workload": {
+    "workflows_per_cell": 256,
+    "active_requests_per_gpu": [1, 2, 4]
+  },
+  "controller": {
+    "initial_alpha": 0.3,
+    "maximum_alpha": 0.3,
+    "minimum_alpha": 0.0,
+    "visible_copy_burden_fraction": 0.02,
+    "visible_copy_burden_cap_fraction_of_service": 0.1
+  },
+  "paired_seeds": [2026082600, 2026082601, 2026082602, 2026082603, 2026082604],
+  "rectangular_matrix_policies": ["Native Mooncake", "AegisKV"],
+  "primary_cell": {
+    "dram_bandwidth_gb_s": 5.0,
+    "replacement_delay_ms": 500.0,
+    "active_requests_per_gpu": 2
+  },
+  "primary_cell_additional_baselines": ["Static FCFS", "DejaVu", "KevlarFlow", "GhostServe"],
+  "estimands": {
+    "primary": "Paired mean affected-workflow WCT reduction versus modeled Native Mooncake over the union of workflows affected in either policy.",
+    "secondary": [
+      "Paired p95 affected-workflow WCT reduction",
+      "Pairwise workflow win fraction",
+      "Healthy whole-workload mean WCT overhead"
+    ]
+  },
+  "integrity_gates": {
+    "same_workflow_and_probe_tuple": true,
+    "all_probes_are_source_worker_gpu": true,
+    "source_owned_independent_paths": true,
+    "zero_target_owned_or_hbm_to_dram": true,
+    "complete_rectangular_matrix": true,
+    "no_performance_threshold_for_audit_pass": true
+  },
+  "evidence_boundary": "Targeted SGLSim metadata DES preliminary result. It is not physical A100 evidence, not production Mooncake failover, not paper-ready, and must be reported beside the broad near-null matrix and the selection disclosure."
+}

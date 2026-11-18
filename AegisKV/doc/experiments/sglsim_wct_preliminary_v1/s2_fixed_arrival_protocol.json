@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "experiment_id": "sglsim-wct-s2-fixed-arrival-v2-20260826",
+  "parent_protocol": "protocol.json",
+  "parent_design_semantics": "source_owned_independent_hbm_dram_v2",
+  "purpose": "remove concurrency-dependent trace-duration and AIMD-window confounding from S2",
+  "arrival_cutoff_ms": 90000.0,
+  "active_requests_per_gpu": [1, 2, 4, 8, 16],
+  "policies": ["Native Mooncake", "AegisKV"],
+  "paired_seeds": [2026082600, 2026082601, 2026082602],
+  "fault_probes_per_seed": 24,
+  "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0],
+  "pressure_exposure_contract": "identical 90-second arrival cutoff and exactly three 30-second controller opportunities for every cell; completion drains after 90 seconds without further control, and pressure fraction is reported rather than forced equal because concurrency is the treatment axis",
+  "evidence_boundary": "SGLSim metadata DES preliminary fixed-arrival sensitivity; not physical A100 evidence. Failure-rate aggregation uses the common 90-second exposure and the parent protocol's sparse-rate first-order Poisson mixture."
+}

@@ -42,6 +42,7 @@ class ClientConfig:
     gsp_num_turns: int
     gsp_ordered: bool
     gsp_workflow_shape: tuple[int, ...] = ()
+    gsp_stage_context_lens: tuple[int, ...] = ()
     gsp_stage_long_decode_agent_index: int = 0
     gsp_long_decode_output_multiplier: float = 4.0
     num_prompts: int | None = None
@@ -57,12 +58,40 @@ class ClientConfig:
     gsp_aegis_gpu_budget_fraction: float | None = None
     gsp_aegis_critical_pressure: float | None = None
     gsp_alpha_policy_path: str = ""
+    gsp_aegis_online_alpha_adapter: bool = False
     gsp_failure_rate_per_window: float | None = None
     gsp_failure_after_output_tokens: int | None = None
+    gsp_failure_injection_count: int | None = None
+    gsp_failure_target_stage_id: int | None = None
+    gsp_failure_target_stage_local_agent_index: int | None = None
+    gsp_failure_target_turn_idx: int | None = None
     gsp_backup_kv: bool | None = None
+    gsp_max_workflow_concurrency: int | None = None
+    gsp_dp_failure_sweep: bool = False
+    gsp_dp_failure_sweep_hold_s: float = 25.0
+    gsp_dp_failure_sweep_gap_s: float = 8.0
+    gsp_dp_failure_sweep_initial_delay_s: float = 20.0
+    gsp_dp_failure_sweep_injections_per_batch: int = 4
+    gsp_dp_failure_sweep_batch_size: int = 32
+    gsp_dp_failure_sweep_batch_gap_s: float = 0.0
+    gsp_dp_failure_sweep_round2_enabled: bool = True
+    gsp_dp_failure_sweep_round2_injections_per_batch: int = 2
+    gsp_dp_failure_sweep_round2_batch_gap_s: float = 60.0
+    gsp_dp_failure_sweep_round1_enabled: bool = True
+    gsp_dp_failure_sweep_precovered_agent_slots: tuple[tuple[int, int], ...] = ()
+    gsp_dp_failure_sweep_precovered_workflows: tuple[str, ...] = ()
+    gsp_agent_slot_failure_sweep: bool = False
+    gsp_agent_slot_sweep_hold_s: float = 18.0
+    gsp_agent_slot_sweep_gap_s: float = 4.0
+    gsp_agent_slot_sweep_initial_delay_s: float = 25.0
+    gsp_agent_slot_sweep_min_injections: int = 2
+    trace_jsonl_path: str = ""
+    trace_limit: int | None = None
 
     @property
     def num_requests(self) -> int:
+        if self.dataset_name == "claude-code-trace-jsonl":
+            return int(self.trace_limit) if self.trace_limit is not None else self.gsp_num_groups
         agents_per_group = (
             sum(self.gsp_workflow_shape)
             if self.gsp_workflow_shape
@@ -154,6 +183,12 @@ class RequestDetailRow:
     aegis_assigned_dp_rank: int = -1
     aegis_host_visible_tokens: int = 0
     aegis_gpu_replica_tokens: int = 0
+    aegis_gpu_replica_dp_rank: int = -1
+    aegis_gpu_replica_quota_tokens: int = 0
+    aegis_gpu_replica_overlap_tokens: int = 0
+    aegis_gpu_replica_unique_tokens: int = 0
+    aegis_gpu_replica_reserved_tokens: int = 0
+    aegis_gpu_replica_evictable: bool = False
     aegis_safe_frontier_tokens: int = 0
     aegis_recompute_tokens: int = 0
     aegis_recovery_action: str = "none"
@@ -243,6 +278,16 @@ def load_client_config(path: Path) -> ClientConfig:
         )
     else:
         workflow_shape = tuple(int(x) for x in (workflow_shape_raw or ()))
+    stage_context_lens_raw = raw.get("gsp_stage_context_lens", ())
+    if isinstance(stage_context_lens_raw, str):
+        stage_context_lens = tuple(
+            int(part)
+            for part in stage_context_lens_raw.replace("-", ",").split(",")
+            if part.strip()
+        )
+    else:
+        stage_context_lens = tuple(int(x) for x in (stage_context_lens_raw or ()))
+
     return ClientConfig(
         dataset_name=str(raw.get("dataset_name", "generated-shared-prefix")),
         seed=int(raw.get("seed", 1)),
@@ -250,17 +295,18 @@ def load_client_config(path: Path) -> ClientConfig:
         max_concurrency=(
             int(raw["max_concurrency"]) if raw.get("max_concurrency") is not None else None
         ),
-        gsp_num_groups=int(raw["gsp_num_groups"]),
-        gsp_prompts_per_group=int(raw["gsp_prompts_per_group"]),
-        gsp_system_prompt_len=int(raw["gsp_system_prompt_len"]),
-        gsp_question_len=int(raw["gsp_question_len"]),
-        gsp_output_len=int(raw["gsp_output_len"]),
+        gsp_num_groups=int(raw.get("gsp_num_groups", raw.get("trace_limit", 1))),
+        gsp_prompts_per_group=int(raw.get("gsp_prompts_per_group", 1)),
+        gsp_system_prompt_len=int(raw.get("gsp_system_prompt_len", 0)),
+        gsp_question_len=int(raw.get("gsp_question_len", 0)),
+        gsp_output_len=int(raw.get("gsp_output_len", 64)),
         gsp_range_ratio=float(raw.get("gsp_range_ratio", 1.0)),
         gsp_fast_prepare=bool(raw.get("gsp_fast_prepare", False)),
         gsp_send_routing_key=bool(raw.get("gsp_send_routing_key", False)),
         gsp_num_turns=int(raw.get("gsp_num_turns", 1)),
         gsp_ordered=bool(raw.get("gsp_ordered", False)),
         gsp_workflow_shape=workflow_shape,
+        gsp_stage_context_lens=stage_context_lens,
         gsp_stage_long_decode_agent_index=int(
             raw.get("gsp_stage_long_decode_agent_index", 0)
         ),
@@ -296,6 +342,7 @@ def load_client_config(path: Path) -> ClientConfig:
             else None
         ),
         gsp_alpha_policy_path=str(raw.get("gsp_alpha_policy_path", "")),
+        gsp_aegis_online_alpha_adapter=bool(raw.get("gsp_aegis_online_alpha_adapter", False)),
         gsp_failure_rate_per_window=(
             float(raw["gsp_failure_rate_per_window"])
             if "gsp_failure_rate_per_window" in raw
@@ -306,8 +353,90 @@ def load_client_config(path: Path) -> ClientConfig:
             if "gsp_failure_after_output_tokens" in raw
             else None
         ),
+        gsp_failure_injection_count=(
+            int(raw["gsp_failure_injection_count"])
+            if raw.get("gsp_failure_injection_count") is not None
+            else None
+        ),
+        gsp_failure_target_stage_id=(
+            int(raw["gsp_failure_target_stage_id"])
+            if "gsp_failure_target_stage_id" in raw
+            else None
+        ),
+        gsp_failure_target_stage_local_agent_index=(
+            int(raw["gsp_failure_target_stage_local_agent_index"])
+            if "gsp_failure_target_stage_local_agent_index" in raw
+            else None
+        ),
+        gsp_failure_target_turn_idx=(
+            int(raw["gsp_failure_target_turn_idx"])
+            if "gsp_failure_target_turn_idx" in raw
+            else None
+        ),
         gsp_backup_kv=(
             bool(raw["gsp_backup_kv"]) if "gsp_backup_kv" in raw else None
+        ),
+        gsp_max_workflow_concurrency=(
+            int(raw["gsp_max_workflow_concurrency"])
+            if raw.get("gsp_max_workflow_concurrency") is not None
+            else None
+        ),
+        gsp_dp_failure_sweep=bool(raw.get("gsp_dp_failure_sweep", False)),
+        gsp_dp_failure_sweep_hold_s=float(
+            raw.get("gsp_dp_failure_sweep_hold_s", 25.0)
+        ),
+        gsp_dp_failure_sweep_gap_s=float(raw.get("gsp_dp_failure_sweep_gap_s", 8.0)),
+        gsp_dp_failure_sweep_initial_delay_s=float(
+            raw.get("gsp_dp_failure_sweep_initial_delay_s", 20.0)
+        ),
+        gsp_dp_failure_sweep_injections_per_batch=int(
+            raw.get("gsp_dp_failure_sweep_injections_per_batch", 4)
+        ),
+        gsp_dp_failure_sweep_batch_size=int(
+            raw.get("gsp_dp_failure_sweep_batch_size", 32)
+        ),
+        gsp_dp_failure_sweep_batch_gap_s=float(
+            raw.get("gsp_dp_failure_sweep_batch_gap_s", 0.0)
+        ),
+        gsp_dp_failure_sweep_round2_enabled=bool(
+            raw.get("gsp_dp_failure_sweep_round2_enabled", True)
+        ),
+        gsp_dp_failure_sweep_round2_injections_per_batch=int(
+            raw.get("gsp_dp_failure_sweep_round2_injections_per_batch", 2)
+        ),
+        gsp_dp_failure_sweep_round2_batch_gap_s=float(
+            raw.get("gsp_dp_failure_sweep_round2_batch_gap_s", 60.0)
+        ),
+        gsp_dp_failure_sweep_round1_enabled=bool(
+            raw.get("gsp_dp_failure_sweep_round1_enabled", True)
+        ),
+        gsp_dp_failure_sweep_precovered_agent_slots=tuple(
+            (int(stage_id), int(local_idx))
+            for stage_id, local_idx in raw.get(
+                "gsp_dp_failure_sweep_precovered_agent_slots", []
+            )
+        ),
+        gsp_dp_failure_sweep_precovered_workflows=tuple(
+            str(x) for x in raw.get("gsp_dp_failure_sweep_precovered_workflows", [])
+        ),
+        gsp_agent_slot_failure_sweep=bool(
+            raw.get("gsp_agent_slot_failure_sweep", False)
+        ),
+        gsp_agent_slot_sweep_hold_s=float(
+            raw.get("gsp_agent_slot_sweep_hold_s", 18.0)
+        ),
+        gsp_agent_slot_sweep_gap_s=float(
+            raw.get("gsp_agent_slot_sweep_gap_s", 4.0)
+        ),
+        gsp_agent_slot_sweep_initial_delay_s=float(
+            raw.get("gsp_agent_slot_sweep_initial_delay_s", 25.0)
+        ),
+        gsp_agent_slot_sweep_min_injections=int(
+            raw.get("gsp_agent_slot_sweep_min_injections", 2)
+        ),
+        trace_jsonl_path=str(raw.get("trace_jsonl_path", "")),
+        trace_limit=(
+            int(raw["trace_limit"]) if raw.get("trace_limit") is not None else None
         ),
     )
 
@@ -413,12 +542,14 @@ def compute_random_lens(full_len: int, range_ratio: float, num: int) -> list[int
 def _mock_gen_prompt(token_num: int, seed: int) -> str:
     if token_num <= 0:
         return ""
-    parts: list[str] = []
+    chunks: list[str] = []
     value = seed
     for i in range(token_num):
         value = (value * 131 + i) & 0xFFFFFFFF
-        parts.append(f"t{value % 100000:05d}")
-    return " ".join(parts)
+        # _mock_encode consumes fixed 4-character chunks.  Keep the generated
+        # string aligned to that tokenizer so token_num remains a token count.
+        chunks.append(f"{value % 0x10000:04x}")
+    return "".join(chunks)
 
 
 def gen_prompt(tokenizer: Any | None, token_num: int, *, mock: bool) -> str:
@@ -506,6 +637,14 @@ def generate_shared_prefix_workload(
     agents_per_group = sum(staged_shape) if staged_shape else client.gsp_prompts_per_group
     workflow_shape_label = "-".join(str(x) for x in staged_shape)
 
+    stage_context_lens = tuple(
+        int(x) for x in client.gsp_stage_context_lens if int(x) > 0
+    )
+    if stage_context_lens and staged_shape and len(stage_context_lens) != len(staged_shape):
+        raise ValueError(
+            "gsp_stage_context_lens must have the same length as gsp_workflow_shape "
+            f"({len(stage_context_lens)} != {len(staged_shape)})"
+        )
     system_prompt_lens = compute_random_lens(
         client.gsp_system_prompt_len, client.gsp_range_ratio, client.gsp_num_groups
     )
@@ -527,7 +666,7 @@ def generate_shared_prefix_workload(
     ).reshape(client.gsp_num_groups, agents_per_group)
 
     system_prompts: list[str] = []
-    if not client.gsp_fast_prepare:
+    if not client.gsp_fast_prepare and not stage_context_lens:
         with tqdm_logging(logger):
             system_prompts = [
                 gen_prompt(tokenizer, int(system_prompt_lens[i]), mock=mock)
@@ -601,7 +740,15 @@ def generate_shared_prefix_workload(
         for prompt_idx, (stage_idx, stage_width, stage_local_idx) in enumerate(staged_slots):
             rid_counter += 1
             turn_questions = questions[group_idx][prompt_idx]
-            turn_prompts = [f"{system_prompt}\n\n{turn_questions[0]}"] + turn_questions[1:]
+            if stage_context_lens:
+                first_turn_prompt = gen_prompt(
+                    tokenizer,
+                    int(stage_context_lens[stage_idx]),
+                    mock=mock,
+                )
+                turn_prompts = [first_turn_prompt] + turn_questions[1:]
+            else:
+                turn_prompts = [f"{system_prompt}\n\n{turn_questions[0]}"] + turn_questions[1:]
             full_prompt = (
                 turn_prompts[0] if client.gsp_num_turns == 1 else turn_prompts
             )
@@ -619,11 +766,12 @@ def generate_shared_prefix_workload(
             stage_critical = bool(
                 staged_shape and (stage_width == 1 or decode_dominant)
             )
-            agent_id = (
-                f"{workflow_id}-s{stage_idx}-a{stage_local_idx}"
-                if staged_shape
-                else str(rid_counter)
-            )
+            if staged_shape and stage_width == 1:
+                agent_id = f"{workflow_id}-main"
+            elif staged_shape:
+                agent_id = f"{workflow_id}-s{stage_idx}-a{stage_local_idx}"
+            else:
+                agent_id = str(rid_counter)
             draft_rows.append(
                 (
                     rid_counter,
@@ -745,6 +893,93 @@ def generate_shared_prefix_workload(
     return requests
 
 
+def _as_text_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item)]
+    if isinstance(value, str) and value:
+        stripped = value.strip()
+        if stripped.startswith("["):
+            try:
+                parsed = json.loads(stripped)
+            except json.JSONDecodeError:
+                return [value]
+            if isinstance(parsed, list):
+                return [str(item) for item in parsed if str(item)]
+        return [value]
+    return []
+
+
+def generate_claude_trace_workload(
+    client: ClientConfig,
+    server: ServerConfig,
+    *,
+    logger: logging.Logger | None = None,
+) -> list[WorkloadRequest]:
+    if client.dataset_name != "claude-code-trace-jsonl":
+        raise ValueError(
+            f"Unsupported dataset_name={client.dataset_name!r}; "
+            "only claude-code-trace-jsonl is supported"
+        )
+    path = Path(client.trace_jsonl_path)
+    if not path.is_absolute():
+        path = BENCHMARK_DIR.parents[1] / path
+    if not path.is_file():
+        raise FileNotFoundError(f"missing trace_jsonl_path: {path}")
+
+    model_path = server.model_path
+    mock = model_path in _MOCK_MODEL_PATHS
+    tokenizer = None if mock else get_tokenizer(model_path)
+    requests: list[WorkloadRequest] = []
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if client.trace_limit is not None and len(requests) >= client.trace_limit:
+                break
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            turn_prompts = _as_text_list(row.get("turn_prompts"))
+            if not turn_prompts:
+                turn_prompts = _as_text_list(row.get("prompt"))
+            if not turn_prompts:
+                continue
+            rid = str(row.get("rid") or row.get("request_id") or len(requests) + 1)
+            first_turn = turn_prompts[0]
+            prompt_len = int(
+                row.get(
+                    "prompt_len",
+                    _encode_prompt_len(tokenizer, first_turn, mock=mock),
+                )
+            )
+            output_len = int(row.get("output_len", client.gsp_output_len))
+            requests.append(
+                WorkloadRequest(
+                    rid=rid,
+                    prompt=turn_prompts if len(turn_prompts) > 1 else first_turn,
+                    prompt_len=max(prompt_len, 1),
+                    output_len=max(output_len, 1),
+                    group_id=int(row.get("group_id", len(requests))),
+                    routing_key=(
+                        str(row.get("routing_key"))
+                        if row.get("routing_key") is not None
+                        else None
+                    ),
+                    agent_id=str(row.get("agent_id") or rid),
+                    critical_agent=bool(row.get("critical_agent", True)),
+                    workflow_id=str(row.get("workflow_id") or f"trace-{len(requests)}"),
+                    stage_id=int(row.get("stage_id", 0)),
+                    stage_width=int(row.get("stage_width", 1)),
+                    stage_local_agent_index=int(
+                        row.get("stage_local_agent_index", 0)
+                    ),
+                    decode_dominant=bool(row.get("decode_dominant", False)),
+                    workflow_shape=str(row.get("workflow_shape", "trace")),
+                )
+            )
+    if logger:
+        logger.info("Generated %d Claude trace requests from %s", len(requests), path)
+    return requests
+
+
 def sim_stats_to_detail_row(
     rid: str,
     sim_stats: dict[str, Any],
@@ -820,6 +1055,24 @@ def sim_stats_to_detail_row(
         aegis_assigned_dp_rank=int(sim_stats.get("aegis_assigned_dp_rank", -1)),
         aegis_host_visible_tokens=int(sim_stats.get("aegis_host_visible_tokens", 0)),
         aegis_gpu_replica_tokens=int(sim_stats.get("aegis_gpu_replica_tokens", 0)),
+        aegis_gpu_replica_dp_rank=int(
+            sim_stats.get("aegis_gpu_replica_dp_rank", -1)
+        ),
+        aegis_gpu_replica_quota_tokens=int(
+            sim_stats.get("aegis_gpu_replica_quota_tokens", 0)
+        ),
+        aegis_gpu_replica_overlap_tokens=int(
+            sim_stats.get("aegis_gpu_replica_overlap_tokens", 0)
+        ),
+        aegis_gpu_replica_unique_tokens=int(
+            sim_stats.get("aegis_gpu_replica_unique_tokens", 0)
+        ),
+        aegis_gpu_replica_reserved_tokens=int(
+            sim_stats.get("aegis_gpu_replica_reserved_tokens", 0)
+        ),
+        aegis_gpu_replica_evictable=bool(
+            sim_stats.get("aegis_gpu_replica_evictable", False)
+        ),
         aegis_safe_frontier_tokens=int(sim_stats.get("aegis_safe_frontier_tokens", 0)),
         aegis_recompute_tokens=int(sim_stats.get("aegis_recompute_tokens", 0)),
         aegis_recovery_action=str(sim_stats.get("aegis_recovery_action", "none")),
@@ -958,6 +1211,18 @@ def write_metrics_json(run_dir: Path, rows: list[RequestDetailRow]) -> Path:
             if candidate_retries
             else 0.0
         ),
+        "aegis_gpu_replica_total_tokens": sum(
+            r.aegis_gpu_replica_tokens for r in completed
+        ),
+        "aegis_gpu_replica_unique_tokens": sum(
+            r.aegis_gpu_replica_unique_tokens for r in completed
+        ),
+        "aegis_gpu_replica_overlap_tokens": sum(
+            r.aegis_gpu_replica_overlap_tokens for r in completed
+        ),
+        "aegis_gpu_replica_evictable_completed": sum(
+            1 for r in completed if r.aegis_gpu_replica_evictable
+        ),
         "aegis_failover_replays": len(failover_replays),
         "aegis_cross_rank_replays": len(cross_rank_replays),
         "aegis_soft_failure_injected_replays": len(soft_failure_injected),
@@ -1033,6 +1298,12 @@ def write_request_details_csv(run_dir: Path, rows: list[RequestDetailRow]) -> Pa
         "aegis_assigned_dp_rank",
         "aegis_host_visible_tokens",
         "aegis_gpu_replica_tokens",
+        "aegis_gpu_replica_dp_rank",
+        "aegis_gpu_replica_quota_tokens",
+        "aegis_gpu_replica_overlap_tokens",
+        "aegis_gpu_replica_unique_tokens",
+        "aegis_gpu_replica_reserved_tokens",
+        "aegis_gpu_replica_evictable",
         "aegis_safe_frontier_tokens",
         "aegis_recompute_tokens",
         "aegis_recovery_action",

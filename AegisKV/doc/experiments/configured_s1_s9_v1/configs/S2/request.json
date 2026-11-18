@@ -1,0 +1,18 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S2",
+  "layer": "request",
+  "description": "Concurrency sweep at fixed model and context",
+  "workload": {
+    "arrival_window_ms": 180000,
+    "warmup_ms": 90000,
+    "model": "Qwen/Qwen3-8B",
+    "context_tokens": 16384,
+    "arrival_process": "registered fixed-arrival workload"
+  },
+  "axes": {
+    "active_requests_per_gpu": [1, 2, 4, 8, 16],
+    "paired_seed": [2026082600, 2026082601, 2026082602, 2026082603, 2026082604, 2026082605, 2026082606, 2026082607, 2026082608, 2026082609]
+  },
+  "matrix_note": "Five queue-pressure levels with paired seeds"
+}

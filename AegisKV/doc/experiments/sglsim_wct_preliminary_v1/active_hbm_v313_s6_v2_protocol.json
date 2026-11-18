@@ -1,0 +1,193 @@
+{
+  "schema_version": 2,
+  "experiment_id": "sglsim-active-hbm-v313-s6-shared-prefix-v2-20260827",
+  "status": "PREREGISTERED_BEFORE_ANY_S6_V2_RAW_CELL",
+  "paper_ready": false,
+  "supersedes_for_s6_claims": "active_hbm_v313_s6_shared_prefix_pilot",
+  "invalidated_v1_reason": "S6 v1 used a permanent shared_materialized_keys set instead of per-tier physical residency. It undercounted refcount-zero resident hits and skipped causal recopy after tier eviction.",
+  "design_semantics": "source_owned_independent_hbm_dram_v2_with_shared_prefix_per_tier_epoch_v2",
+  "question": "With stable shared-prefix content identity and exact per-tier physical lifetimes, how do reuse, eviction, rematerialization, recovery, copy amplification, and HBM/DRAM occupancy change?",
+  "selection_policy": "All 60 registered cells and all three seeds are retained regardless of WCT direction, hit-rate shape, significance, eviction/rematerialization count, or whether AegisKV improves any metric.",
+  "model": {
+    "model_id": "Qwen/Qwen3-8B",
+    "display": "Qwen3-8B TP1/PP1",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "tp": 1,
+    "pp": 1,
+    "weight_bytes_per_rank": 16381470720,
+    "kv_bytes_per_token": 147456,
+    "request_max_output_tokens": 4096,
+    "context_tokens": 16384,
+    "service_status": "MODELED_SYNTHETIC_A100_COEFFICIENTS_NOT_PHYSICAL_CALIBRATION"
+  },
+  "hardware": {
+    "gpu": "NVIDIA A100 40GB modeled as 40 GiB addressable HBM",
+    "total_hbm_bytes_per_gpu": 42949672960,
+    "usable_hbm_bytes_per_gpu": 37795712204,
+    "runtime_reserve_bytes_per_gpu": 5153960756,
+    "serving_plus_peer_backup_budget_bytes_per_gpu": 21414241484,
+    "gpus_per_node": 8,
+    "system_dp": 16,
+    "node_count": 2,
+    "placement": "one TP1/PP1 replica per GPU in two complete 8-GPU nodes",
+    "bandwidth_profile_id": "sglsim_a100_40gib_modeled_directional_v1",
+    "bandwidth_calibration_status": "MODELED_NOT_PHYSICALLY_CALIBRATED_A100",
+    "copy_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "recovery_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "topologies": {
+      "same_node": {
+        "peer_hbm": "same_node",
+        "dram": "local",
+        "peer_rule": "bijective successor GPU within each 8-GPU node",
+        "dram_rule": "CPU DRAM attached to the source node"
+      },
+      "cross_node": {
+        "peer_hbm": "cross_node",
+        "dram": "remote",
+        "peer_rule": "bijective GPU target on the next node in a node ring",
+        "dram_rule": "CPU DRAM attached to the next node in the ring"
+      }
+    }
+  },
+  "capacity_equation": {
+    "invariant": "weight_bytes + runtime_reserve_bytes + active_serving_kv_bytes + physical_peer_hbm_backup_used_bytes <= total_hbm_bytes",
+    "dispatch_reservation_formula": "(prompt_tokens + request_max_output_tokens) * kv_bytes_per_token",
+    "reservation_bytes_per_request": 3019898880,
+    "four_request_serving_reservation_bytes": 12079595520,
+    "headroom_before_backup_bytes": 9334645964,
+    "initial_alpha_backup_quota_bytes": 10737418240,
+    "no_oracle": "dispatch and prefix admission never inspect realized output length, realized service, or future cohort members"
+  },
+  "shared_prefix_semantics": {
+    "reuse_fraction": [0.0, 0.25, 0.5, 0.75, 1.0],
+    "group_size": 4,
+    "prefix_chunk_tokens": 4096,
+    "content_identity": "Within each source rank, requests sorted by (arrival_ms, request_id) are partitioned into consecutive groups of four. Stable logical identity is (group_id, chunk_ordinal).",
+    "physical_epoch_identity": "Each tier uses a generation owner ID (content identity, tier, epoch); the owner ID may change after eviction while content identity remains fixed.",
+    "tier_state_machine": "UNMATERIALIZED -> PENDING -> COMMITTED -> EVICTED. Rejected attempts are immediately finalized and remain only in immutable epoch audit lineage.",
+    "same_tier_duplicate_rule": "PENDING or COMMITTED suppresses another physical copy in that tier.",
+    "independent_tier_rule": "HBM and DRAM are evaluated independently. A surviving PENDING/COMMITTED tier never prevents causal readmission of a missing other tier.",
+    "resident_cache_rule": "A COMMITTED object is a resident alias hit even at logical refcount zero; active-overlap and resident hits are reported separately.",
+    "eviction_rule": "On a later source seal, an EVICTED epoch is finalized before a new epoch attempts admission. Rejected and replaced epochs leave active/controller/baseline registries.",
+    "aggregate_priority_rule": "For each stable content chunk, every live tier epoch uses the minimum predicted residual-DAG slack among currently active logical members. At refcount zero, slack is set to the full chunk recompute cost, making current protection benefit zero. A later active alias refreshes slack metadata. update_slack must not copy, evict, or change used bytes.",
+    "recovery": "Recovery reads only a continuous chain of the selected tier's current COMMITTED epochs; PENDING, rejected, finalized, or evicted epochs contribute zero.",
+    "legacy_observed_content_set": "shared_materialized_keys is retained only as an ever-admitted logical-content set and never controls copy or recovery. A key is added only after at least one tier admits an epoch."
+  },
+  "sweep": {
+    "reuse_fraction": [0.0, 0.25, 0.5, 0.75, 1.0],
+    "topologies": ["same_node", "cross_node"],
+    "policies": ["Native Mooncake", "AegisKV"],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "registered_cell_count": 60,
+    "gate_cells": "reuse={0,1} x same_node x 2 policies x first seed = 4"
+  },
+  "workload": {
+    "fixed_arrival_cutoff_ms": 90000.0,
+    "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0],
+    "offered_active_requests_per_gpu": 4,
+    "context_tokens": 16384,
+    "failure_type": "source_worker_gpu",
+    "fault_probes_per_seed": 12,
+    "probe_schedule": "equal-width stratified timestamps over the common 90 s arrival window; identical probe tuples across all reuse, topology, and policy cells for a seed",
+    "primary_denominator": "all workflows from one immutable workflow universe per seed; policies share exact request IDs, prefix assignments, and probes",
+    "warmup": "none; cold-start-inclusive fixed-arrival pilot"
+  },
+  "statistics": {
+    "seed_unit": "three paired workload seeds",
+    "interval": "Student-t 95% confidence interval across seed-level metrics, df=2",
+    "primary": [
+      "physical-copy to logical-useful byte ratio",
+      "request recovery hit and prefix-token/recoverable-byte fraction",
+      "HBM and DRAM byte-ms occupancy integral and time-mean GiB per GPU",
+      "per-tier epoch admission, rejection, eviction, rematerialization, and no-duplicate counts",
+      "active-overlap hit, resident hit, refcount-zero resident hit, and refcount conservation"
+    ],
+    "forbidden_gates": [
+      "AegisKV must improve WCT",
+      "recovery hit must be monotone in reuse",
+      "copy amplification must be monotone in reuse",
+      "any seed or cell may be removed for curve shape"
+    ]
+  },
+  "figure_grammar": {
+    "filename_stem": "s6_v313_shared_prefix_reuse_v2",
+    "size_inches": [7.0, 5.1],
+    "layout": "2x3 mechanism panels matching S6 v1 axes, but sourced only from v2 cells",
+    "minimum_font_pt": 7.0,
+    "png_minimum_width_px": 1800,
+    "panel_text_boundary": "no pilot, preliminary, seed, hash, or evidence-boundary prose inside the panel"
+  },
+  "hard_gates": [
+    "exactly 4 gate cells pass before the full 60-cell run starts",
+    "exactly 60 registered cells are atomically published",
+    "workflow/probe/assignment hashes match across paired treatments",
+    "same-tier PENDING and COMMITTED states schedule no duplicate physical copy",
+    "refcount-zero COMMITTED cache is a resident hit",
+    "single-tier and full-tier eviction allow independent causal rematerialization",
+    "single surviving COMMITTED tier remains recoverable",
+    "rejected fresh epochs and replaced evicted epochs leave no orphan active/controller/baseline request",
+    "live shared epoch owners equal current PENDING/COMMITTED tier mappings",
+    "shared aggregate priority follows visible residual-DAG members; idle demotion and active reactivation are metadata-only with zero copy/used/eviction delta",
+    "logical/refcount/copy/capacity/recovery/occupancy accounting conserves",
+    "empty replay is exact and fault replay never lowers WCT",
+    "no performance-direction threshold and no seed/cell selection",
+    "single-page vector PDF, PNG width >=1800, extracted font >=7 pt"
+  ],
+  "sources": {
+    "run_preliminary.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/run_preliminary.py",
+      "sha256": "0bb1dfb06c21dabb3e6460c6005ecea3ee1baa52db225f07b26660bb36a192fb"
+    },
+    "active_hbm_v313.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v313.py",
+      "sha256": "1f1facd8fc020e000a5ad66805d155102488c62ed38a60dece9049bbf0c9732b"
+    },
+    "active_hbm_v313_s6.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v313_s6.py",
+      "sha256": "154dc4584122da3c96c1b31a4b1bd51b8083027b923670c18d0b8801408d840c"
+    },
+    "active_hbm_v313_s6_v2.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v313_s6_v2.py",
+      "sha256": "1704f0df99be587a536746ef8c3155a3542809c9e660a80847b2f3ecf0d6b6fa"
+    },
+    "run_active_hbm_v313_s6_v2.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s6_v2.py",
+      "sha256": "ac4f406a7f29f5c35fe798575ba559dc26b42ebd4a4d25345b8ea08693bdee3d"
+    },
+    "test_active_hbm_v313_s6_v2_residency.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/test_active_hbm_v313_s6_v2_residency.py",
+      "sha256": "99edd826ebd2ffe9efe93cff9cbb1f2ef29d73d85a18ded2554cba75182474c2"
+    },
+    "test_active_hbm_v313_s6_v2_protocol.py": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/test_active_hbm_v313_s6_v2_protocol.py",
+      "sha256": "c97047c4344c68056acd4eb61cb650cb1662371c8b9d78d43392f5ee53b36988"
+    },
+    "aegis_independent_tiers.py": {
+      "path": "/home/comp/zhanzhao/sglsim/python/sglsim/srt/simulation/aegis_independent_tiers.py",
+      "sha256": "9055269ab5ce35bea1e5bd22dab84601ba75373e575ba889329b1a9802c3d62d"
+    },
+    "aegis_baselines.py": {
+      "path": "/home/comp/zhanzhao/sglsim/python/sglsim/srt/simulation/aegis_baselines.py",
+      "sha256": "34b6de256800416e612df4ae02d16d6b5f74d60d69b6405d1336c5d1fbab5280"
+    },
+    "capacity_protocol": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v3_protocol.json",
+      "sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f"
+    },
+    "topology_failover_protocol": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v311_s1_s2_protocol.json",
+      "sha256": "121621a0c2cd1cfe14e0e60c315b5d010b036679dc0164e6c776936316592b1d"
+    }
+  },
+  "evidence_boundary": "Three-seed metadata DES mechanism pilot. A100 capacity/model bytes are frozen, but service coefficients, directional bandwidth, 500 ms Aegis activation, and 60 s Native replacement are modeled/unmeasured. Native Mooncake is a modeled Router+Store approximation. Shared-prefix identity/epochs are experiment-layer metadata, not a verified production Mooncake cache implementation. Not physical A100 or paper-ready evidence."
+}

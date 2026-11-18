@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-active-hbm-v31-paired-central-20260827",
+  "status": "PREREGISTERED_BEFORE_V31_RERUN_RESULTS",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "current_design_path": "/home/comp/zhanzhao/Mooncake/aegiskv/design/current_design.md",
+  "current_design_sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac",
+  "parent_capacity_protocol": "active_hbm_v3_protocol.json",
+  "parent_capacity_protocol_sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f",
+  "v31_des": "active_hbm_v31.py",
+  "v31_des_sha256": "42e3416880404e88c7401fe5efc0a39d722c4d52981f5e603140ab494ec7e367",
+  "core_runner": "run_preliminary.py",
+  "core_runner_sha256": "0bb1dfb06c21dabb3e6460c6005ecea3ee1baa52db225f07b26660bb36a192fb",
+  "corrections": {
+    "serving_backup_projection": {
+      "old": "min(current_hbm_limit, current_hbm_used + full_prompt_bytes)",
+      "old_status": "invalidated_for_v31_because_potential_bytes_were_treated_as_inevitable_before_per_chunk_policy_admission",
+      "new": "deep-copy the current policy state and apply the same per-chunk HBM/DRAM admissions; gate on the projected HBM bytes actually retained",
+      "new_uses_only_dispatch_visible_state": true
+    },
+    "slack_prediction": {
+      "old": "max(realized_branch_service) - realized_branch_service",
+      "old_status": "invalidated_for_v31_because_realized_output_and_service_were future information",
+      "new": "independent categorical output prediction and independent residual from a seed-separated stream",
+      "new_reads_realized_output_or_service": false,
+      "physical_gbdt_calibration": false
+    },
+    "copy_paths": {
+      "status": "unchanged_after_audit",
+      "reason": "source-owned Peer-HBM and direct DRAM use separate serialized per-tier lanes; request copy critical path is max of admitted tier service, never the sum",
+      "byte_rule": "each admitted tier is charged exactly chunk_tokens times kv_bytes_per_token"
+    }
+  },
+  "matrix": {
+    "model": "Qwen3-8B TP1 PP1",
+    "system_dp": 16,
+    "context_tokens": 40960,
+    "active_requests_per_gpu": 16,
+    "arrival_cutoff_ms": 90000.0,
+    "fault_probes_per_cell": 24,
+    "failure_types": ["source_worker_gpu", "source_node"],
+    "policies": [
+      "Native Mooncake",
+      "AegisKV",
+      "AegisKV no Algorithm 1",
+      "AegisKV no Algorithm 2",
+      "AegisKV no Algorithm 3"
+    ],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "expected_cells": 30
+  },
+  "primary_estimands": {
+    "healthy_wct": "mean no-fault workflow completion time over the common workflow universe",
+    "same_probe_failure_conditioned_wct": "for each shared probe, mean replay WCT over every workflow in that same universe, then equal-weight across probes",
+    "all_workflow_total_wct": "healthy_wct plus all-workflow added-WCT; audited to equal same-probe fault replay WCT",
+    "primary_denominator": "workflow_count times fault_probe_count; never the policy-specific changed subset"
+  },
+  "secondary_diagnostic": "changed-only metrics remain within-policy diagnostics and are forbidden as primary cross-policy evidence",
+  "hard_gates": {
+    "same_workflow_and_probe_hashes_across_policies": true,
+    "raw_hash_and_statistic_recomputation": true,
+    "capacity_violations": 0,
+    "exact_projection_matches_real_admission": true,
+    "slack_and_dispatch_do_not_read_realized_output": true,
+    "source_copy_parallel_max_not_sum": true,
+    "no_performance_direction_or_win_threshold": true
+  },
+  "modeled_unmeasured_timing_inputs": {
+    "aegis_worker_fence_activation_ms": 500.0,
+    "native_replacement_ms": 60000.0
+  },
+  "evidence_boundary": "Preliminary metadata DES correction rerun, not a physical result and not paper-ready. Native Mooncake remains a modeled approximation. The independent Slack predictor is an uncalibrated causal approximation, and 500 ms/60 s remain modeled and unmeasured."
+}

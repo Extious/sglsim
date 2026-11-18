@@ -1,0 +1,59 @@
+% !TeX root = ../paper_outline.tex
+\appendix
+\section{附录}
+
+\begin{frame}{AegisKV | 符号与跨算法接口}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.06}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.49\textwidth}
+      \begin{tabularx}{\linewidth}{p{0.31\linewidth}X}
+        \toprule
+        量（单位） & 含义 \\
+        \midrule
+        $\operatorname{WCT}_w$（秒） & 工作流完成时间 \\
+        $T_v^{\mathrm{rem}},F_v$（秒/分布） & 执行片段随机剩余时长与分布 \\
+        $ES_v,EF_v$（秒） & 节点最早开始/完成时间 \\
+        $LS_v,LF_v$（秒） & 节点最晚开始/完成时间 \\
+        $L^{(k)},S_v^{(k)}$（秒） & 剩余 WCT 与总松弛时间 \\
+        $\widehat\sigma_r$（秒） & 算法 1 发布的请求松弛时间 \\
+        $b_s,m_{s,n,a}$（字节） & 块大小与目的节点未覆盖字节 \\
+        $e(r),b(r)$（Rank ID） & Router 给请求绑定的执行 Rank 与 Backup Rank \\
+        $a\in\{B_1,B_2,R\}$ & L1、L2 或重计算动作 \\
+        $R_{s,n,a}$（秒） & 故障恢复路径时延 \\
+        $F_r^{\mathrm{safe}}$（词元） & 最长连续有效恢复前沿 \\
+        \bottomrule
+      \end{tabularx}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{tabularx}{\linewidth}{p{0.34\linewidth}X}
+        \toprule
+        量（单位） & 含义 \\
+        \midrule
+        $P_{s,n,a},G_{s,n,a}$（秒） & 可见惩罚与相对重算收益 \\
+        $C_{s,n,a}^{\mathrm{write}}$（秒） & 正常路径备份写入时延 \\
+        $V_{s,n,a},\rho_{s,n,a}$ & 候选项净收益与单位字节收益 \\
+        $x_{s,n,a}^{(k)}$（0/1） & 在固定 Backup Rank 上计划的备份动作 \\
+        $z_{s,n,a}^{(k)}$（0/1） & 目标 DP 完成复制并 ACK 的提交状态 \\
+        $D_{n,\ell}^{(k)}$（字节） & 容量截断前影子需求 \\
+        $U_{n,\ell}^{(k)},O_{n,\ell}^{(k)}$（字节） & 实际占用与未满足需求 \\
+        $M_n,H_n$（字节） & 可管理 L1 HBM 与 L2 DRAM \\
+        $L_{n,1}^{(k)},L_{n,2}^{(k)}$（字节） & 正常 L1/L2 服务负载 \\
+        $r_{n,1},r_{n,2}$（字节） & 正常负载安全余量 \\
+        $\alpha_n,\beta_n$（$[0,1]$） & L1/L2 Backup ratios \\
+        $\mathcal H_r$（摘要） & Router 缓存的 request-level Recovery Hint \\
+        \bottomrule
+      \end{tabularx}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.10cm}
+  \boundary{算法 2 在窗口 $k$ 发布 $D/U/O$；算法 3 只在窗口边界消费这些反馈，
+  并发布从窗口 $k+1$ 生效的 $\alpha_n/\beta_n$，避免同窗口循环依赖。}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{AegisKV | 参考文献}
+  \scriptsize
+  \bibliographystyle{Simple}
+  \bibliography{ref}
+\end{frame}

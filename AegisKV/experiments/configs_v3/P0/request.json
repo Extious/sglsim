@@ -1,0 +1,34 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "request",
+  "group": "P0",
+  "extends": "../common/request.json",
+  "fixed": {
+    "workload": {
+      "kind": "deterministic_contract_scenario",
+      "dataset_id": "p0-global-des-contract-v1",
+      "request_universe": "twelve_preregistered_scenarios",
+      "selection": "complete_enumeration"
+    },
+    "arrival": {
+      "mode": "deterministic_contract_schedule"
+    }
+  },
+  "axes": {
+    "contract_scenario": [
+      "independent_dp_overlap",
+      "qwen3_8b_tp1_shard",
+      "qwen3_32b_tp4_shard",
+      "synthetic_pp2_shard",
+      "same_node_peer_hbm_path",
+      "cross_node_peer_hbm_path",
+      "source_to_node_dram_path",
+      "node_dram_to_recovery_gpu_path",
+      "failure_in_pending_window",
+      "failure_after_commit_source_first",
+      "target_first_and_node_failure",
+      "stable_same_timestamp_tie_hash"
+    ],
+    "seed": [2026082900]
+  }
+}

@@ -1,0 +1,89 @@
+<mxfile host="app.diagrams.net" modified="2026-08-10T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="real-cc-8ab0a089" name="Real CC workflow 8ab0a089">
+    <mxGraphModel dx="1024" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="780" pageHeight="450" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="main_before" value="Main" style="rounded=1;arcSize=18;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#E8F1FF;strokeColor=#4C78A8;strokeWidth=2;fontSize=28;fontStyle=1;fontColor=#20364D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="10" y="188" width="80" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="fork" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#4C78A8;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="108" y="198" width="28" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="fork_bus" value="" style="rounded=0;fillColor=#9AA8B7;strokeColor=none;" parent="1" vertex="1">
+          <mxGeometry x="158" y="72" width="2" height="278" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="agent_a1" value="A1   110.3 s" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#D9EAF7;strokeColor=#4C78A8;strokeWidth=2;fontSize=28;fontStyle=1;fontColor=#20364D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="181" y="58" width="367" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_a2" value="A2   116.7 s" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#D9EAF7;strokeColor=#4C78A8;strokeWidth=2;fontSize=28;fontStyle=1;fontColor=#20364D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="193" y="118" width="389" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_a3" value="A3   78.9 s" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#D9EAF7;strokeColor=#4C78A8;strokeWidth=2;fontSize=28;fontStyle=1;fontColor=#20364D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="201" y="178" width="263" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_a4" value="A4   117.9 s" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FDE7D5;strokeColor=#D55E00;strokeWidth=2.4;fontSize=28;fontStyle=1;fontColor=#7A3500;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="246" y="238" width="393" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_a5" value="A5   107.1 s" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#D9EAF7;strokeColor=#4C78A8;strokeWidth=2;fontSize=28;fontStyle=1;fontColor=#20364D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="246" y="298" width="357" height="42" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="join_bus" value="" style="rounded=0;fillColor=#9AA8B7;strokeColor=none;" parent="1" vertex="1">
+          <mxGeometry x="662" y="72" width="2" height="278" as="geometry"/>
+        </mxCell>
+        <mxCell id="join" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#4C78A8;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="686" y="198" width="28" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="main_after" value="Main" style="rounded=1;arcSize=18;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#E8F1FF;strokeColor=#4C78A8;strokeWidth=2;fontSize=28;fontStyle=1;fontColor=#20364D;fontFamily=Helvetica;" parent="1" vertex="1">
+          <mxGeometry x="722" y="188" width="80" height="48" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_main_fork" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.8;" parent="1" source="main_before" target="fork" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="97" y="212"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_fork_bus" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#6B7785;strokeWidth=1.6;" parent="1" source="fork" target="fork_bus" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="148" y="212"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_bus_a1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.025;entryX=0;entryY=0.5;" parent="1" source="fork_bus" target="agent_a1" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="170" y="79"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_bus_a2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.241;entryX=0;entryY=0.5;" parent="1" source="fork_bus" target="agent_a2" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="181" y="139"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_bus_a3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.457;entryX=0;entryY=0.5;" parent="1" source="fork_bus" target="agent_a3" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="189" y="199"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_bus_a4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.673;entryX=0;entryY=0.5;" parent="1" source="fork_bus" target="agent_a4" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="234" y="259"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_bus_a5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.889;entryX=0;entryY=0.5;" parent="1" source="fork_bus" target="agent_a5" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="234" y="319"/></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="edge_a1_join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.5;entryX=0;entryY=0.025;" parent="1" source="agent_a1" target="join_bus" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="79"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_a2_join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.5;entryX=0;entryY=0.241;" parent="1" source="agent_a2" target="join_bus" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="139"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_a3_join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.5;entryX=0;entryY=0.457;" parent="1" source="agent_a3" target="join_bus" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="199"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_a4_join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.5;entryX=0;entryY=0.673;" parent="1" source="agent_a4" target="join_bus" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="259"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_a5_join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#6B7785;strokeWidth=1.5;exitX=1;exitY=0.5;entryX=0;entryY=0.889;" parent="1" source="agent_a5" target="join_bus" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="319"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_bus_join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.6;" parent="1" source="join_bus" target="join" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="676" y="212"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge_join_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#6B7785;strokeWidth=1.8;" parent="1" source="join" target="main_after" edge="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="722" y="212"/></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,29 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "request",
+  "group": "P12",
+  "extends": "../common/request.json",
+  "fixed": {
+    "workload": {
+      "kind": "analytical_transfer_verification",
+      "dataset_id": "p12-analytical-verification-v1",
+      "request_universe": "closed_form_transfer_cases",
+      "selection": "complete_enumeration_by_seed",
+      "causal_slack_contract": {
+        "schema": "aegiskv.global-des-causal-workload.v1",
+        "mode": "analytical_visible_fork_join_v1",
+        "future_information": false,
+        "topology": "declared_two_branch_fork_join",
+        "positive_slack_source": "closed_form_request_contract",
+        "hardware_calibrated": false,
+        "evidence_class": "modeled_internal_verification_only"
+      }
+    },
+    "arrival": {
+      "mode": "deterministic_contract_schedule"
+    }
+  },
+  "axes": {
+    "seed": [2026082900, 2026082901, 2026082902]
+  }
+}

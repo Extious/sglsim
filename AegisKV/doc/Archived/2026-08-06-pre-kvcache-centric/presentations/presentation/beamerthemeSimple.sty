@@ -1,0 +1,226 @@
+% Simple Modern Beamer Theme
+% 
+% A completely new minimalist design focused on clean typography and layout
+% Version 2.0: Modern, ultra-clean design for academic presentations
+
+\ProvidesPackage{beamerthemeSimple}[2025/01/26 v2.0]
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Required Packages
+%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage{tikz}
+\RequirePackage{geometry}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Modern Color Palette
+%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{TextPrimary}{RGB}{26, 26, 26}        % Almost black
+\definecolor{TextSecondary}{RGB}{89, 89, 89}      % Medium gray
+\definecolor{TextMuted}{RGB}{158, 158, 158}       % Light gray
+\definecolor{AccentColor}{RGB}{0, 0, 0}           % Pure black for emphasis
+\definecolor{BackgroundPure}{RGB}{255, 255, 255}  % Pure white
+\definecolor{BackgroundLight}{RGB}{250, 250, 250} % Off-white
+\definecolor{BorderColor}{RGB}{230, 230, 230}     % Very light gray
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Typography Setup
+%%%%%%%%%%%%%%%%%%%%%%%
+\usefonttheme{serif}
+
+% Modern font configuration
+\setbeamerfont{title}{size=\Large, series=\bfseries}
+\setbeamerfont{subtitle}{size=\Large, series=\mdseries}
+\setbeamerfont{author}{size=\large, series=\mdseries}
+\setbeamerfont{institute}{size=\normalsize, series=\mdseries}
+\setbeamerfont{date}{size=\small, series=\mdseries}
+\setbeamerfont{frametitle}{size=\large, series=\bfseries}
+\setbeamerfont{framesubtitle}{size=\large, series=\mdseries}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Color Scheme
+%%%%%%%%%%%%%%%%%%%%%%%
+% Background and text
+\setbeamercolor{background canvas}{bg=BackgroundPure}
+\setbeamercolor{normal text}{fg=TextPrimary, bg=BackgroundPure}
+\setbeamercolor{structure}{fg=AccentColor}
+
+% Title slide colors
+\setbeamercolor{title}{fg=AccentColor, bg=BackgroundPure}
+\setbeamercolor{subtitle}{fg=TextSecondary, bg=BackgroundPure}
+\setbeamercolor{author}{fg=TextPrimary, bg=BackgroundPure}
+\setbeamercolor{institute}{fg=TextSecondary, bg=BackgroundPure}
+\setbeamercolor{date}{fg=TextMuted, bg=BackgroundPure}
+
+% Frame elements
+\setbeamercolor{frametitle}{fg=AccentColor, bg=BackgroundPure}
+\setbeamercolor{framesubtitle}{fg=TextSecondary, bg=BackgroundPure}
+
+% Lists and items
+\setbeamercolor{item projected}{fg=BackgroundPure, bg=AccentColor}
+\setbeamercolor{enumerate item}{fg=AccentColor}
+\setbeamercolor{itemize item}{fg=AccentColor}
+\setbeamercolor{itemize subitem}{fg=TextSecondary}
+\setbeamercolor{itemize subsubitem}{fg=TextMuted}
+
+% Blocks
+\setbeamercolor{block title}{fg=AccentColor, bg=BackgroundLight}
+\setbeamercolor{block body}{fg=TextPrimary, bg=BackgroundPure}
+\setbeamercolor{block title alerted}{fg=BackgroundPure, bg=TextPrimary}
+\setbeamercolor{block body alerted}{fg=TextPrimary, bg=BackgroundLight}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Remove Default Elements
+%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{sidebar right}{}
+\setbeamertemplate{sidebar left}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Custom Title Page
+%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{title page}{
+  \vfill
+  \begin{center}
+    % Title
+    {\usebeamerfont{title}\usebeamercolor[fg]{title}\inserttitle}
+    
+    \vskip1.5em
+    
+    % Subtitle
+    \ifx\insertsubtitle\@empty\else
+      {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle}
+      \vskip1.5em
+    \fi
+    
+    % Thin line separator
+    \textcolor{BorderColor}{\rule{0.6\textwidth}{0.5pt}}
+    
+    \vskip2em
+    
+    % Author and Institute
+    {\usebeamerfont{author}\usebeamercolor[fg]{author}\insertauthor}
+    
+    \vskip0.5em
+    
+    \ifx\insertinstitute\@empty\else
+      {\usebeamerfont{institute}\usebeamercolor[fg]{institute}\insertinstitute}
+      \vskip0.5em
+    \fi
+    
+    % Date
+    {\usebeamerfont{date}\usebeamercolor[fg]{date}\insertdate}
+    
+  \end{center}
+  \vfill
+  \setcounter{framenumber}{0}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Custom Frame Title
+%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{frametitle}{
+  \vskip12pt
+  \noindent\begin{minipage}{\textwidth}
+    {\usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}\insertframetitle}
+    \ifx\insertframesubtitle\@empty\else
+      \vskip4pt
+      {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\insertframesubtitle}
+    \fi
+  \end{minipage}
+  \vskip8pt
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Section Pages
+%%%%%%%%%%%%%%%%%%%%%%%
+\AtBeginSection[]{
+  \begin{frame}[plain,noframenumbering]
+    \vfill
+    \begin{center}
+      {\usebeamerfont{title}\usebeamercolor[fg]{title}\insertsectionhead}
+      \vskip1em
+      \textcolor{BorderColor}{\rule{0.4\textwidth}{0.5pt}}
+    \end{center}
+    \vfill
+  \end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Footer Design
+%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{footline}{
+  \hfill
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, xshift=-8pt, yshift=6pt] at (current page.south east) {
+      \tiny\color{TextMuted}\insertframenumber\,/\,\inserttotalframenumber
+    };
+  \end{tikzpicture}
+  \vskip4pt
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% List Styling
+%%%%%%%%%%%%%%%%%%%%%%%
+% Simple geometric shapes for lists
+\setbeamertemplate{itemize item}{\raisebox{0.12ex}{\tiny$\bullet$}}
+\setbeamertemplate{itemize subitem}{\raisebox{0.12ex}{\tiny$\circ$}}
+\setbeamertemplate{itemize subsubitem}{\raisebox{0.12ex}{\tiny$-$}}
+
+% Clean enumeration
+\setbeamertemplate{enumerate item}{\insertenumlabel.}
+\setbeamertemplate{enumerate subitem}{\insertenumlabel.\insertsubenumlabel}
+\setbeamertemplate{enumerate subsubitem}{\insertenumlabel.\insertsubenumlabel.\insertsubsubenumlabel}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Block Design
+%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{block begin}{
+  \vskip6pt
+  \begin{beamercolorbox}[dp=0.5ex, leftskip=0.5ex, rightskip=0.5ex]{block title}
+    \usebeamerfont{block title}\insertblocktitle
+  \end{beamercolorbox}
+  \vskip-2pt
+  \begin{beamercolorbox}[dp=0.5ex, leftskip=0.5ex, rightskip=0.5ex, vmode]{block body}
+    \vskip6pt
+}
+
+\setbeamertemplate{block end}{
+  \vskip6pt
+  \end{beamercolorbox}
+  \vskip6pt
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Mathematics & Code
+%%%%%%%%%%%%%%%%%%%%%%%
+% Ensure math looks good
+\setbeamercolor{math text}{fg=TextPrimary}
+\setbeamercolor{math text inlined}{fg=TextPrimary}
+\setbeamercolor{math text displayed}{fg=TextPrimary}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Table of Contents
+%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{section in toc}{%
+  \vskip4pt%
+  \inserttocsectionnumber.~\inserttocsection%
+  \vskip2pt%
+}
+
+\setbeamertemplate{subsection in toc}{%
+  \hskip1.5em\inserttocsectionnumber.\inserttocsubsectionnumber~\inserttocsubsection%
+  \vskip1pt%
+}
+
+\setbeamercolor{section in toc}{fg=TextPrimary}
+\setbeamercolor{subsection in toc}{fg=TextSecondary}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography
+%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{bibliography item}{\insertbiblabel}
+\setbeamercolor{bibliography item}{fg=TextMuted}
+\setbeamercolor{bibliography entry author}{fg=TextPrimary}
+\setbeamercolor{bibliography entry title}{fg=TextPrimary}
+\setbeamercolor{bibliography entry location}{fg=TextSecondary}
+\setbeamercolor{bibliography entry note}{fg=TextMuted}

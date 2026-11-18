@@ -68,6 +68,19 @@ class KVCachePool:
     def kv_token_usage(self) -> tuple[int, int]:
         return self._cache.kv_token_usage()
 
+    def clear_l1_for_gpu_failure(self) -> dict[str, int]:
+        """Clear volatile L1 metadata and retain the independent Host L2."""
+
+        result = self._cache.clear_l1_for_gpu_failure()
+        self.metrics["gpu_failure_l1_cleared_tokens"] = (
+            int(self.metrics.get("gpu_failure_l1_cleared_tokens", 0))
+            + int(result["cleared_device_tokens"])
+        )
+        self.metrics["gpu_failure_l1_clear_count"] = (
+            int(self.metrics.get("gpu_failure_l1_clear_count", 0)) + 1
+        )
+        return result
+
     def kv_token_usage_details(
         self, *, logical_tokens: int | None = None
     ) -> tuple[int, int, int, int]:
@@ -376,6 +389,37 @@ class KVCachePool:
 
     def flush_write_through_acks(self) -> int:
         return self._cache.flush_write_through_acks()
+
+    def enable_offline_hicache_des(
+        self,
+        *,
+        dp_rank: int,
+        pp_rank: int,
+        scheduler_tp_rank: int,
+        kv_bytes_per_token_per_tp_rank: int,
+        worker_incarnation: int = 0,
+    ) -> None:
+        """Enable parent-ACKed ordinary HiCache transfers for offline DES."""
+
+        self.hicache.enable_offline_des(
+            dp_rank=dp_rank,
+            pp_rank=pp_rank,
+            scheduler_tp_rank=scheduler_tp_rank,
+            kv_bytes_per_token_per_tp_rank=kv_bytes_per_token_per_tp_rank,
+            worker_incarnation=worker_incarnation,
+        )
+
+    def drain_offline_hicache_intents(self) -> list[dict]:
+        return self.hicache.drain_offline_intents()
+
+    def apply_offline_hicache_acks(
+        self,
+        acknowledgements: list[dict],
+    ) -> list[dict]:
+        return self._cache.apply_offline_hicache_acks(acknowledgements)
+
+    def offline_hicache_intent_audit(self) -> list[str]:
+        return self._cache.offline_hicache_intent_audit()
 
     def write_to_l3(self, req: Req) -> None:
         if self.config.l3_capacity_pages == 0:

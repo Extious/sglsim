@@ -1,0 +1,447 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-08-05T10:05:00.000Z" agent="Codex" version="26.0.16" type="device">
+  <diagram id="aegiskv-three-layer" name="AegisKV Three-Layer Architecture">
+    <mxGraphModel dx="2600" dy="1700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2600" pageHeight="1700" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="AegisKV · Three-Layer System Architecture" style="rounded=0;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=0;fillColor=none;strokeColor=none;strokeWidth=0;dashed=0;dashPattern=6 4;fontColor=#172B4D;fontSize=28;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="1">
+          <mxGeometry x="350" y="0" width="1900" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Slack-aware requests → causal route binding → certified finite-window MILP → DP×PP execution" style="rounded=0;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=0;fillColor=none;strokeColor=none;strokeWidth=0;dashed=0;dashPattern=6 4;fontColor=#5E6C84;fontSize=14;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="1">
+          <mxGeometry x="450" y="52" width="1700" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="system-host" value="AEGISKV SYSTEM · blue = request · orange = stage-aligned KV · dashed purple/green = certified control" style="swimlane;startSize=42;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#F1F3F5;swimlaneFillColor=#FFFFFF;strokeColor=#A5ADBA;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="1">
+          <mxGeometry x="40" y="85" width="2520" height="1560" as="geometry" />
+        </mxCell>
+        <mxCell id="application-layer" value="LAYER 1 · APPLICATION · build the workflow, track progress, and attach per-request Slack" style="swimlane;startSize=40;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#FFF6D8;swimlaneFillColor=#FFFDF6;strokeColor=#C9A227;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="system-host">
+          <mxGeometry x="30" y="52" width="1830" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="workflow-input" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;APPLICATION ENTRY&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Agent / Workflow Handler&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;task-decomposition or role protocol&lt;br/&gt;construct request sequence and dependencies&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=12;fillColor=#FFFFFF;strokeColor=#5B8DB8;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#274C77;fontSize=13;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="application-layer">
+          <mxGeometry x="30" y="75" width="390" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="workflow-builder" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;WORKFLOW BUILDER&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Fixed Workflow DAG&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;node = one agent execution segment&lt;br/&gt;status: pending / running / completed&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=12;fillColor=#E8F1FB;strokeColor=#5B8DB8;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#274C77;fontSize=13;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="application-layer">
+          <mxGeometry x="460" y="75" width="460" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="algorithm-1-handler" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;APPLICATION-SIDE IMPLEMENTATION&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Algorithm 1 · Slack Handler&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;online: duration model + CPM forward / backward&lt;br/&gt;trace study: oracle Slack can bypass prediction&lt;br/&gt;publish Slack through one downstream contract&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=12;fillColor=#FFF6D8;strokeColor=#C9A227;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5B4710;fontSize=13;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="application-layer">
+          <mxGeometry x="960" y="75" width="820" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="request-envelope" value="REQUEST ENVELOPE ↓  workflow_id · dag_node_id · payload · slack_ms · slack_source · slack_version" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#C9A227;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5B4710;fontSize=13;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="application-layer">
+          <mxGeometry x="960" y="238" width="820" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-app-builder" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=2.2;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="application-layer" source="workflow-input" target="workflow-builder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-builder-alg1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#C9A227;strokeWidth=2.2;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="application-layer" source="workflow-builder" target="algorithm-1-handler">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-alg1-envelope" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#C9A227;strokeWidth=2.2;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="application-layer" source="algorithm-1-handler" target="request-envelope">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="router-layer" value="LAYER 2 · ROUTER · observed state freezes execution e(r); certified exact plan binds one healthy backup b(r)" style="swimlane;startSize=40;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#F2ECFA;swimlaneFillColor=#FCFAFF;strokeColor=#8B6BB1;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="system-host">
+          <mxGeometry x="30" y="392" width="1830" height="245" as="geometry" />
+        </mxCell>
+        <mxCell id="execution-binding" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;OBSERVED-STATE TOP-1&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Execution target e(r)&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;causal normal-inference route&lt;br/&gt;example below: DP Rank 0&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=12;fillColor=#E8F1FB;strokeColor=#5B8DB8;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#274C77;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="router-layer">
+          <mxGeometry x="90" y="90" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="top2-scheduler" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;ADMISSION AND ROUTE CONTRACT&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Causal Router + Certified Plan&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;health / load / approximate Radix state observed now&lt;br/&gt;freeze e(r), candidates B(r), route_version&lt;br/&gt;load certified y[r,b]=1; future manifest is forbidden&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=12;fillColor=#F2ECFA;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=13;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="router-layer">
+          <mxGeometry x="620" y="70" width="590" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="backup-binding" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CERTIFIED IMMUTABLE ROUTE&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Backup target b(r)&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;one-hot MILP decision y[r,b]&lt;br/&gt;example below: DP Rank 3&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=12;fillColor=#FFF4DF;strokeColor=#D69E2E;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#6B4A10;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="router-layer">
+          <mxGeometry x="1425" y="90" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-envelope-router" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#8B6BB1;strokeWidth=2.2;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="system-host" source="request-envelope" target="top2-scheduler">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1400.0" y="377.0" />
+              <mxPoint x="1876.0" y="377.0" />
+              <mxPoint x="1876.0" y="447.0" />
+              <mxPoint x="945.0" y="447.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-router-exec" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=2.2;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="router-layer" source="top2-scheduler" target="execution-binding">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-router-backup" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=2.2;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="router-layer" source="top2-scheduler" target="backup-binding">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inference-layer" value="LAYER 3 · INFERENCE ENGINE · DP=4 × PP=4 processes; each DP owns one Connector policy and one atomic alpha/beta budget" style="swimlane;startSize=40;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#E8F1FB;swimlaneFillColor=#FAFCFF;strokeColor=#5B8DB8;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="system-host">
+          <mxGeometry x="30" y="665" width="1830" height="820" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-legend" value="CONTROL / DATA SPLIT · exact plan carries route + per-stage placements · runtime moves only PPp → PPp KV · green budget version is DP-wide" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=4;fillColor=#FFFFFF;strokeColor=#A5ADBA;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5E6C84;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="inference-layer">
+          <mxGeometry x="30" y="52" width="1770" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0" value="DP RANK 0 · one replica / failure domain" style="swimlane;startSize=40;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#E8F1FB;swimlaneFillColor=#FBFDFF;strokeColor=#5B8DB8;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="inference-layer">
+          <mxGeometry x="30" y="140" width="420" height="620" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-role" value="EXAMPLE EXECUTION TARGET · e(r)" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#E8F1FB;strokeColor=#5B8DB8;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5E6C84;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="20" y="50" width="380" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-pp-0" value="PP0&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="20" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-pp-1" value="PP1&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="115" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-0-pp-0-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-0" source="dp-0-pp-0" target="dp-0-pp-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-pp-2" value="PP2&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="210" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-0-pp-1-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-0" source="dp-0-pp-1" target="dp-0-pp-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-pp-3" value="PP3&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="305" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-0-pp-2-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-0" source="dp-0-pp-2" target="dp-0-pp-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-adapter" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · DP-OWNED BUDGET&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Budget Publisher · Algorithm 3&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;H_0, M_0 → atomic alpha_0 / beta_0 for PP0–PP3&lt;br/&gt;K → K+1 only after 4/4 budget ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="20" y="460" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-connector" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · STAGE-LOCAL EXECUTOR&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Certified Connector · Algorithm 2&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;b(r) + x[r,c,p,b,t] → HBM / Host / Recompute&lt;br/&gt;PPp → PPp only; commit after 4/4 stage ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#F2ECFA;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="20" y="165" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-hbm" value="DATA PLANE · GPU HBM&#10;per-stage H_0 = alpha_0 × HBMmax_0" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="20" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-dram" value="DATA PLANE · Host DRAM&#10;DP policy M_0 = beta_0 × Hostmax_0" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="220" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-feedback" value="ROLLING STATE K · resident stock · used link bytes · admitted / unmet utility · recovery p99 · SLO miss" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="20" y="380" width="380" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-0-scope" value="DP-OWNED alpha_0 / beta_0 across PP0–PP3 · node arbiter = physical Host cap only" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=4;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-0">
+          <mxGeometry x="20" y="580" width="380" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-0-adapter-connector" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.8;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-0" source="dp-0-adapter" target="dp-0-connector">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="412.0" y="510.0" />
+              <mxPoint x="412.0" y="215.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-dp-0-connector-hbm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.237;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-0" source="dp-0-connector" target="dp-0-hbm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-0-connector-dram" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.763;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-0" source="dp-0-connector" target="dp-0-dram">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-0-feedback-adapter" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.6;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-0" source="dp-0-feedback" target="dp-0-adapter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1" value="DP RANK 1 · one replica / failure domain" style="swimlane;startSize=40;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#F1F3F5;swimlaneFillColor=#FCFDFE;strokeColor=#A5ADBA;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="inference-layer">
+          <mxGeometry x="475" y="140" width="420" height="620" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-role" value="AVAILABLE DP REPLICA" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#F1F3F5;strokeColor=#A5ADBA;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5E6C84;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="20" y="50" width="380" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-pp-0" value="PP0&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="20" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-pp-1" value="PP1&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="115" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-1-pp-0-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-1" source="dp-1-pp-0" target="dp-1-pp-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-pp-2" value="PP2&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="210" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-1-pp-1-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-1" source="dp-1-pp-1" target="dp-1-pp-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-pp-3" value="PP3&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="305" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-1-pp-2-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-1" source="dp-1-pp-2" target="dp-1-pp-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-adapter" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · DP-OWNED BUDGET&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Budget Publisher · Algorithm 3&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;H_1, M_1 → atomic alpha_1 / beta_1 for PP0–PP3&lt;br/&gt;K → K+1 only after 4/4 budget ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="20" y="460" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-connector" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · STAGE-LOCAL EXECUTOR&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Certified Connector · Algorithm 2&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;b(r) + x[r,c,p,b,t] → HBM / Host / Recompute&lt;br/&gt;PPp → PPp only; commit after 4/4 stage ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#F2ECFA;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="20" y="165" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-hbm" value="DATA PLANE · GPU HBM&#10;per-stage H_1 = alpha_1 × HBMmax_1" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="20" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-dram" value="DATA PLANE · Host DRAM&#10;DP policy M_1 = beta_1 × Hostmax_1" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="220" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-feedback" value="ROLLING STATE K · resident stock · used link bytes · admitted / unmet utility · recovery p99 · SLO miss" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="20" y="380" width="380" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-1-scope" value="DP-OWNED alpha_1 / beta_1 across PP0–PP3 · node arbiter = physical Host cap only" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=4;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-1">
+          <mxGeometry x="20" y="580" width="380" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-1-adapter-connector" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.8;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-1" source="dp-1-adapter" target="dp-1-connector">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="412.0" y="510.0" />
+              <mxPoint x="412.0" y="215.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-dp-1-connector-hbm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.237;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-1" source="dp-1-connector" target="dp-1-hbm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-1-connector-dram" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.763;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-1" source="dp-1-connector" target="dp-1-dram">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-1-feedback-adapter" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.6;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-1" source="dp-1-feedback" target="dp-1-adapter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2" value="DP RANK 2 · one replica / failure domain" style="swimlane;startSize=40;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#F1F3F5;swimlaneFillColor=#FCFDFE;strokeColor=#A5ADBA;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="inference-layer">
+          <mxGeometry x="920" y="140" width="420" height="620" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-role" value="AVAILABLE DP REPLICA" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#F1F3F5;strokeColor=#A5ADBA;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5E6C84;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="20" y="50" width="380" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-pp-0" value="PP0&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="20" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-pp-1" value="PP1&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="115" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-2-pp-0-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-2" source="dp-2-pp-0" target="dp-2-pp-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-pp-2" value="PP2&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="210" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-2-pp-1-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-2" source="dp-2-pp-1" target="dp-2-pp-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-pp-3" value="PP3&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="305" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-2-pp-2-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-2" source="dp-2-pp-2" target="dp-2-pp-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-adapter" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · DP-OWNED BUDGET&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Budget Publisher · Algorithm 3&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;H_2, M_2 → atomic alpha_2 / beta_2 for PP0–PP3&lt;br/&gt;K → K+1 only after 4/4 budget ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="20" y="460" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-connector" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · STAGE-LOCAL EXECUTOR&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Certified Connector · Algorithm 2&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;b(r) + x[r,c,p,b,t] → HBM / Host / Recompute&lt;br/&gt;PPp → PPp only; commit after 4/4 stage ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#F2ECFA;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="20" y="165" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-hbm" value="DATA PLANE · GPU HBM&#10;per-stage H_2 = alpha_2 × HBMmax_2" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="20" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-dram" value="DATA PLANE · Host DRAM&#10;DP policy M_2 = beta_2 × Hostmax_2" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="220" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-feedback" value="ROLLING STATE K · resident stock · used link bytes · admitted / unmet utility · recovery p99 · SLO miss" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="20" y="380" width="380" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-2-scope" value="DP-OWNED alpha_2 / beta_2 across PP0–PP3 · node arbiter = physical Host cap only" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=4;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-2">
+          <mxGeometry x="20" y="580" width="380" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-2-adapter-connector" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.8;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-2" source="dp-2-adapter" target="dp-2-connector">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="412.0" y="510.0" />
+              <mxPoint x="412.0" y="215.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-dp-2-connector-hbm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.237;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-2" source="dp-2-connector" target="dp-2-hbm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-2-connector-dram" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.763;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-2" source="dp-2-connector" target="dp-2-dram">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-2-feedback-adapter" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.6;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-2" source="dp-2-feedback" target="dp-2-adapter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3" value="DP RANK 3 · one replica / failure domain" style="swimlane;startSize=40;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#FFF4DF;swimlaneFillColor=#FFFDF8;strokeColor=#D69E2E;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="inference-layer">
+          <mxGeometry x="1365" y="140" width="420" height="620" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-role" value="EXAMPLE BACKUP TARGET · b(r)" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FFF4DF;strokeColor=#D69E2E;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5E6C84;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="20" y="50" width="380" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-pp-0" value="PP0&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="20" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-pp-1" value="PP1&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="115" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-3-pp-0-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-3" source="dp-3-pp-0" target="dp-3-pp-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-pp-2" value="PP2&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="210" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-3-pp-1-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-3" source="dp-3-pp-1" target="dp-3-pp-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-pp-3" value="PP3&#10;S/W" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="305" y="95" width="75" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-3-pp-2-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=1.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-3" source="dp-3-pp-2" target="dp-3-pp-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-adapter" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · DP-OWNED BUDGET&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Budget Publisher · Algorithm 3&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;H_3, M_3 → atomic alpha_3 / beta_3 for PP0–PP3&lt;br/&gt;K → K+1 only after 4/4 budget ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="20" y="460" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-connector" value="&lt;div style=&quot;font-size:11px;font-weight:700;color:#5E6C84;&quot;&gt;CONTROL PLANE · STAGE-LOCAL EXECUTOR&lt;/div&gt;&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Certified Connector · Algorithm 2&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;b(r) + x[r,c,p,b,t] → HBM / Host / Recompute&lt;br/&gt;PPp → PPp only; commit after 4/4 stage ACKs&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=10;fillColor=#F2ECFA;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="20" y="165" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-hbm" value="DATA PLANE · GPU HBM&#10;per-stage H_3 = alpha_3 × HBMmax_3" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#FBE9E9;strokeColor=#C94040;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#7F1D1D;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="20" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-dram" value="DATA PLANE · Host DRAM&#10;DP policy M_3 = beta_3 × Hostmax_3" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=6;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="220" y="290" width="180" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-feedback" value="ROLLING STATE K · resident stock · used link bytes · admitted / unmet utility · recovery p99 · SLO miss" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="20" y="380" width="380" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="dp-3-scope" value="DP-OWNED alpha_3 / beta_3 across PP0–PP3 · node arbiter = physical Host cap only" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=4;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="dp-3">
+          <mxGeometry x="20" y="580" width="380" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-3-adapter-connector" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.8;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-3" source="dp-3-adapter" target="dp-3-connector">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="412.0" y="510.0" />
+              <mxPoint x="412.0" y="215.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-dp-3-connector-hbm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.237;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-3" source="dp-3-connector" target="dp-3-hbm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-3-connector-dram" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=1.8;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.763;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-3" source="dp-3-connector" target="dp-3-dram">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dp-3-feedback-adapter" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=1.6;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="dp-3" source="dp-3-feedback" target="dp-3-adapter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="kv-transfer-bus" value="STAGE-ALIGNED KV · DP0.PPp → DP3.PPp for p=0..3 · contiguous prefix commits only after 4/4 stage ACKs" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=4;fillColor=#FFF4DF;strokeColor=#D69E2E;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#6B4A10;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="inference-layer">
+          <mxGeometry x="560" y="98" width="760" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="failure-footer" value="FAILURE / RETRY · use certified healthy b(r) · restore the verified all-stage contiguous prefix · recompute the remaining suffix" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=3;fillColor=#FFFFFF;strokeColor=#A5ADBA;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5E6C84;fontSize=11;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="inference-layer">
+          <mxGeometry x="290" y="775" width="1250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-exec-dp0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#5B8DB8;strokeWidth=2.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="system-host" source="execution-binding" target="dp-0-pp-0">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="270.0" y="651.0" />
+              <mxPoint x="15.0" y="651.0" />
+              <mxPoint x="15.0" y="924.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-backup-dp3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#8B6BB1;strokeWidth=2.4;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="system-host" source="backup-binding" target="dp-3-connector">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1605.0" y="651.0" />
+              <mxPoint x="1876.0" y="651.0" />
+              <mxPoint x="1876.0" y="799.0" />
+              <mxPoint x="1389.0" y="799.0" />
+              <mxPoint x="1389.0" y="1020.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-dp0-kv-bus" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=2.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="inference-layer" source="dp-0-connector" target="kv-transfer-bus">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="462.0" y="355.0" />
+              <mxPoint x="462.0" y="113.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-kv-bus-dp3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#D69E2E;strokeWidth=2.6;dashed=0;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="inference-layer" source="kv-transfer-bus" target="dp-3-connector">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1352.0" y="113.0" />
+              <mxPoint x="1352.0" y="355.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="implementation-details" value="CERTIFIED EXACT CONTROL · offline HiGHS → lightweight runtime plan" style="swimlane;startSize=42;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#F1F3F5;swimlaneFillColor=#FBFCFE;strokeColor=#A5ADBA;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="system-host">
+          <mxGeometry x="1900" y="52" width="590" height="1433" as="geometry" />
+        </mxCell>
+        <mxCell id="alg1-detail" value="ALGORITHM 1 · APPLICATION SLACK HANDLER" style="swimlane;startSize=38;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#FFF6D8;swimlaneFillColor=#FFFEF9;strokeColor=#C9A227;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="implementation-details">
+          <mxGeometry x="20" y="58" width="550" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="alg1-detail-input" value="&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Inputs&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;fixed DAG + progress + calibrated online duration distribution&lt;br/&gt;trace evaluation: oracle Slack may bypass this predictor&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#FFFFFF;strokeColor=#C9A227;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5B4710;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg1-detail">
+          <mxGeometry x="20" y="55" width="510" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="alg1-detail-compute" value="&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Compute&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;sample K remaining-duration realizations&lt;br/&gt;CPM forward/backward → node Slack&lt;br/&gt;request Slack = conservative quantile&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#FFF6D8;strokeColor=#C9A227;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5B4710;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg1-detail">
+          <mxGeometry x="20" y="150" width="510" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="alg1-detail-output" value="OUTPUT · predicted_slack_ms · slack_quantile · slack_version" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#C9A227;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#5B4710;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg1-detail">
+          <mxGeometry x="20" y="270" width="510" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="router-detail" value="ROUTER CONTRACT · CAUSAL ADMISSION ONLY" style="swimlane;startSize=38;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#F2ECFA;swimlaneFillColor=#FFFCFF;strokeColor=#8B6BB1;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="implementation-details">
+          <mxGeometry x="20" y="400" width="550" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="router-detail-body" value="&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Observed state → immutable route version&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;choose e(r) from current health / load / cache state&lt;br/&gt;pass eligible backup candidates B(r) to the MILP&lt;br/&gt;accept certified b(r); never read a future failure manifest&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#FFFFFF;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="router-detail">
+          <mxGeometry x="20" y="55" width="510" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="alg2-detail" value="ALGORITHM 2 · CERTIFIED ROUTE + STAGE PLACEMENT" style="swimlane;startSize=38;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#F2ECFA;swimlaneFillColor=#FFFCFF;strokeColor=#8B6BB1;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="implementation-details">
+          <mxGeometry x="20" y="612" width="550" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="alg2-detail-input" value="&lt;div style=&quot;font-size:15px;font-weight:700;margin-top:3px;&quot;&gt;Frozen finite-window inputs&lt;/div&gt;&lt;div style=&quot;font-size:11px;margin-top:5px;&quot;&gt;Slack + causal e(r) + B(r) + chunks; hazard prior (not realized future)&lt;br/&gt;topology + resident/link stock + current ACKed H/M budget&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#FFFFFF;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg2-detail">
+          <mxGeometry x="20" y="55" width="510" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="alg2-detail-vars" value="&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Binary decisions&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;y[r,b]: exactly one immutable backup DP&lt;br/&gt;x[r,c,p,b,t]: one tier t ∈ {HBM, Host, Recompute}&lt;br/&gt;g[r,c,b,s]: exact all-PP-stage survival under scenario s&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#F2ECFA;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg2-detail">
+          <mxGeometry x="20" y="137" width="510" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="alg2-detail-compute" value="&lt;div style=&quot;font-size:16px;font-weight:700;margin-top:3px;&quot;&gt;Joint objective + hard constraints&lt;/div&gt;&lt;div style=&quot;font-size:13px;margin-top:7px;&quot;&gt;min E[workflow loss] + lambda·CVaR_tau + copy/normal cost&lt;br/&gt;+ H/M budget cost + |delta H| / |delta M| switching cost&lt;br/&gt;stage HBM, DP Host, node Host, link BW, AND + contiguous prefix&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#FFFFFF;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg2-detail">
+          <mxGeometry x="20" y="239" width="510" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="alg2-detail-output" value="OUTPUT · certified b(r) + x[r,c,p,b,t] · all-stage contiguous recoverable prefix" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#8B6BB1;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#4A375C;fontSize=12;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg2-detail">
+          <mxGeometry x="20" y="341" width="510" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="alg3-detail" value="ALGORITHM 3 · EXACT DP BUDGET + ATOMIC PUBLICATION" style="swimlane;startSize=38;horizontal=1;rounded=1;arcSize=10;container=1;collapsible=0;recursiveResize=0;whiteSpace=wrap;html=1;verticalAlign=middle;align=left;spacingLeft=12;fillColor=#ECF8F1;swimlaneFillColor=#FCFEFD;strokeColor=#4B9B70;strokeWidth=1.6;fontSize=14;fontStyle=1;fontColor=#172B4D;fontFamily=Noto Sans CJK SC;" vertex="1" parent="implementation-details">
+          <mxGeometry x="20" y="1034" width="550" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="alg3-detail-input" value="&lt;div style=&quot;font-size:15px;font-weight:700;margin-top:3px;&quot;&gt;Causal rolling state at sealed window K&lt;/div&gt;&lt;div style=&quot;font-size:11px;margin-top:5px;&quot;&gt;resident HBM/Host + used links + observed unavailable ranks&lt;br/&gt;offered/admitted/unmet utility + pressure + recovery p99 + SLO + ACKed version&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#FFFFFF;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg3-detail">
+          <mxGeometry x="20" y="55" width="510" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="alg3-detail-compute" value="&lt;div style=&quot;font-size:15px;font-weight:700;margin-top:3px;&quot;&gt;Integer budget decisions in the same MILP&lt;/div&gt;&lt;div style=&quot;font-size:11px;margin-top:5px;&quot;&gt;H_n: one per-stage HBM token limit shared by PP0–PP3&lt;br/&gt;M_n: DP-owned Host policy limit; node capacity is separate&lt;br/&gt;alpha_n=H_n/HBMmax_n; beta_n=M_n/Hostmax_n&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=9;fillColor=#ECF8F1;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=12;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg3-detail">
+          <mxGeometry x="20" y="147" width="510" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="alg3-detail-publication" value="&lt;div style=&quot;font-size:15px;font-weight:700;margin-top:3px;&quot;&gt;Publication + certification gate&lt;/div&gt;&lt;div style=&quot;font-size:11px;margin-top:5px;&quot;&gt;HiGHS OPTIMAL + zero gap + primal=dual + independent validation&lt;br/&gt;decision SHA + replay; publish after 4/4 ACK&lt;br/&gt;route-only causal rolling reuses fixed H/M&lt;/div&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=left;verticalAlign=middle;spacing=8;fillColor=#FFFFFF;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=0;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg3-detail">
+          <mxGeometry x="20" y="249" width="510" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="alg3-detail-output" value="PLAN · finite-instance optimum only · publish_new | reuse_current_fixed" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;overflow=hidden;align=center;verticalAlign=middle;spacing=5;fillColor=#FFFFFF;strokeColor=#4B9B70;strokeWidth=1.4;dashed=0;dashPattern=6 4;fontColor=#276749;fontSize=11;fontStyle=1;fontFamily=Noto Sans CJK SC;" vertex="1" parent="alg3-detail">
+          <mxGeometry x="20" y="326" width="510" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-alg1-callout" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#C9A227;strokeWidth=2.2;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.35;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="system-host" source="algorithm-1-handler" target="alg1-detail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-router-callout" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#8B6BB1;strokeWidth=2.2;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=0.5;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="system-host" source="top2-scheduler" target="router-detail">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="945.0" y="447.0" />
+              <mxPoint x="1884.0" y="447.0" />
+              <mxPoint x="1884.0" y="547.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-connector-callout" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#8B6BB1;strokeWidth=2.2;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="system-host" source="dp-3-connector" target="alg2-detail">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1882.0" y="1020.0" />
+              <mxPoint x="1882.0" y="864.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-adapter-callout" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#4B9B70;strokeWidth=2.2;dashed=1;dashPattern=7 5;startArrow=none;startFill=0;endArrow=block;endFill=1;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=1;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=1;" edge="1" parent="system-host" source="dp-3-adapter" target="alg3-detail">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1892.0" y="1315.0" />
+              <mxPoint x="1892.0" y="1266.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

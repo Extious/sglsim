@@ -1,0 +1,21 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "failure",
+  "group": "P3",
+  "extends": "../common/failure.json",
+  "fixed": {
+    "trigger": {
+      "scale_normalization": {
+        "rule": "constant_conditioned_cluster_gpu_time_exposure_v2",
+        "reference_node_count": 4,
+        "reference_gpus_per_node": 8,
+        "reference_active_offset_ns": 1000000,
+        "selected_gpu_count_source": "compiled_physical_topology",
+        "trigger_offset_formula": "reference_active_offset_ns * reference_gpu_count / selected_gpu_count",
+        "exposure_window": "after_anchor_scheduler_ownership_before_injection",
+        "rounding": "nearest_integer_ns_half_up"
+      }
+    }
+  },
+  "axes": {}
+}

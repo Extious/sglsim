@@ -17,6 +17,12 @@ from benchmark.agentic_workflows.run import execute_scenario, main as online_mai
 from benchmark.agentic_workflows.combine import combine_summary_files
 from benchmark.agentic_workflows.paper import write_paper_candidates
 from benchmark.agentic_workflows.summary import summarize_run_dir, write_summary_csv
+from benchmark.agentic_workflows.failure import failure_plan_from_scenario
+from benchmark.agentic_workflows.online import build_named_online_plan, main as online_plan_main
+from benchmark.agentic_workflows.workload import (
+    agent_role_for_stage,
+    summarize_workflow_shape,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -181,7 +187,248 @@ def test_materialize_staged_13131_scenario_projects_shape(tmp_path):
     assert client["max_concurrency"] == scenario.max_concurrency
     assert client["gsp_stage_long_decode_agent_index"] == 0
     assert client["gsp_long_decode_output_multiplier"] == 5.0
+    assert client["gsp_failure_after_output_tokens"] == 32
     assert client["gsp_aegis_policy"] == "aegiskv"
+
+
+def test_motivation_main_subagent_dp8_failure_plan(tmp_path):
+    scenario = get_scenario("motivation_main_subagent_dp8_failure")
+    config_dir = materialize_synthesis_config(
+        scenario,
+        base_config_dir=DEFAULT_BASE_CONFIG_DIR,
+        output_dir=tmp_path,
+        trial=0,
+    )
+
+    client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
+    server = json.loads((config_dir / "server.json").read_text(encoding="utf-8"))
+    workload = summarize_workflow_shape(scenario)
+    failure = failure_plan_from_scenario(scenario)
+    plan = build_named_online_plan(
+        "motivation_main_subagent_dp8_failure",
+        output_dir=tmp_path / "plan",
+        trial=0,
+    )
+
+    assert server["scheduler"]["dp_size"] == 8
+    assert server["cache"]["l1_capacity_pages"] == 393216
+    assert server["context_length"] == 196608
+    assert client["gsp_failover_replay"] is True
+    assert client["gsp_failover_replay_critical_only"] is False
+    assert client["gsp_failure_after_output_tokens"] == 128
+    assert client["gsp_failure_injection_count"] == 24
+    assert client["gsp_failure_target_stage_id"] == 4
+    assert client["gsp_failure_target_stage_local_agent_index"] == 0
+    assert client["gsp_failure_target_turn_idx"] == 0
+    assert client["gsp_backup_kv"] is False
+    assert client["gsp_stage_context_lens"] == [40960, 40960, 81920, 40960, 122880]
+    assert workload.workflow_shape == "1-3-1-3-1"
+    assert workload.workflow_count == scenario.groups
+    assert workload.total_agentic_requests == scenario.workflow_count
+    assert workload.main_agents_per_workflow == 3
+    assert workload.subagents_per_workflow == 6
+    assert workload.estimated_first_turn_prompt_tokens == 40960
+    assert workload.estimated_final_turn_context_tokens == 122880
+    assert failure.controlled_by_injection_count
+    assert failure.injection_count == 24
+    assert failure.target_stage_id == 4
+    assert failure.target_stage_local_agent_index == 0
+    assert failure.target_turn_idx == 0
+    assert failure.retry_policy == "peer"
+    assert agent_role_for_stage(stage_width=1) == "main_agent"
+    assert agent_role_for_stage(stage_width=3) == "subagent"
+    assert "request_details.csv" in plan.result_artifacts
+    assert plan.synthesis_entrypoint == "benchmark.synthesis_requests.run.run_experiment"
+
+
+def test_online_plan_cli_writes_plan_json(tmp_path, capsys):
+    rc = online_plan_main(
+        [
+            "--scenario",
+            "motivation_main_subagent_dp8_failure",
+            "--output-dir",
+            str(tmp_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert rc == 0
+    assert (tmp_path / "online_experiment_plan.json").exists()
+    assert payload["scenario"] == "motivation_main_subagent_dp8_failure"
+    assert payload["failure"]["injection_count"] == 24
+    assert payload["failure"]["target_stage_id"] == 4
+
+
+def test_dp_failure_sweep_state_reserves_per_batch_workflow_once():
+    from benchmark.synthesis_requests.client import DpFailureSweepState
+
+    state = DpFailureSweepState(injections_per_batch=4, batch_size=32)
+    assert state.try_reserve("wf-0", stage_id=1, stage_local_agent_index=1) is True
+    assert state.try_reserve("wf-0", stage_id=1, stage_local_agent_index=1) is False
+    assert state.try_reserve("wf-31", stage_id=1, stage_local_agent_index=2) is True
+    assert state.try_reserve("wf-32", stage_id=3, stage_local_agent_index=0) is True
+    assert state.try_reserve("wf-63", stage_id=4, stage_local_agent_index=0) is True
+    assert state.completed() is False
+    assert state.try_reserve("wf-1", stage_id=2, stage_local_agent_index=0) is True
+    assert state.try_reserve("wf-2", stage_id=3, stage_local_agent_index=1) is True
+    assert state.try_reserve("wf-33", stage_id=3, stage_local_agent_index=2) is True
+    assert state.try_reserve("wf-34", stage_id=0, stage_local_agent_index=0) is True
+    assert state.completed() is True
+    assert state.try_reserve("wf-3", stage_id=1, stage_local_agent_index=0) is False
+
+
+def test_motivation_dp_sweep_scenario_materialize(tmp_path):
+    scenario = get_scenario("motivation_main_subagent_dp8_dp_sweep")
+    config_dir = materialize_synthesis_config(
+        scenario,
+        base_config_dir=DEFAULT_BASE_CONFIG_DIR,
+        output_dir=tmp_path,
+        trial=0,
+    )
+    client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
+
+    assert scenario.groups == 64
+    assert scenario.max_workflow_concurrency == 32
+    assert scenario.dp_failure_sweep is True
+    assert scenario.dp_failure_sweep_injections_per_batch == 4
+    assert client["max_concurrency"] is None
+    assert client["gsp_max_workflow_concurrency"] == 32
+    assert client["gsp_dp_failure_sweep"] is True
+    assert client["gsp_dp_failure_sweep_injections_per_batch"] == 4
+    assert client["gsp_dp_failure_sweep_batch_size"] == 32
+    assert client["gsp_failure_injection_count"] is None
+    assert client["gsp_failover_replay"] is True
+
+
+def test_motivation_dp_sweep_round2_scenario_materialize(tmp_path):
+    scenario = get_scenario("motivation_main_subagent_dp8_dp_sweep_round2")
+    config_dir = materialize_synthesis_config(
+        scenario,
+        base_config_dir=DEFAULT_BASE_CONFIG_DIR,
+        output_dir=tmp_path,
+        trial=0,
+    )
+    client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
+
+    assert scenario.dp_failure_sweep is True
+    assert scenario.dp_failure_sweep_round1_enabled is False
+    assert client["gsp_dp_failure_sweep_round1_enabled"] is False
+    assert len(client["gsp_dp_failure_sweep_precovered_agent_slots"]) == 8
+    assert len(client["gsp_dp_failure_sweep_precovered_workflows"]) == 8
+
+
+def test_motivation_agent_sweep_scenario_materialize(tmp_path):
+    scenario = get_scenario("motivation_main_subagent_dp8_agent_sweep")
+    config_dir = materialize_synthesis_config(
+        scenario,
+        base_config_dir=DEFAULT_BASE_CONFIG_DIR,
+        output_dir=tmp_path,
+        trial=0,
+    )
+    client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
+
+    assert scenario.groups == 24
+    assert scenario.max_workflow_concurrency == 24
+    assert scenario.agent_slot_failure_sweep is True
+    assert client["max_concurrency"] is None
+    assert client["gsp_max_workflow_concurrency"] == 24
+    assert client["gsp_agent_slot_failure_sweep"] is True
+    assert client["gsp_failure_injection_count"] is None
+    assert client["gsp_failover_replay"] is True
+
+
+def test_motivation_main_and_subagent_failure_scenarios_are_comparable():
+    names = [
+        "motivation_main_subagent_dp8_no_failure",
+        "motivation_main_subagent_dp8_failure",
+        "motivation_main_subagent_dp8_subagent_failure",
+        "motivation_main_subagent_dp8_noncritical_subagent_failure",
+        "motivation_main_subagent_dp8_s1_a2_failure",
+        "motivation_main_subagent_dp8_s3_a0_failure",
+        "motivation_main_subagent_dp8_s3_a1_failure",
+        "motivation_main_subagent_dp8_s3_a2_failure",
+    ]
+    scenarios = [get_scenario(name) for name in names]
+    signatures = {
+        (
+            scenario.groups,
+            scenario.prompts_per_group,
+            scenario.turns,
+            scenario.workflow_shape,
+            scenario.system_prompt_len,
+            scenario.question_len,
+            scenario.output_len,
+            scenario.dp_size,
+            scenario.seed,
+            scenario.stage_context_lens,
+        )
+        for scenario in scenarios
+    }
+
+    assert len(signatures) == 1
+    assert scenarios[0].groups == 24
+    assert scenarios[0].max_concurrency == 24
+    assert scenarios[0].max_workflow_concurrency == 24
+    assert scenarios[0].seed == 9251
+    assert scenarios[0].failover_replay is False
+    assert scenarios[0].failure_injection_count == 0
+    assert scenarios[1].failure_injection_count == 24
+    assert scenarios[1].failure_target_stage_id == 4
+    assert scenarios[1].failure_target_stage_local_agent_index == 0
+    assert scenarios[2].failure_target_stage_id == 1
+    assert scenarios[2].failure_target_stage_local_agent_index == 0
+    assert scenarios[3].failure_target_stage_id == 1
+    assert scenarios[3].failure_target_stage_local_agent_index == 1
+    subagent_targets = {
+        (
+            scenario.failure_target_stage_id,
+            scenario.failure_target_stage_local_agent_index,
+        )
+        for scenario in scenarios[2:]
+    }
+    assert subagent_targets == {
+        (1, 0),
+        (1, 1),
+        (1, 2),
+        (3, 0),
+        (3, 1),
+        (3, 2),
+    }
+
+
+def test_online_alpha_dp8_scenarios_cover_load_and_failure_states(tmp_path):
+    names = [
+        "online_alpha_dp8_baseload_lowrisk",
+        "online_alpha_dp8_baseload_highrisk",
+        "online_alpha_dp8_highload_lowrisk",
+        "online_alpha_dp8_highload_highrisk",
+    ]
+    scenarios = [get_scenario(name) for name in names]
+
+    assert {scenario.groups for scenario in scenarios} == {2, 4}
+    assert {scenario.max_concurrency for scenario in scenarios} == {6, 12}
+    assert {scenario.failure_rate_per_window for scenario in scenarios} == {0.003, 0.03}
+    assert {scenario.aegis_critical_pressure for scenario in scenarios} == {0.62, 0.86}
+    assert all(scenario.dp_size == 8 for scenario in scenarios)
+    assert all(scenario.aegis_policy == "aegiskv" for scenario in scenarios)
+    assert all(scenario.alpha_policy_path for scenario in scenarios)
+    assert all(
+        scenario.stage_context_lens == (40960, 40960, 81920, 40960, 122880)
+        for scenario in scenarios
+    )
+    assert all(scenario.context_length == 196608 for scenario in scenarios)
+
+    config_dir = materialize_synthesis_config(
+        scenarios[0],
+        base_config_dir=DEFAULT_BASE_CONFIG_DIR,
+        output_dir=tmp_path,
+        trial=0,
+    )
+    client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
+    assert client["gsp_alpha_policy_path"] == scenarios[0].alpha_policy_path
+    assert client["gsp_failure_rate_per_window"] == 0.003
+    assert client["gsp_aegis_critical_pressure"] == 0.62
 
 
 def test_staged_13131_stress_policy_scenarios_are_comparable_and_soft(tmp_path):
@@ -206,6 +453,7 @@ def test_staged_13131_stress_policy_scenarios_are_comparable_and_soft(tmp_path):
             SCENARIOS[name].seed,
             SCENARIOS[name].failure_after_output_tokens,
             SCENARIOS[name].workflow_shape,
+            SCENARIOS[name].stage_context_lens,
             SCENARIOS[name].long_decode_output_multiplier,
         )
         for name in policy_names
@@ -232,6 +480,55 @@ def test_staged_13131_stress_policy_scenarios_are_comparable_and_soft(tmp_path):
     assert client["gsp_failure_after_output_tokens"] == 128
     assert client["gsp_long_decode_output_multiplier"] == 8.0
     assert client["seed"] == scenario.seed + 1
+
+
+def test_staged_13131_lite_policy_scenarios_pin_failure_timing(tmp_path):
+    policy_names = [
+        "staged_13131_policy_lite_no_backup",
+        "staged_13131_policy_lite_host_only",
+        "staged_13131_policy_lite_gpu_replica",
+        "staged_13131_policy_lite_aegiskv",
+    ]
+    signatures = {
+        (
+            SCENARIOS[name].groups,
+            SCENARIOS[name].prompts_per_group,
+            SCENARIOS[name].turns,
+            SCENARIOS[name].system_prompt_len,
+            SCENARIOS[name].question_len,
+            SCENARIOS[name].output_len,
+            SCENARIOS[name].dp_size,
+            SCENARIOS[name].critical_agent_ratio,
+            SCENARIOS[name].failover_injection,
+            SCENARIOS[name].failover_retry_rank_offset,
+            SCENARIOS[name].seed,
+            SCENARIOS[name].failure_after_output_tokens,
+            SCENARIOS[name].workflow_shape,
+            SCENARIOS[name].stage_context_lens,
+            SCENARIOS[name].long_decode_output_multiplier,
+        )
+        for name in policy_names
+    }
+    policies = {SCENARIOS[name].aegis_policy for name in policy_names}
+
+    assert len(signatures) == 1
+    assert policies == {"no_backup", "host_only", "gpu_replica", "aegiskv"}
+    assert SCENARIOS["staged_13131_policy_lite_no_backup"].backup_kv is False
+    assert SCENARIOS["staged_13131_policy_lite_aegiskv"].backup_kv is True
+    assert SCENARIOS["staged_13131_policy_lite_aegiskv"].failure_after_output_tokens == 64
+
+    scenario = get_scenario("staged_13131_policy_lite_aegiskv")
+    config_dir = materialize_synthesis_config(
+        scenario,
+        base_config_dir=DEFAULT_BASE_CONFIG_DIR,
+        output_dir=tmp_path,
+        trial=2,
+    )
+    client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
+
+    assert client["gsp_failure_after_output_tokens"] == 64
+    assert client["gsp_long_decode_output_multiplier"] == 5.0
+    assert client["seed"] == scenario.seed + 2
 
 
 def test_staged_13131_100k_context_policy_scenarios_are_comparable(tmp_path):
@@ -266,9 +563,12 @@ def test_staged_13131_100k_context_policy_scenarios_are_comparable(tmp_path):
     assert policies == {"no_backup", "host_only", "gpu_replica", "aegiskv"}
     scenario = get_scenario("staged_13131_100k_context_aegiskv")
     assert scenario.workflow_shape == (1, 3, 1, 3, 1)
-    assert scenario.workflow_count == 9
-    assert 95_000 <= scenario.estimated_first_turn_prompt_tokens <= 105_000
-    assert 100_000 <= scenario.estimated_final_turn_context_tokens <= 110_000
+    assert scenario.workflow_count == 18
+    assert scenario.dp_size == 8
+    assert scenario.max_concurrency == 6
+    assert scenario.stage_context_lens == (40960, 40960, 81920, 40960, 122880)
+    assert scenario.estimated_first_turn_prompt_tokens == 40960
+    assert scenario.estimated_final_turn_context_tokens == 122880
     assert scenario.estimated_long_decode_output_tokens == 1024
     assert scenario.backup_kv is True
     assert scenario.failure_rate_per_window == 0.01
@@ -283,6 +583,7 @@ def test_staged_13131_100k_context_policy_scenarios_are_comparable(tmp_path):
     client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
 
     assert client["gsp_workflow_shape"] == [1, 3, 1, 3, 1]
+    assert client["gsp_stage_context_lens"] == [40960, 40960, 81920, 40960, 122880]
     assert client["gsp_system_prompt_len"] == 98304
     assert client["gsp_question_len"] == 1024
     assert client["gsp_output_len"] == 128
@@ -291,6 +592,65 @@ def test_staged_13131_100k_context_policy_scenarios_are_comparable(tmp_path):
     assert client["gsp_failure_after_output_tokens"] == 128
     assert client["gsp_aegis_policy"] == "aegiskv"
     assert client["gsp_alpha_policy_path"] == scenario.alpha_policy_path
+
+
+def test_alpha_tradeoff_dp8_scenarios_cover_load_failure_and_alpha(tmp_path):
+    names = {
+        name
+        for name in SCENARIOS
+        if name.startswith("alpha_tradeoff_dp8_")
+    }
+
+    assert len(names) == 48
+    alphas = {round(float(SCENARIOS[name].aegis_gpu_budget_fraction), 2) for name in names}
+    injection_counts = {SCENARIOS[name].failure_injection_count for name in names}
+    group_counts = {SCENARIOS[name].groups for name in names}
+    ports = {SCENARIOS[name].start_port for name in names}
+
+    assert alphas == {
+        0.05,
+        0.10,
+        0.15,
+        0.20,
+        0.25,
+        0.30,
+        0.35,
+        0.40,
+        0.45,
+        0.50,
+        0.55,
+        0.60,
+    }
+    assert injection_counts == {1, 3}
+    assert group_counts == {2, 4}
+    assert len(ports) == len(names)
+
+    scenario = get_scenario("alpha_tradeoff_dp8_highload_fail3_a030")
+    config_dir = materialize_synthesis_config(
+        scenario,
+        base_config_dir=DEFAULT_BASE_CONFIG_DIR,
+        output_dir=tmp_path,
+        trial=0,
+    )
+    client = json.loads((config_dir / "client.json").read_text(encoding="utf-8"))
+    server = json.loads((config_dir / "server.json").read_text(encoding="utf-8"))
+
+    assert scenario.dp_size == 8
+    assert scenario.aegis_policy == "gpu_replica"
+    assert scenario.backup_kv is True
+    assert scenario.replay_critical_only is True
+    assert scenario.failure_injection_count == 3
+    assert scenario.groups == 4
+    assert scenario.max_concurrency == 12
+    assert scenario.estimated_final_turn_context_tokens == 122880
+    assert client["gsp_stage_context_lens"] == [40960, 40960, 81920, 40960, 122880]
+    assert client["gsp_aegis_gpu_budget_fraction"] == 0.3
+    assert client["gsp_failure_injection_count"] == 3
+    assert client["gsp_failover_replay_critical_only"] is True
+    assert server["scheduler"]["dp_size"] == 8
+    assert server["cache"]["aegis_total_l1_capacity_pages"] == 786432
+    assert server["cache"]["l1_capacity_pages"] == 550502
+    assert server["context_length"] == 196608
 
 
 def test_hot_tail_peer_scenario_uses_short_prefixes():
@@ -366,6 +726,10 @@ def test_ablation_scenarios_share_workload_shape_and_vary_ablation():
         "ablation_no_pressure",
         "ablation_no_hysteresis",
         "ablation_no_critical_restore",
+        "ablation_static_alpha",
+        "ablation_size_only",
+        "ablation_no_peer_locality",
+        "ablation_no_marginal_accounting",
     ]
     signatures = {
         (
@@ -383,8 +747,10 @@ def test_ablation_scenarios_share_workload_shape_and_vary_ablation():
         for name in scenario_names
     }
     ablations = {SCENARIOS[name].aegis_ablation for name in scenario_names}
+    failure_after = {SCENARIOS[name].failure_after_output_tokens for name in scenario_names}
 
     assert len(signatures) == 1
+    assert failure_after == {64}
     assert ablations == {
         "",
         "no_lifecycle",
@@ -393,6 +759,10 @@ def test_ablation_scenarios_share_workload_shape_and_vary_ablation():
         "no_pressure",
         "no_hysteresis",
         "no_critical_restore",
+        "static_alpha",
+        "size_only_backup",
+        "no_peer_locality",
+        "no_marginal_accounting",
     }
 
 
@@ -424,6 +794,7 @@ def test_online_dry_run_writes_configs_and_manifest(tmp_path):
     for row in manifest["plan"]:
         assert Path(row["config_dir"], "client.json").exists()
         assert Path(row["config_dir"], "server.json").exists()
+        assert Path(row["online_plan"]).exists()
     assert (tmp_path / "unit-dry" / "agentic_workflow_manifest.json").exists()
 
 
@@ -567,7 +938,8 @@ def test_summarize_run_dir_extracts_aegis_replay_metrics(tmp_path):
     assert summary.scenario == "unit"
     assert summary.seed == 1234
     assert summary.completed == 3
-    assert summary.workflow_count == 2
+    assert summary.workflow_count == 1
+    assert summary.total_agentic_requests == 2
     assert summary.system_prompt_len == 64
     assert summary.question_len == 16
     assert summary.aegis_policy == "host_only"
@@ -606,6 +978,8 @@ def test_plot_scripts_combine_and_project_summary_rows(tmp_path):
     assert rows[0]["seed"] == "1234"
     assert rows[0]["evidence_tier"] == "sglsim-agentic-online-preliminary"
     assert rows[0]["source_run_dir"] == str(run_dir)
+    assert rows[0]["workflow_count"] == "1"
+    assert rows[0]["total_agentic_requests"] == "2"
     assert rows[0]["system_prompt_len"] == "64"
     assert rows[0]["failover_retry_policy"] == "peer"
     assert rows[0]["aegis_policy"] == "host_only"
@@ -622,6 +996,7 @@ def test_aggregate_paper_candidates_computes_ci(tmp_path):
             "scenario": "unit",
             "dp_size": "2",
             "workflow_count": "4",
+            "total_agentic_requests": "8",
             "turns": "2",
             "completed": "8",
             "failed": "0",
@@ -640,6 +1015,7 @@ def test_aggregate_paper_candidates_computes_ci(tmp_path):
             "scenario": "unit",
             "dp_size": "2",
             "workflow_count": "4",
+            "total_agentic_requests": "8",
             "turns": "2",
             "completed": "8",
             "failed": "0",

@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "time_origin": "policy_workload_start",
+  "retry_route_mode": "router_committed",
+  "description": "Correctness-only causal exact smoke. The manifest fixes the failed DP/PP stage and victim identity, but never prescribes AegisKV b(r) or retry rank.",
+  "deployment": {
+    "nodes": 4,
+    "gpus_per_node": 4,
+    "dp_size": 4,
+    "pp_size": 4,
+    "failure_scope": "gpu",
+    "simulator_boundary": "pp_rank identifies the failed physical stage; the containing DP replica is unavailable during replacement"
+  },
+  "events": [
+    {
+      "event_id": "causal-exact-rank0-stage1-v1",
+      "offset_s": 4.7,
+      "dp_rank": 0,
+      "pp_rank": 1,
+      "failure_scope": "gpu",
+      "duration_s": 2.0,
+      "victims": [
+        {
+          "backup_key": "00ca01c4-p1-m3",
+          "execution_dp_rank": 0,
+          "pp_rank": 1,
+          "failure_scope": "gpu"
+        }
+      ]
+    }
+  ],
+  "actual_injected_failure_count": 1,
+  "failure_hazard_policy_prior": 0.01,
+  "separation_note": "The optimizer hazard prior is independent of this realized one-event correctness manifest. Several later original requests are intentionally admitted while DP0 is unavailable."
+}

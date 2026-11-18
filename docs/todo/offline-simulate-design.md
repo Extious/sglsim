@@ -1,12 +1,23 @@
 # Offline / Logical-Clock Simulation Design
 
-**Status:** Draft | **Not implemented on main**
+**Status (2026-08-04):** Implemented | bounded Qwen3-32B DP4/PP4/32K
+online-vs-offline failure gates pass for AegisKV and no-backup
+
+**Evidence boundary:** Gate-v2-passing offline results may be used for bounded
+algorithm search.  They are SGLSim metadata/prediction evidence, not physical
+GPU data-movement evidence.  The selected policy was checked with a small
+online wall-clock replay; the preserved long v13 wall run is an anchor because it
+predates common scheduler telemetry and is not itself a field-complete v2 gate.
 
 ## Context
 
 **Main branch** uses **wall-clock only**: each scheduler step `sleep(predicted)` on a real timeline. This matches online serving fidelity (multi-DP drift, HTTP client latency, subprocess isolation).
 
-**Offline / logical-clock** mode is a **future optional layer**: advance a simulated time counter from predicted durations **without sleeping**, for fast trace replay, calibration shape checks, and offline what-if experiments. It is **not** on main today; this document records how to design it when reintroduced (separate branch, feature flag, or package extra).
+**Offline / logical-clock** mode is an isolated driver layer: advance independent
+per-DP simulated clocks from the same predicted durations and metadata effects,
+without sleeping.  It is the fast path for calibrated trace replay, policy
+search, and ablation.  The existing online wall-clock path remains the parity
+reference and must keep its current behavior.
 
 ## Related plans
 
@@ -21,127 +32,299 @@ Provide a **fast, metadata-only DES** path that:
 1. Keeps **SGLang scheduling semantics** (prefill-first, continuous batching, HiCache metadata) identical to wall-clock main
 2. Replaces GPU forward with **predicted duration** and advances **logical time** instead of `time.sleep`
 3. Supports **streaming arrival** injection via a logical `created_time` queue (jump to next arrival when idle)
-4. Optionally shares a **global logical clock** when `dp_size > 1` for unified metrics and queue snapshots
+4. Keeps one logical clock per DP rank and uses a parent discrete-event
+   coordinator only for request/failure injection, causality, and result merge
+5. Reuses the same AegisKV Slack, placement, alpha/beta, KV metadata, ACK,
+   failure/recovery, and retry-route implementations in online and offline modes
 
 ## Non-goals
 
 - Replacing main wall-clock path or re-adding legacy dual-mode time CLI on main without an explicit product decision
 - Bit-identical replay with real SGLang wall timestamps (compare **normalized shapes**, not absolute seconds)
-- Single global scheduler for all DP ranks (keep per-rank subprocess topology)
+- Strict per-step cross-DP max synchronization or a single global rank clock
+- Reimplementing AegisKV policy/failure semantics in a second offline-only code path
 
 ## Reference implementations
 
 | Source | Clock model | Lesson for SGLSim |
 |--------|-------------|-------------------|
-| sglang-simulator (`sglang/tools/sglang-simulator`) | Per-rank `_global_clock` class var, **no cross-process sync** | Independent rank clocks avoid artificial coupling; good baseline |
+| sglang-simulator (`sglang/tools/sglang-simulator/build/lib`) | Process-local `_global_clock`, future-arrival heap, batch-result advancement, **no cross-process sync** | Independent rank clocks and idle jumps are the baseline; its simplified failure manager is not reused |
 | Vidur / Opal-sim | Single-process DES | Fast but no multi-subprocess fidelity |
 | Previous SGLSim prototype | `SimGlobalClock` (`mp.Value`) + `max(shared, rank_local)` on every step | **Known bug:** max-sync over-couples DP ranks, collapses per-request latency variance |
 
-## Proposed architecture
+## Implemented architecture
 
 ```mermaid
 flowchart TB
-  subgraph parent [Engine parent]
-    CLI["--offline or env flag"]
-    GC["SharedLogicalClock optional"]
-    SQ["stats_queue merge"]
+  subgraph parent [Offline parent DES]
+    EH["event heap: arrivals / failures / rank completions"]
+    DPC["DataParallelController: route / Alg2 plan / ACK / retry"]
+    OUT["ordered telemetry and result merge"]
   end
-  subgraph ranks [Scheduler subprocesses]
-    R0["dp0: rank_clock + predict step"]
-    R1["dp1: rank_clock + predict step"]
+  subgraph ranks [Independent rank executors]
+    R0["dp0: Scheduler + LogicalClockDriver"]
+    R1["dp1: Scheduler + LogicalClockDriver"]
+    RN["dpN: Scheduler + LogicalClockDriver"]
   end
-  CLI --> GC
-  GC -.->|optional sync| R0
-  GC -.->|optional sync| R1
-  R0 --> SQ
-  R1 --> SQ
-  SQ --> parent
+  EH --> DPC
+  DPC --> R0
+  DPC --> R1
+  DPC --> RN
+  R0 -->|next completion| EH
+  R1 -->|next completion| EH
+  RN -->|next completion| EH
+  R0 --> OUT
+  R1 --> OUT
+  RN --> OUT
 ```
 
 ### Time advancement (per rank)
 
 Mirror sglang-simulator batch-driven advance:
 
-1. **Batch ran:** `step_logical_time(hicache_load + forward + hicache_backup)` after `run_batch` predict
-2. **Idle with future arrivals:** jump `logical_now` to next `created_time` (no empty spin steps)
-3. **Response time:** `logical_now` at `process_batch_result` (+ backup remainder if not overlap-booked)
+1. **Batch prepared:** preserve the pinned SGLang order: receive/admit,
+   `get_next_batch_to_run`, metadata allocation, then `run_batch` prediction.
+2. **Rank completion scheduled:** feed the existing `compute_pipeline_sleep_s`
+   stages to the logical driver.  The driver advances/schedules; it never sleeps.
+3. **Batch completed:** call the existing `process_batch_result`, HiCache event
+   consumption, backup ACKs, and request output/cache side effects.
+4. **Idle with future local work:** jump only that rank to its next relevant
+   request/failure event.  Do not advance another rank.
+5. **Response time:** use the completing rank's logical timestamp.
 
-Wall-clock overlap bookkeeping (`compute_pipeline_sleep_s`, `ForwardSlot`) becomes **accounting only** in offline mode (no sleep).
+Wall-clock Pipeline v2 bookkeeping (`compute_pipeline_sleep_s`) remains shared.
+`ForwardSlot` CPU-overflow is wall-only: offline records zero CPU-overflow because
+host scheduling jitter is intentionally outside the logical model.
 
-### Shared clock (`dp_size > 1`) — design choices
+### Cross-rank coordination (`dp_size > 1`)
 
-| Option | Behavior | Trade-off |
-|--------|----------|-----------|
-| **A. Independent ranks** (sglang-simulator) | Each rank owns `_rank_clock`; metrics `duration = max(rid.last_event_time)` | Faithful parallelism; no unified timeline |
-| **B. Loose sync** | Parent `Value` updated only on **batch completion** per rank: `shared = max(shared, rank_local)` | Unified duration; less coupling than per-micro-step max |
-| **C. Strict max-sync** (old prototype) | Every `step_rank_clock` pushes `max(shared, rank)` | Simple but **over-couples** ranks — avoid as default |
+Every rank owns a monotonic `_rank_clock`.  The parent min-heap orders externally
+visible events by `(timestamp, deterministic_sequence)`.  A rank may not complete
+a batch before its scheduled completion event, but another rank may run and
+finish earlier.  Global makespan is `max(rank_last_event_time)`, not a clock
+pushed back into workers.
 
-**Recommendation:** default **A** for fidelity; optional **B** behind `global_clock_sync: true` for calibration export only.
+The old `SimGlobalClock` behavior (`rank = max(shared, rank)` every step) is
+forbidden: it over-couples independent DPs and collapses latency variance.
 
-### CLI / config sketch
+### Driver boundary
 
-```json
-{
-  "simulation": {
-    "time_mode": "wall",
-    "global_clock_sync": false
-  }
-}
-```
-
-| Field | Values | Notes |
-|-------|--------|-------|
-| `time_mode` | `"wall"` \| `"logical"` | Main implements `"wall"` only today |
-| `global_clock_sync` | bool | Only meaningful when `time_mode=logical` and `dp_size > 1` |
-
-Implement as **one flag** (e.g. `--offline` or `SGLSIM_TIME_MODE=logical`), not revived legacy dual-mode naming.
+The public online server remains wall-only and unchanged.  Offline replay is a
+separate parent driver (`AegisKV.demo.run_offline_wct`) over
+`OfflineSchedulerCluster`; it does not add a logical-clock branch to
+`launch_server` or revive `SimGlobalClock`.
 
 ### Parent integration
 
 | Component | Wall (main) | Logical (future) |
 |-----------|-------------|------------------|
-| `Engine.launch_subprocesses` | No shared clock | Create optional `SharedLogicalClock` in `SimIpcRegistry` |
-| `TokenizerManager` | `time.time()` tokenize stamp | `logical_now` or measured tokenize added to rank clock |
+| Driver | `WallClockDriver`: current `time.time/sleep/ForwardSlot` behavior | `LogicalClockDriver` per rank: monotonic now/advance, no sleep |
+| Engine/workload | HTTP + async closed-loop clients + scheduler subprocesses | Parent DES + common request/route/failure builders |
+| `TokenizerManager` | Current tokenize and wall arrival stamps | Pre-tokenized payload injected at logical arrival |
 | `Scheduler.run_batch` | predict only | same |
-| `Scheduler` advance | `_advance_wall_clock_step` → sleep | `_advance_logical_step` → `StateManager.step_rank_clock` |
-| `calc_bench_metrics` duration | wall / max last_event | `shared_clock.read()` or max `last_event_time` per option A/B |
-| `stats_queue` | optional | **Required** for parent merge when `dp > 1` |
+| Scheduler advance | driver computes shared Pipeline v2 stages and sleeps | driver computes the same stages and schedules/advances rank time |
+| `process_batch_result` | current cache/output/HiCache side effects | same function, using rank logical response time |
+| AegisKV clocks | current wall/monotonic providers | injected parent/rank logical time provider |
+| Metrics duration | wall timestamps | max per-rank last-event timestamp |
+| Controller/scheduler transport | current IPC queues | causal requests, runtime commands, ACK/control events, and detokenizer messages returned synchronously with each parent-ordered rank event |
 
-### Multi-DP stats merge (P1 dependency)
+### Multi-DP causal transport and stats merge
 
-Logical mode needs the same parent-side merge as trace calibration:
-
-- Child: `stats_queue.put((rid, RequestStats))` on completion
-- Parent drain thread: merge into `REQUEST_STATS` (extend detokenizer drain or dedicated thread)
-- `Engine._cache_metrics()` must aggregate per-rank signals when `dp_size > 1`
+The controller still executes the shared routing, placement, ledger, lineage,
+ACK, failure, and retry logic.  Its selected request and rank-control commands
+are captured by the offline parent and passed in the next causal worker command.
+Each worker returns Aegis events and detokenizer messages in that same response.
+This avoids `multiprocessing.Queue` feeder-thread races that could otherwise let
+the parent pop a future failure before a just-dispatched request became visible.
+No rank clock is advanced by another rank's transport delay.
 
 ### Scheduler snapshots (P2)
 
 Push `SchedulerSnapshot(dp_rank, t, num_waiting, num_running, …)` to a queue for calibration and global queue-depth charts. See [trace-calibration-design.md](trace-calibration-design.md) schema.
 
+## Read-only alignment audit (2026-08-04)
+
+### Pinned SGLang scheduling semantics
+
+Authoritative source:
+`/home/comp/zhanzhao/sglang/python/sglang/srt/managers/scheduler.py`.
+
+- `event_loop_normal`: receive/process requests, choose the next batch, run it,
+  then process its result with the same `last_batch` lifecycle.
+- `event_loop_overlap`: receive, choose the current batch, drain the previous
+  result at the same control-flow points, run/enqueue the current result, and
+  retain `last_batch` semantics.
+- `get_next_batch_to_run`: prefill-first admission; a completed prefill merges
+  into the persistent running batch; decode uses the normal update path.
+
+Offline must not introduce a different admission rule, a global rank barrier,
+or an extra event-loop gate.  The implementation seam is time advancement and
+external event driving, not scheduler policy.
+
+### Pinned sglang-simulator logical-time behavior
+
+Audited source:
+`/home/comp/zhanzhao/sglang/tools/sglang-simulator/build/lib/sglang_simulator/`.
+The original `src` package is absent from this checkout; `build/lib` contains
+the complete importable Python source used for the audit.
+
+- `simulation/manager/state.py` stores `_global_clock` as process-local class
+  state.  With one scheduler per process, it is effectively a per-rank clock.
+- `simulation/sglang/scheduler.py` receives offline requests into a
+  `(created_time, salt, request)` heap, admits arrivals at the local logical
+  time, and jumps an idle clock to the next arrival.
+- `run_batch` predicts forward time without sleeping.  Its wrapped
+  `process_batch_result` advances logical time and accounts for HiCache
+  load/backup overlap.
+- There is no cross-process strict clock synchronization.
+
+Useful ideas are the future-arrival heap, batch-driven advancement, and idle
+jump.  Its hook-based implementation and simplified failure manager are not a
+drop-in replacement for SGLSim's current Pipeline v2 and AegisKV semantics.
+
+### Current SGLSim online path
+
+Authoritative SGLSim sources:
+
+- `python/sglsim/srt/managers/scheduler.py`: `run_batch` performs KV metadata
+  allocation and forward prediction; `_advance_wall_clock_step` sleeps once;
+  `_response_time_after_batch` consumes HiCache and backup events;
+  `process_batch_result` applies request/cache/output side effects.
+- `python/sglsim/srt/simulation/pipeline_accounting.py`: overlap ON exposes
+  forward plus wall-only CPU overflow; overlap OFF serializes visible H2D with
+  forward while D2H remains copy-engine-overlapped.
+- `python/sglsim/srt/managers/data_parallel_controller.py`: routing, shared
+  Alg2 backup planning/ACK, failure state, and retry-rank selection.
+- `python/sglsim/srt/managers/aegis_l1_l2.py`: rank-local backup state and
+  Alg3 alpha/beta windows.
+
+The current online loop, HTTP path, subprocess topology, and streaming mode
+remain unchanged.  Raw wall-time dependencies in scheduler restoration,
+controller event timestamps, Alg3 windows, and radix-cache LRU must receive
+explicit time providers before formal offline replay.  Offline must call the
+same policy and metadata code, not serialize equivalent-looking copies.
+
+## Online-vs-offline accuracy gate
+
+### Paired-run inputs
+
+Every calibration pair must record and hash the same:
+
+- server/model configuration, including Qwen3-32B, DP=4, PP=4, and 32K context;
+- pre-tokenized agentic trace and closed-loop dependency graph;
+- random seed and deterministic event tie-break rule;
+- request route plan and retry route plan;
+- failure manifest, victim request IDs, outage durations, and recovery model;
+- AegisKV algorithm and cache/placement configuration.
+
+Run a small deterministic smoke pair first.  Only after it passes should the
+formal configuration be replayed against preserved wall-clock artifacts.
+
+### Required common telemetry
+
+Both modes export the same machine-readable schemas:
+
+- workflow and request WCT, TTFT, per-token/ITL or service-time samples;
+- mean, p50, p90, p99, and makespan;
+- per-DP waiting/running depth snapshots and completion sequence;
+- primary and retry route decisions;
+- cache load/eviction, backup plan/commit/ACK, retry, failure, and recovery
+  events, including restored/recomputed token counts;
+- per-batch predicted forward, H2D, pending D2H, visible communication,
+  Pipeline v2 base duration, wall-only CPU overflow, and response timestamp.
+
+### Gate v2 thresholds
+
+These thresholds are deliberately explicit but provisional.  Smoke evidence may
+tighten them; loosening requires a written causal explanation and a new gate
+version.
+
+| Class | Initial acceptance |
+|---|---|
+| Structural invariants | Exact request/workflow counts and terminal statuses |
+| Routing/failure semantics | Exact primary routes, victim IDs, retry targets, failure-event order, and recovery actions |
+| KV/Aegis side effects | Exact event counts and restored/recomputed token totals for deterministic smoke; formal run permits only explained cache-tie differences |
+| Forward accounting | Per-request/batch predicted-forward totals within 1%; aggregate H2D/D2H accounting within 5% |
+| WCT/makespan | mean/p50/p90/p99 and makespan within 10% |
+| TTFT/ITL/service time | available percentile metrics within 10% |
+| Per-DP completion order | Spearman rank correlation at least 0.99, excluding documented timestamp ties |
+| Queue-depth shape | active-batch correlation at least 0.95 and MAE at most 1 request; for sparse depth 0/1 same-timestamp sibling ties, MAE at most 0.15 active steps |
+
+No bit-identical requirement applies to absolute timestamps, OS/process jitter,
+HTTP/tokenizer overhead, wall-only CPU overflow, or events whose timestamps are
+tied within the configured deterministic epsilon.  These exclusions do not
+waive semantic mismatches in routing, failure, ACK, recovery, or KV effects.
+
+Offline output becomes formal AegisKV evidence only when the gate report records
+`passed=true` for both smoke and formal pairs.  Candidate policies found offline
+still require a small number of final online wall-clock replications.
+
+### Current passing paired artifacts
+
+All four artifacts use the formal Qwen3-32B DP4/PP4/32K server configuration,
+the same first Weka/Real-CC workflow, 35 original requests, one frozen retry,
+the same execution/retry route plan, and the same rank-3 failure manifest.  The
+workload is deliberately scaled (`input_scale=0.008`, max input 1008, max output
+16) so this is a bounded calibration pair, not the five-workflow result itself.
+
+- AegisKV: `candidate-failure-online-aegiskv.json` vs
+  `candidate-failure-offline-aegiskv-v3.json`, gate
+  `candidate-failure-gate-aegiskv-v3.json`; WCT error 1.54%, makespan error
+  2.43%, gate passed.
+- No-backup: `candidate-failure-online-no_backup.json` vs
+  `candidate-failure-offline-no_backup-v2.json`, gate
+  `candidate-failure-gate-no_backup-v3.json`; WCT error 2.02%, makespan error
+  1.94%, gate passed.
+
+Both gates match exact request/route/failure/recovery semantics, backup/cache
+event counts, TTFT/ITL/service distributions, and forward/communication
+accounting.  They also require the same per-rank request sets and at least 0.99
+request-weighted completion-order Spearman correlation.  The no-backup queue
+boundary is one same-timestamp sibling ordering: depth never exceeds one and
+the active-step MAE is 0.134, below the explicit 0.15 sparse threshold.
+
+### Gate-passed five-workflow search
+
+After the bounded current-source gates passed, the independent-clock driver was
+used for the frozen five-workflow Weka/Real-CC search: 465 original requests,
+six retries, three matched failures, and identical primary/retry routes.  The
+machine-readable index is
+`formal-5wf-evidence-index-synchronous-v2.json`; the human-readable analysis is
+`algorithm_search_summary.md`.  The selected candidate uses Algorithm 1 Slack,
+Algorithm 2 lineage-aware mixed placement with a 0.3125 Host floor, and
+Algorithm 3 smoothing 0.20.  It improves all five paired workflow WCTs versus
+fair no-backup and reduces recomputation by 55,296 tokens (42.063%).  The CDF,
+PDF, and raw samples use the `formal-5wf-wct-cdf-synchronous-v2` prefix.
+
 ## Phases
 
 | Phase | Deliverables | Acceptance |
 |-------|--------------|------------|
-| **P0** | `time_mode=logical`, `dp=1`, no shared clock | Unit test: N decode steps → `logical_now == sum(predicted)`; no `time.sleep` in hot path |
-| **P1** | `stats_queue` merge, optional shared clock B | `test_multi_dp_*` metrics from parent; duration monotonic |
-| **P2** | Snapshot export + benchmark hook | `compare_traces` Mode B queue shape gate |
-| **P3** | Optional lockstep co-step driver | Only if trace replay requires deterministic cross-rank ordering |
+| **P0 — complete** | Injected wall/logical time driver and shared Pipeline v2 accounting | Online remains wall-only; logical steps do not sleep |
+| **P1 — complete** | Parent event heap and independent DP rank executors | Earlier completion is visible; no strict max-sync |
+| **P2 — complete** | Shared workload/failure builders and common telemetry export | Same trace/routes/manifest produce schema-complete pairs |
+| **P3 — complete** | Smoke comparison and field-level gate | Gate v2 emits causal failures and passes bounded pairs |
+| **P4 — complete for bounded calibration** | Qwen3-32B DP4/PP4/32K server-config failure calibration | Current AegisKV and no-backup pairs pass; full long v13 remains an anchor |
+| **P5 — complete** | Offline AegisKV/no_backup/ablation/search + selected online replay | Both bounded online gates pass; five-workflow tier, Host-floor, and Algorithm 3 searches are indexed and reproducible |
 
 ## Risks and mitigations
 
 | Risk | Mitigation |
 |------|------------|
 | Max-sync coupling (old `SimGlobalClock`) | Default independent rank clocks; document option B explicitly |
-| Dual-mode branch explosion on main | Separate module `sglsim.srt.simulation.logical_clock` or feature branch; no time-mode branches in scheduler hot path on main |
+| Dual-mode branch explosion | Inject one driver interface; retain `WallClockDriver` as the default and keep policy code mode-agnostic |
 | TTFT / chunked prefill timestamps | Keep `service_time_s` accumulation for partial prefill (port from legacy logical-clock path) |
-| CI speed | Logical mode becomes default for unit tests; wall-clock stays integration / synthesis benchmark |
+| Parent processes a long rank step atomically | Split prepare/complete scheduling so another rank's earlier completion can be popped first |
+| Clock drift in Alg3/LRU/controller | Inject the same rank/parent logical time provider into shared implementations |
+| CI speed | Use logical mode for new deterministic unit tests; preserve wall-clock integration/synthesis coverage |
 
-## Test commands (when implemented)
+## Test commands
 
 ```bash
-uv run --extra test pytest test/unit/srt/test_logical_clock_monotonic.py -q
-uv run --extra test pytest test/unit/srt/test_multi_dp_logical_clocks.py -q
+uv run --extra test pytest test/unit/srt/test_time_driver.py -q
+uv run --extra test pytest test/unit/srt/test_offline_cluster.py -q
+uv run --extra test pytest test/unit/srt/test_offline_accuracy_gate.py -q
+uv run --extra test pytest test/unit/srt/test_offline_workflow.py -q
 ```
 
 ## Links

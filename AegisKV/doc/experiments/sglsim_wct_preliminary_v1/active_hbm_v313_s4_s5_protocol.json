@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "experiment_id": "active_hbm_v313_s4_s5_preliminary_pilot",
+  "status": "PREREGISTERED_BEFORE_EXECUTION",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "sources": {
+    "current_design": {
+      "path": "/home/comp/zhanzhao/Mooncake/aegiskv/design/current_design.md",
+      "sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac"
+    },
+    "v313_replay": {
+      "path": "active_hbm_v313.py",
+      "sha256": "1f1facd8fc020e000a5ad66805d155102488c62ed38a60dece9049bbf0c9732b"
+    },
+    "s4_s5_extension": {
+      "path": "active_hbm_v313_s4s5.py",
+      "sha256": "c2d7d3aa971c2a81f29f75a02bd91577422f3070cfcdee4f6c0e8f0e42c1dbe5"
+    },
+    "s4_s5_test": {
+      "path": "test_active_hbm_v313_s4s5.py",
+      "sha256": "65f4335e36468f35da5648c608178cd81ce894114da0009434bf217497c3ed39"
+    },
+    "runner": {
+      "path": "run_active_hbm_v313_s4_s5_pilot.py",
+      "sha256": "f6eb9fea5589a96816a240c56c2c1bb4dec497b711300a5879e222bf6c3d697d"
+    },
+    "protocol_test": {
+      "path": "test_active_hbm_v313_s4_s5_protocol.py",
+      "sha256": "5c3009fef75acfdb3cd4e60c80eaa7928971f1ebb793dd14a8ab75ce66c59324"
+    },
+    "capacity_protocol": {
+      "path": "active_hbm_v3_protocol.json",
+      "sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f"
+    },
+    "composite_protocol": {
+      "path": "results/mechanism_pilot_v2/composite_protocol.json",
+      "sha256": "d095d7680694e51db52f186ec2f7831093d9f3dfc117ef994ee0685fdde3df8f"
+    },
+    "topology_protocol": {
+      "path": "active_hbm_v311_s1_s2_protocol.json",
+      "sha256": "121621a0c2cd1cfe14e0e60c315b5d010b036679dc0164e6c776936316592b1d"
+    }
+  },
+  "common": {
+    "model": "Qwen3-8B TP1/PP1",
+    "gpu": "NVIDIA A100 40 GiB modeled capacity",
+    "system_dp": 16,
+    "workload_seed_pairing": "the exact same causal workload universe and fault probes are replayed across policies within each seed",
+    "slack_predictor": "independent registered output distribution v1; does not read realized output or service and is not a physical GBDT calibration",
+    "copy_semantics": "source-owned Peer-HBM and Store-DRAM copies are independent asynchronous queues; they do not add a serialized foreground transfer tail",
+    "capacity_semantics": "weight + runtime reserve + active serving KV + physical-target Peer-HBM backup <= 40 GiB at every recorded event",
+    "topology_and_paths": {
+      "gpus_per_node": 8,
+      "node_count": 2,
+      "placement": "DP16 fills two 8-GPU nodes; even source ranks use same-node Peer-HBM/local DRAM and odd ranks use cross-node Peer-HBM/remote DRAM; v3.1.3 mapping is bijective",
+      "copy_bandwidth_gb_s": {
+        "peer_hbm_same_node": 50.0,
+        "peer_hbm_cross_node": 10.0,
+        "dram_local": 16.0,
+        "dram_remote": 10.0
+      },
+      "recovery_bandwidth_gb_s": {
+        "peer_hbm_same_node": 50.0,
+        "peer_hbm_cross_node": 10.0,
+        "dram_local": 16.0,
+        "dram_remote": 10.0
+      },
+      "calibration_status": "MODELED_NOT_PHYSICALLY_CALIBRATED_A100"
+    },
+    "policy_failover": {
+      "replacement_delay_ms": 60000.0,
+      "fence_activation_delay_ms": 500.0,
+      "timing_status": "MODELED_UNMEASURED_SENSITIVITY_INPUTS",
+      "policy_modes": {
+        "Native Mooncake": {
+          "source_worker_gpu": "replacement_wait",
+          "source_node": "replacement_wait"
+        },
+        "AegisKV": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        },
+        "AegisKV no Algorithm 1": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        },
+        "AegisKV no Algorithm 2": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        },
+        "AegisKV no Algorithm 3": {
+          "source_worker_gpu": "prebound_fence_activation",
+          "source_node": "topology_conditioned_committed_replica"
+        }
+      }
+    }
+  },
+  "s4": {
+    "purpose": "single-factor mechanism ablation in a fixed high-information region; no win threshold",
+    "internal_policies": [
+      "Native Mooncake",
+      "AegisKV",
+      "AegisKV no Algorithm 1",
+      "AegisKV no Algorithm 2",
+      "AegisKV no Algorithm 3"
+    ],
+    "internal_to_display": {
+      "Native Mooncake": "Native Mooncake",
+      "AegisKV": "Full AegisKV",
+      "AegisKV no Algorithm 1": "-Algorithm 1",
+      "AegisKV no Algorithm 2": "-Algorithm 2",
+      "AegisKV no Algorithm 3": "-Algorithm 3"
+    },
+    "ablation_contract": {
+      "Algorithm 1": "zero only request slack metadata; keep controller, tiers, copy paths, capacity and AIMD",
+      "Algorithm 2": "keep Aegis controller, request slack, causal source copies, physical capacity and AIMD; replace independent per-tier SlackLandlord admission with coupled FCFS all-or-nothing direct-capacity admission",
+      "Algorithm 3": "keep request slack, independent tier admission and physical shared capacity; schedule identical control opportunities but execute no alpha update"
+    },
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "context_tokens": 16384,
+    "active_requests_per_gpu": 8,
+    "arrival_cutoff_ms": 90000.0,
+    "control_opportunities_ms": [30000.0, 60000.0, 90000.0],
+    "fault_probes_per_seed": 24,
+    "probe_seed_xor": 1397312769,
+    "probe_type_schedule": ["source_worker_gpu", "source_node"],
+    "failure_domains": ["source_worker_gpu", "source_node"],
+    "estimator": "within each seed/domain, mean and p99 over the complete workflow x same-probe universe; paired t CI across the three seed-level policy/Full ratios",
+    "primary_interpretation": "worker/GPU failure is primary; source-node is always retained and reported, regardless of discrimination",
+    "no_result_shape_threshold": true
+  },
+  "s5": {
+    "purpose": "exercise AIMD under a fixed low-high-low offered-load schedule and persist physical occupancy/churn at every control window",
+    "policy": "AegisKV",
+    "seeds": [2026082600, 2026082601, 2026082602],
+    "context_tokens": 16384,
+    "control_horizon_ms": 240000.0,
+    "control_opportunities_ms": [30000.0, 60000.0, 90000.0, 120000.0, 150000.0, 180000.0, 210000.0, 240000.0],
+    "phases": [
+      {
+        "name": "low",
+        "start_ms": 0.0,
+        "end_ms": 60000.0,
+        "offered_active_requests_per_gpu": 2,
+        "seed_xor": 2712847316
+      },
+      {
+        "name": "high",
+        "start_ms": 60000.0,
+        "end_ms": 120000.0,
+        "offered_active_requests_per_gpu": 8,
+        "seed_xor": 299917636
+      },
+      {
+        "name": "recovery",
+        "start_ms": 120000.0,
+        "end_ms": 240000.0,
+        "offered_active_requests_per_gpu": 2,
+        "seed_xor": 1432778632
+      }
+    ],
+    "load_boundary_rule": "an arrival exactly at a phase boundary belongs to the new phase and is processed before the control event at the same timestamp",
+    "recorded_fields": [
+      "offered and realized active requests per GPU",
+      "pressure and external-memory-pressure fractions",
+      "alpha and alpha times 40-GiB target quota",
+      "shared serving-plus-backup budget kept distinct from policy quota",
+      "active serving HBM, physical-target Peer-HBM backup and Store DRAM bytes",
+      "per-window admit, reject, eviction, primary reclaim, AIMD release, resume and post-control dispatch deltas",
+      "event-integrated HBM and DRAM capacity byte-ms"
+    ],
+    "behavior_gates": {
+      "high_phase": "each seed must observe pressure and an alpha decrease relative to the first low-phase control",
+      "recovery_phase": "each seed must observe at least one stable window and a later additive alpha increase",
+      "failure_rule": "if either behavior is absent, publish a FAIL diagnostic without changing phases, seeds or thresholds"
+    },
+    "no_result_shape_threshold": true
+  },
+  "hard_gates": [
+    "all protocol source hashes match before execution",
+    "S4 uses the same workflow and probe tuple hashes across all five policies per seed",
+    "fault replay never lowers WCT and never changes the all-workflow denominator",
+    "Algorithm 2 ablation remains an Aegis controller and never maps to Static baseline",
+    "Algorithm 2 ablation never leaves a one-tier partial admission",
+    "Algorithm 3 ablation has identical scheduled windows and zero executed updates",
+    "copy admitted bytes equal scheduled bytes per tier",
+    "physical serving plus Peer-HBM backup never exceeds the frozen shared budget",
+    "S5 occupancy is sampled from event state and integrated bytes, never inferred from outcome/event fractions",
+    "S5 alpha quota is alpha times 40 GiB and remains distinct from serving reserve/shared budget",
+    "no seed, cell or window is selected by outcome direction"
+  ],
+  "paper_ready": false,
+  "evidence_boundary": "Three-seed preliminary DES only. Directional bandwidth, service, fence and replacement inputs are modeled/unmeasured; no physical A100 performance claim and no target-trend threshold."
+}

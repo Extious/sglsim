@@ -1,0 +1,89 @@
+{
+    "schema_version": 1,
+    "time_origin": "policy_workload_start",
+    "deployment": {
+        "nodes": 4,
+        "gpus_per_node": 4,
+        "dp_size": 4,
+        "pp_size": 4,
+        "failure_scope": "gpu",
+        "simulator_boundary": "pp_rank identifies the failed stage; current SGLSim makes the containing DP replica unavailable during replacement"
+    },
+    "events": [
+        {
+            "event_id": "failure-02",
+            "offset_s": 330.0,
+            "dp_rank": 2,
+            "pp_rank": 0,
+            "failure_scope": "gpu",
+            "duration_s": 12.0,
+            "victims": [
+                {
+                    "backup_key": "07dd4053-p1-m1",
+                    "execution_dp_rank": 2,
+                    "backup_dp_rank": 0
+                },
+                {
+                    "backup_key": "07dd4053-p1-m5",
+                    "execution_dp_rank": 2,
+                    "backup_dp_rank": 3
+                },
+                {
+                    "backup_key": "07dd4053-p1-m7",
+                    "execution_dp_rank": 2,
+                    "backup_dp_rank": 1
+                },
+                {
+                    "backup_key": "00ca01c4-p2-s0-t0",
+                    "execution_dp_rank": 2,
+                    "backup_dp_rank": 0
+                }
+            ]
+        },
+        {
+            "event_id": "failure-03",
+            "offset_s": 1800.0,
+            "dp_rank": 1,
+            "pp_rank": 2,
+            "failure_scope": "gpu",
+            "duration_s": 12.0,
+            "victims": [
+                {
+                    "backup_key": "03e110ac-p6-s2-t6",
+                    "execution_dp_rank": 1,
+                    "backup_dp_rank": 3
+                }
+            ]
+        },
+        {
+            "event_id": "failure-04",
+            "offset_s": 1950.0,
+            "dp_rank": 1,
+            "pp_rank": 1,
+            "failure_scope": "gpu",
+            "duration_s": 12.0,
+            "victims": [
+                {
+                    "backup_key": "03e110ac-p6-s2-t7",
+                    "execution_dp_rank": 1,
+                    "backup_dp_rank": 3
+                }
+            ]
+        }
+    ],
+    "calibration_result": "/home/comp/zhanzhao/sglsim/AegisKV/demo/results/qwen3_32b_dp4_pp4_idle_matched_primary_v12/20260804-122149/aegiskv.json",
+    "victim_selection": "v12 observed real backups only; four early high-value DP2 victims plus two late DP1 victims whose workflow remains active",
+    "schedule_basis": "failure-02 retains the common DP2 idle interval; failure-03 and failure-04 occur after the last observed planned DP1 completion in both v8 no_backup and v12 aegiskv while workflow 03e remains active",
+    "completion_guard_s": 5.0,
+    "resolved_dp_size": 4,
+    "resolved_pp_size": 4,
+    "victim_count": 6,
+    "design_notes": {
+        "v12_route_violation_removed": "the DP3 event at 395s was removed because request 085411a4-p2-s2-t11 arrived at 409.0s while recovery completed at 409.6s",
+        "early_event_safety": "DP2 has no planned normal-path arrivals across the bounded failure-02 outage in both the v8 no_backup route-plan source and v12 aegiskv calibration",
+        "late_event_safety": "the last planned DP1 completions were 1692.0s in v8 no_backup and 1698.7s in v12 aegiskv; offsets 1800s and 1950s provide margins before injection",
+        "retry_liveness": "workflow 03e remains active beyond 2100s in both calibration policies, so its completed late DP1 victims are polled and retried at both late events",
+        "backup_evidence": "v12 ACKs show full L2 for 07dd4053-p1-m1 and p1-m5, partial L1 for 07dd4053-p1-m7 and 00ca01c4-p2-s0-t0, and nonzero L1 for both late 03e victims",
+        "pp_stage_coverage": "events use pp_rank 0, 2, and 1"
+    }
+}

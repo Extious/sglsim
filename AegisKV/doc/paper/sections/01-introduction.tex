@@ -1,0 +1,78 @@
+\section{Introduction}
+\label{sec:introduction}
+
+LLM serving systems increasingly execute \emph{workflows}, not isolated
+requests.  An agent may invoke several model replicas and tools in parallel,
+join their outputs, and issue another round of long-context requests.  The KV
+cache accumulated along this execution is expensive to regenerate.  When a
+worker fails, restarting from tokens can delay not only the interrupted request
+but every downstream node waiting for it.
+
+Existing systems reduce this cost by streaming, checkpointing, or offloading KV
+state to peer GPUs, host memory, or storage
+~\cite{strati2024dejavu,jayakody2026ghostserve,qin2025mooncake,xie2025hicache}.
+These mechanisms answer how to move and restore KV efficiently.  They do not,
+by themselves, determine which live KV state most reduces a workflow's
+failure-induced completion delay when capacity is scarce.  Normal cache signals
+such as size, recency, and expected reuse are insufficient: two equal-sized
+requests can sit on different parallel branches, so the same recovery pause can
+be exposed on one branch and hidden behind useful work on the other.
+
+The key observation is simple.  A branch's remaining \emph{Slack} is the delay
+it can absorb before it extends the next mandatory join.  If a failure adds less
+than that Slack, faster recovery does not change workflow completion time; once
+the pause exceeds Slack, each additional second is user visible.  Slack thus
+provides a request-level value that the application can compute from workflow
+dependencies but the KV manager cannot infer locally.  It also evolves after
+every request or tool result, so treating an agent as permanently critical is
+too coarse.
+
+\system{} applies this observation twice.  At each request or tool boundary,
+the application predicts the remaining duration of the causally visible agent
+branches and runs CPM to update their Slack.  The next model request carries
+one scalar.  During normal operation, the Controller compares the reduction in
+Slack-exposed recovery delay from protecting a complete KV chunk with the harm
+of evicting resident chunks.  During recovery, it uses the same updated Slack
+to order peer-HBM adoption, DRAM loading, and recomputation.  This shared signal
+keeps protection and recovery aligned: state protected because it is urgent is
+also recovered early if the failure occurs.
+
+Turning the observation into an online system raises two practical problems.
+First, Slack changes much more frequently than large KV regions should move.
+\textsc{SlackLandlord} therefore changes request-level credit lazily and moves
+data only on chunk sealing or capacity pressure.  A per-pool heap exposes one
+prefix-safe eviction tail per request, avoiding a global re-sort of all pages.
+Second, peer-HBM protection must never endanger
+foreground allocation.  \textsc{GuardedAIMD} adjusts a target's shadow-HBM
+quota on a slow time scale, while the Worker allocator remains the final
+capacity authority.  DRAM and SSD continue to use the underlying Store and
+transfer machinery.
+
+\system{} deliberately makes a narrow fault-tolerance claim.  It handles one
+fail-stop serving domain at a time, recovers a request on a Router-selected
+target with the same model and parallel layout, and uses only complete,
+version-compatible KV chunks.  Missing or stale metadata falls back to
+recomputation.  Slack affects performance priority, never correctness or
+physical capacity.
+
+This paper makes three contributions:
+
+\begin{itemize}
+  \item It identifies workflow Slack as the missing value signal for KV fault
+  tolerance and quantifies, using a public agent trace, why parallel branches
+  expose different failure costs (\S\ref{sec:background}).
+
+  \item It designs \system{}, whose \textsc{SlackLandlord} policy converts the
+  same fail-now recovery model into normal-period admission and eviction
+  credits and failure-time recovery order.  The policy manages variable-size,
+  continuous KV prefixes without solving an online MCF or MILP
+  (\S\ref{sec:design}).
+
+  \item It separates policy from safety: \textsc{GuardedAIMD} adapts only the
+  peer-HBM envelope, Workers enforce local capacity, and the commit and fencing
+  protocol prevents partial KV or duplicate output from becoming visible
+  (\S\ref{sec:control-plane}--\S\ref{sec:end-to-end}).
+\end{itemize}
+
+% Evaluation contribution and headline numbers belong here only after the
+% physical implementation and paired experiment gates in Section 5 pass.

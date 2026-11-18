@@ -1,0 +1,1119 @@
+\documentclass[UTF8,11pt,a4paper,fontset=fandol]{ctexart}
+
+\usepackage[left=2.45cm,right=2.45cm,top=2.35cm,bottom=2.45cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array,tabularx,longtable}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{xurl}
+\usepackage{hyperref}
+
+\definecolor{AegisBlue}{RGB}{38,91,145}
+\definecolor{AegisGreen}{RGB}{41,126,91}
+\definecolor{AegisOrange}{RGB}{188,112,38}
+\definecolor{AegisGray}{RGB}{77,87,99}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=AegisBlue,
+  citecolor=AegisGreen,
+  urlcolor=AegisOrange,
+  pdfauthor={Zhan Zhao},
+  pdftitle={AegisKV 技术设计文档}
+}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.35em}
+\renewcommand{\arraystretch}{1.18}
+\setlength{\emergencystretch}{2em}
+
+\pagestyle{headings}
+
+\newcommand{\AegisKV}{AegisKV}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\pos}[1]{\left[#1\right]_+}
+\newcommand{\clip}[1]{\left[#1\right]_0^1}
+\newcommand{\BOne}{B_1}
+\newcommand{\BTwo}{B_2}
+\newcommand{\Recompute}{R}
+
+\newenvironment{designpoint}
+  {\par\smallskip\noindent\textcolor{AegisBlue}{\textbf{设计要点：}}\ignorespaces}
+  {\par\smallskip}
+
+\title{\bfseries \AegisKV：面向智能体工作流的\\松弛感知 KV 恢复系统\\[0.45em]
+  \large 技术设计文档}
+\author{Zhan Zhao}
+\date{2026 年 7 月 21 日}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+智能体工作流通常由多个模型调用、工具调用和同步点组成。一次 GPU 或节点故障
+不仅会中断单个请求，还可能通过扇出、汇合和跨智能体依赖放大为更长的工作流完成
+时间。传统的 KV Cache 保护策略往往只依据 KV 大小、最近访问时间或固定容量阈值，
+没有区分恢复延迟是否真正落在工作流关键路径上，也没有同时处理 GPU HBM 与 Host
+DRAM 对正常服务容量的竞争。
+
+\AegisKV 将恢复机制组织为三条路径：位于其他 GPU HBM 的 L1 Backup、位于目标节点
+Host DRAM 的 L2 Backup，以及始终可用的 Recompute。系统首先从固定的工作流执行
+DAG 估计请求松弛时间，再以 KV 块为粒度联合选择备份层和目标 GPU。L1 与 L2 的
+备份容量分别由 $\alpha$ 和 $\beta$ 控制，并在时间窗口边界依据正常服务负载与上一
+窗口的实际备份占用与未满足收益进行调整。本文档给出系统模型、目标选择、收益--容量权衡、
+跨窗口控制接口、恢复数据面和正确性边界，作为后续实现与实验的统一设计基线。
+\end{abstract}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\section{文档范围与设计结论}
+
+本文档描述 \AegisKV 的端到端技术设计。它不是演示稿，也不依赖 Beamer；正文重点
+解释各模块为什么存在、输入输出是什么，以及算法之间如何通过版本化接口协同。
+
+\AegisKV 的核心设计结论如下：
+
+\begin{itemize}
+  \item \textbf{恢复正确性不依赖备份命中。}Recompute 是始终可用的基线恢复路径；
+    L1 Backup 和 L2 Backup 只用于降低故障后的可见恢复延迟。
+  \item \textbf{备份决策必须同时选择层和目标 GPU。}“备份到 L1”并不是完整动作；
+    一个候选动作由 KV 块、目标节点、目标 GPU 和备份层共同确定。
+  \item \textbf{恢复收益必须与增量容量一起比较。}算法 2 以净恢复收益为目标，并将
+    目标端已有前缀覆盖、写入开销和容量占用纳入同一个决策。
+  \item \textbf{$\alpha$ 与 $\beta$ 是两层独立但联动的容量比例。}
+    $\alpha$ 控制 L1 HBM 中允许用于备份的比例，$\beta$ 控制 L2 Host DRAM 中允许
+    用于备份的比例；二者都受正常服务安全上限约束。
+  \item \textbf{算法 2 与算法 3 通过窗口解耦。}算法 2 在窗口 $k$ 使用已经发布的
+    $\alpha^{(k)},\beta^{(k)}$，其输出只影响窗口 $k+1$ 的容量控制，不追溯修改当前
+    窗口的动作。
+\end{itemize}
+
+\section{问题背景}
+
+\subsection{智能体工作流中的故障放大}
+
+单个模型请求的恢复时间不等于工作流完成时间（Workflow Completion Time, WCT）
+的增加量。若一个请求位于关键路径上，几十毫秒的额外恢复时间可能直接增加 WCT；
+若它位于具有充足松弛时间的并行分支上，同样的恢复时间可能完全被其他分支隐藏。
+因此，\AegisKV 不直接把“重算时间最长的 KV”视为最高优先级，而是估计恢复时间
+超过请求松弛时间后，工作流真正可见的延迟。
+
+\subsection{备份与正常服务的资源竞争}
+
+L1 Backup 占用其他 GPU 的 HBM，会压缩活跃请求、前缀缓存和批处理可用空间；
+L2 Backup 占用 Host DRAM，也会与正常的分层缓存、预取和回载竞争。固定硬预算
+无法同时适应节点负载偏斜和工作流需求变化：
+
+\begin{itemize}
+  \item 预算过小会使高价值 KV 块被迫重算；
+  \item 预算过大会降低正常路径缓存命中率，甚至造成显存或主机内存溢出；
+  \item 所有节点使用同一比例会忽略数据并行实例之间的负载不均衡；
+  \item 只观察当前占用无法区分“没有更多正收益需求”和“需求被配额截断”。
+\end{itemize}
+
+因此，\AegisKV 为每个节点分别维护 $\alpha_n$ 和 $\beta_n$，并把正常服务安全边界
+与备份收益反馈显式分开。
+
+\section{系统模型与符号}
+
+\subsection{三级恢复路径}
+
+对任意已提交且仍被活跃请求引用的 KV 块，系统允许以下三种恢复动作：
+
+\begin{table}[htbp]
+  \centering
+  \caption{AegisKV 的恢复路径}
+  \label{tab:recovery-tiers}
+  \begin{tabularx}{\textwidth}{p{0.15\textwidth}p{0.22\textwidth}X}
+    \toprule
+    动作 & 存储位置 & 故障后的恢复过程 \\
+    \midrule
+    L1 Backup（$\BOne$）
+      & 其他故障域中的 GPU HBM
+      & 目标 GPU 直接接管，或通过可用的 GPU P2P 路径搬运缺失部分；
+        时延最低，但 HBM 机会成本最高。 \\
+    L2 Backup（$\BTwo$）
+      & 目标节点的 Host DRAM
+      & 先通过 H2D 将 KV 回载到接管 GPU，再继续执行；
+        时延和资源成本通常介于 L1 与重算之间。 \\
+    Recompute（$\Recompute$）
+      & 不保存额外副本
+      & 从已验证输入或更短的安全前缀重新执行 prefill；
+        不消耗备份容量，是正确性保持的兜底路径。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{记号、算子与单位约定}
+
+除非公式另行说明，容量和 KV 大小使用字节，带宽使用字节/秒，执行、复制与恢复
+时间使用秒。比例、布尔量和归一化压力没有单位。上标 $(k)$ 表示时间窗口 $k$；
+上帽 $\widehat{\cdot}$ 表示预测值；上横线 $\bar{\cdot}$ 表示归一化值；波浪号
+$\widetilde{\cdot}$ 表示平滑前的控制器输出。粗体符号表示收集所有节点、GPU 或层
+对应标量后形成的向量。
+
+\begin{longtable}{p{0.22\textwidth}p{0.17\textwidth}p{0.53\textwidth}}
+  \caption{通用索引、动作与算子}\label{tab:notation}\\
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endhead
+  $w,v,r,s$ & 索引
+    & 工作流、DAG 执行节点、模型请求和 KV 块。 \\
+  $n,g,\ell,k,t$ & 索引
+    & 目标节点、节点内 GPU、备份层、时间窗口和窗口内时刻；
+      $\ell\in\{1,2\}$。 \\
+  $a$ & 动作
+    & $a\in\{\BOne,\BTwo,\Recompute\}$，分别表示 L1 Backup、L2 Backup
+      和 Recompute。记 $B_\ell=\BOne$ 当 $\ell=1$，$B_\ell=\BTwo$ 当
+      $\ell=2$。 \\
+  $\pos{z}$ & 与 $z$ 相同
+    & 正部算子 $\max(z,0)$；负收益或负缺口被截为零。 \\
+  $\clip{z}$ & 无量纲
+    & 单位区间截断 $\min(1,\max(0,z))$。 \\
+  $\operatorname{clip}(z;l,u)$ & 与 $z$ 相同
+    & 一般区间截断 $\min(u,\max(l,z))$。 \\
+  $Q_p(X)$ & 与 $X$ 相同
+    & 样本集合或随机变量 $X$ 的 $p$ 分位数。 \\
+  $\arg\max_{x\in\mathcal X}f(x)$ & 集合
+    & 使目标 $f(x)$ 最大的所有可行解；若有多个最优解，实现使用固定规则打破平局。 \\
+  \bottomrule
+\end{longtable}
+
+\subsection{算法 1 符号}
+
+\begin{longtable}{p{0.25\textwidth}p{0.17\textwidth}p{0.50\textwidth}}
+  \caption{工作流与松弛估计符号}\label{tab:algorithm1-symbols}\\
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endhead
+  $D_w=(V_w,E_w)$ & 有向无环图
+    & 工作流 $w$ 启动前确定的执行 DAG；$V_w$ 是执行节点集合，$E_w$ 是依赖边集合。 \\
+  $D_w^{\mathrm{rem}}(t)$ & 有向无环图
+    & 时刻 $t$ 删除已完成节点后得到的剩余执行图。 \\
+  $\phi_v(t)$ & 特征向量
+    & 节点 $v$ 在时刻 $t$ 已知的进度、词元数、请求类型和工具/API 时延等特征。 \\
+  $f_{\mathrm{time}}$ & 预测函数
+    & 将 $\phi_v(t)$ 映射为节点 $v$ 剩余执行时间的模型。 \\
+  $\widehat d_v(t)$ & 秒
+    & 节点 $v$ 的预测剩余执行时间。 \\
+  $ES_v,EF_v$ & 秒
+    & 节点 $v$ 相对时刻 $t$ 的最早开始时间和最早完成时间。 \\
+  $LS_v,LF_v$ & 秒
+    & 在不延长预测剩余 WCT 的条件下，节点 $v$ 的最晚开始时间和最晚完成时间。 \\
+  $T_w^{\mathrm{rem}}(t)$ & 秒
+    & 按预测时长计算的工作流 $w$ 剩余关键路径长度。 \\
+  $S_v(t)$ & 秒
+    & 执行节点 $v$ 的总松弛时间。 \\
+  $v(r)$ & 节点索引
+    & 承载模型请求 $r$ 的 DAG 执行节点。 \\
+  $\widehat\sigma_r(t)$ & 秒
+    & 请求 $r$ 可吸收而不增加预测 WCT 的额外延迟。 \\
+  \bottomrule
+\end{longtable}
+
+\subsection{算法 2 符号}
+
+\begin{longtable}{p{0.27\textwidth}p{0.16\textwidth}p{0.49\textwidth}}
+  \caption{备份决策与目标放置符号}\label{tab:algorithm2-symbols}\\
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endhead
+  $s=(o_s,[i_s,j_s),v_s,b_s,\mathcal R_s)$ & 块元数据
+    & KV 块 $s$ 的所有者故障域、词元区间、版本、总字节数和当前引用请求集合。 \\
+  $\mathcal W_s,\mathcal R_w$ & 集合
+    & 引用块 $s$ 的工作流集合，以及属于工作流 $w$ 的请求集合。 \\
+  $\mathcal C_{s,a}^{(k)}$ & 位置集合
+    & 窗口 $k$ 中块 $s$ 执行动作 $a$ 时所有可行的目标 $(n,g)$。 \\
+  $BW$ & 字节/秒
+    & 对应上下标所指定复制或恢复路径的有效带宽；上标
+      $\mathrm{write}$、$\mathrm{P2P}$、$\mathrm{H2D}$ 区分写入、GPU 间恢复和
+      Host 到 GPU 回载。 \\
+  $m_{s,n,g,a}$ & 字节
+    & 在目标 $(n,g)$ 执行动作 $a$ 还需要新增的 KV 字节数。 \\
+  $q_{n,g,a}^{\mathrm{write}},q_{n,g,a}^{\mathrm{rec}}$ & 秒
+    & 写入阶段与恢复阶段中不由数据传输项表示的排队、建立和固定开销。 \\
+  $R_s^{\mathrm{prefill}},R_s^{\mathrm{tail}}$ & 秒
+    & 从安全输入重算该块所需的 prefill 时间，以及任何恢复动作之后仍不可避免的
+      尾部重放时间。 \\
+  $R_{s,n,g,a}$ & 秒
+    & 使用目标 $(n,g)$ 和动作 $a$ 恢复块 $s$ 的预计总时延。 \\
+  $\Gamma_{s,n,g,a}(t)$ & 秒
+    & 恢复动作在相关工作流关键路径上造成的总可见延迟。 \\
+  $G_{s,n,g,a}(t)$ & 秒
+    & 相比 Recompute，候选备份动作减少的可见恢复延迟。 \\
+  $C_{s,n,g,a}^{\mathrm{write}}$ & 秒
+    & 在正常路径上创建该备份的预计写入时间。 \\
+  $\lambda_a$ & 无量纲
+    & 将动作 $a$ 的正常路径写入时间折算到恢复收益目标中的权重。 \\
+  $V_{s,n,g,a}(t)$ & 秒等价收益
+    & 恢复收益减去加权写入成本后的净价值。 \\
+  $\rho_{s,n,g,a}(t)$ & 秒等价收益/字节
+    & 每新增一字节备份容量带来的净价值，用于在线排序。 \\
+  $M_{n,g},M_n,H_n$ & 字节
+    & GPU $g$ 的 HBM 容量、节点 $n$ 的 HBM 总容量和 Host DRAM 容量；
+      $M_n=\sum_gM_{n,g}$。 \\
+  $c_{n,g,1}^{(k)},c_{n,2}^{(k)}$ & 字节
+    & 窗口 $k$ 中 GPU $g$ 的 L1 备份预算和节点 $n$ 的 L2 备份预算。 \\
+  $x_{s,n,g,a}^{(k)}$ & 二元变量
+    & 窗口 $k$ 是否为块 $s$ 选择目标 $(n,g)$ 和备份动作 $a$。 \\
+  $\mathbf c^{(k)},\mathcal X(\mathbf c^{(k)})$ & 向量、集合
+    & 所有当前 L1/L2 字节预算组成的向量，以及在这些预算下满足式~\eqref{eq:placement}
+      全部约束的放置集合。 \\
+  $h_{s,n,g,a}^{(k)}$ & 二元常量
+    & 窗口开始前目标位置是否已经拥有块 $s$ 的 verified、版本匹配覆盖。 \\
+  $\Pi^{(k)}$ & 计划
+    & 算法 2 在窗口 $k$ 产生的块、动作、目标位置和版本化放置计划。 \\
+  $V_s^{\mathrm{sel},(k)},\Delta V_{s,n,g,a}^{(k)}$ & 秒等价收益
+    & 块 $s$ 已选动作的价值，以及候选动作相对已选动作的正增量价值。 \\
+  $\mathcal R_{n,\ell}^{(k)}$ & 记录集合
+    & 目标为节点 $n$、层 $\ell$，仅因容量不足而被拒绝的最佳增量动作记录。 \\
+  $U_{n,\ell}^{(k)}$ & 字节
+    & 窗口 $k$ 中节点 $n$、层 $\ell$ 的实际备份占用。 \\
+  $E_{n,\ell}^{(k)}$ & 秒等价收益
+    & 窗口 $k$ 中节点 $n$、层 $\ell$ 因容量不足而未获得的正增量收益之和。 \\
+  \bottomrule
+\end{longtable}
+
+\subsection{算法 3 符号}
+
+\begin{longtable}{p{0.27\textwidth}p{0.16\textwidth}p{0.49\textwidth}}
+  \caption{容量控制符号}\label{tab:algorithm3-symbols}\\
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  符号 & 类型或单位 & 含义 \\
+  \midrule
+  \endhead
+  $\alpha_n^{(k)},\beta_n^{(k)}$ & $[0,1]$
+    & 窗口 $k$ 中节点 $n$ 的 L1 HBM 与 L2 Host DRAM 备份容量比例。 \\
+  $L_{n,g,1}^{(k)},L_{n,2}^{(k)}$ & 字节样本集合
+    & 窗口 $k$ 中正常服务在 GPU $g$ 的 HBM 占用样本，以及节点 Host DRAM
+      占用样本。 \\
+  $r_{n,g,1},r_{n,2}$ & 字节
+    & 为突发负载预留的 L1 与 L2 安全余量。 \\
+  $\varepsilon_{n,1},\varepsilon_{n,2}$ & $(0,1)$
+    & 计算正常负载高分位数时允许落在该分位数以上的尾部概率。 \\
+  $P_{n,1}^{(k)},P_{n,2}^{(k)}$ & $[0,1]$
+    & 正常服务占用加安全余量后，相对于两层总容量的压力。 \\
+  $\alpha_n^{\max},\beta_n^{\max}$ & $[0,1]$
+    & 离线无故障扫描得到的 L1/L2 备份比例绝对上限。 \\
+  $A_n^{\mathrm{safe},(k+1)},B_n^{\mathrm{safe},(k+1)}$ & $[0,1]$
+    & 由窗口 $k$ 正常负载推导出的下一窗口 L1/L2 安全上限。 \\
+  $\bar U_{n,\ell}^{(k)},\bar E_{n,\ell}^{(k)}$ & $[0,1]$
+    & 实际备份占用比例和归一化未满足收益。 \\
+  $E_{n,\ell}^{\mathrm{ref}}$ & 秒等价收益
+    & 用于把 $E_{n,\ell}^{(k)}$ 归一化的离线参考尺度，必须大于零。 \\
+  $\theta_{z,0},\theta_{z,U},\theta_{z,E},\theta_{z,P}$ & 非负系数
+    & 线性控制器的截距、占用、未满足收益和正常负载压力系数；
+      $z\in\{\alpha,\beta\}$。 \\
+  $\widetilde\alpha_n^{(k+1)},\widetilde\beta_n^{(k+1)}$ & $[0,1]$
+    & 安全截断后、时间平滑前的下一窗口比例。 \\
+  $\eta_1,\eta_2$ & $(0,1]$
+    & L1/L2 指数平滑步长；值越小，预算变化越慢。 \\
+  $\mathcal A_3$ & 确定性映射
+    & 算法 3，即负载压力、安全上限、线性控制和平滑公式的组合。 \\
+  \bottomrule
+\end{longtable}
+
+\section{系统架构}
+
+\AegisKV 的控制面由四个逻辑模块组成：
+
+\begin{enumerate}
+  \item \textbf{工作流适配器}在工作流开始前生成固定的执行 DAG，并在运行时维护
+    节点完成状态。
+  \item \textbf{松弛估计器（算法 1）}根据剩余 DAG 和执行时长预测，计算各请求
+    能够吸收的额外延迟。
+  \item \textbf{备份规划器（算法 2）}以 KV 块为粒度，联合选择 L1/L2/Recompute、
+    目标节点和目标 GPU，并发布本窗口的价值与容量反馈。
+  \item \textbf{容量控制器（算法 3）}在窗口边界结合正常负载和算法 2 的反馈，
+    发布下一窗口的 $\alpha_n,\beta_n$ 及预算版本。
+\end{enumerate}
+
+数据面包括 L1/L2 目录、异步复制队列、版本验证、复制提交屏障和故障恢复执行器。
+控制面决定“应该保护什么以及保护到哪里”；数据面保证副本只有在完整、版本匹配且
+可访问时才对恢复路径可见。
+
+\section{算法 1：固定 DAG 上的松弛估计}
+
+\subsection{剩余工作流}
+
+工作流拓扑在启动前固定。运行时只根据完成状态构造剩余诱导子图：
+\begin{equation}
+  \begin{aligned}
+    V_w^{\mathrm{rem}}(t)
+      &=\{v\in V_w:\operatorname{status}_v(t)\neq\mathrm{completed}\},\\
+    D_w^{\mathrm{rem}}(t)
+      &=D_w[V_w^{\mathrm{rem}}(t)].
+  \end{aligned}
+  \label{eq:remaining-dag}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:remaining-dag} 说明。}
+$\operatorname{status}_v(t)$ 是节点 $v$ 在时刻 $t$ 的运行状态；第一行从原节点集合
+$V_w$ 中保留所有尚未完成的节点，得到 $V_w^{\mathrm{rem}}(t)$。记号 $D[U]$ 表示
+图 $D$ 在节点集合 $U$ 上的诱导子图，因此第二行同时保留这些节点之间原有的依赖边，
+得到剩余 DAG。该式只删除已完成工作，不改变工作流拓扑。
+
+对每个未完成节点 $v$，时长预测器根据截至 $t$ 已可见的进度、词元、API/工具时延、
+角色与请求类型特征，输出一个剩余执行时间估计：
+\begin{equation}
+  \widehat d_v(t)=f_{\mathrm{time}}\!\left(\phi_v(t)\right).
+  \label{eq:duration-estimate}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:duration-estimate} 说明。}
+$\phi_v(t)$ 是时刻 $t$ 已知的节点特征，$f_{\mathrm{time}}$ 是离线校准的剩余时间
+预测器，输出 $\widehat d_v(t)$，单位为秒。帽号表示它是预测值而非真实完成时间。
+首版实现固定使用经过验证的一个预测分位数；不同分位数的风险敏感比较放入实验，
+不在在线算法中同时维护多套时长模型。
+
+\subsection{关键路径与请求松弛}
+
+令 $\operatorname{pred}_t(v)$ 和 $\operatorname{succ}_t(v)$ 分别表示节点 $v$ 在
+$D_w^{\mathrm{rem}}(t)$ 中的直接前驱和直接后继集合。关键路径法（CPM）的前向与
+反向扫描为
+\begin{equation}
+  \begin{aligned}
+    ES_v(t)
+      &=\begin{cases}
+          0, & \operatorname{pred}_t(v)=\varnothing,\\
+          \max_{u\in\operatorname{pred}_t(v)}EF_u(t), & \text{其他情况},
+        \end{cases}\\
+    EF_v(t)&=ES_v(t)+\widehat d_v(t),\\
+    T_w^{\mathrm{rem}}(t)
+      &=\max_{v:\operatorname{succ}_t(v)=\varnothing}EF_v(t),\\
+    LF_v(t)
+      &=\begin{cases}
+          T_w^{\mathrm{rem}}(t), & \operatorname{succ}_t(v)=\varnothing,\\
+          \min_{z\in\operatorname{succ}_t(v)}LS_z(t), & \text{其他情况},
+        \end{cases}\\
+    LS_v(t)&=LF_v(t)-\widehat d_v(t).
+  \end{aligned}
+  \label{eq:cpm-scan}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:cpm-scan} 说明。}
+前两行沿拓扑序计算最早时间：源节点立即开始，其他节点等待所有前驱完成。
+$T_w^{\mathrm{rem}}(t)$ 是所有汇点最早完成时间的最大值，即预测剩余 WCT。后两行
+逆拓扑序计算最晚时间：汇点最晚在 $T_w^{\mathrm{rem}}(t)$ 完成，其他节点必须在
+最早的后继最晚开始时间之前完成。$ES,EF,LS,LF,T_w^{\mathrm{rem}}$ 的单位均为秒，
+且都以当前时刻 $t$ 为时间原点。
+
+节点总松弛定义为
+\begin{equation}
+  S_v(t)=LS_v(t)-ES_v(t)\ge 0.
+  \label{eq:node-slack}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:node-slack} 说明。}
+$S_v(t)$ 是节点 $v$ 的最晚开始时间与最早开始时间之差。$S_v=0$ 表示节点位于预测
+关键路径；$S_v>0$ 表示最多可额外延迟 $S_v$ 秒而不增加预测剩余 WCT。
+
+首版实现令请求继承其所属执行节点的松弛：
+\begin{equation}
+  \widehat{\sigma}_r(t)=S_{v(r)}(t),
+  \label{eq:request-slack}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:request-slack} 说明。}
+$v(r)$ 是承载请求 $r$ 的执行节点，$\widehat\sigma_r(t)$ 是请求级预测松弛，单位为
+秒。首版直接令请求继承节点松弛，避免在尚无实测依据时引入节点内并发请求的额外
+松弛分配模型。
+
+\begin{designpoint}
+算法 1 只提供工作流层的“可隐藏延迟预算”。它不决定备份层，也不读取
+$\alpha$ 或 $\beta$；其输出作为算法 2 计算恢复价值的输入。
+\end{designpoint}
+
+\section{算法 2：松弛感知的 KV 块备份决策}
+
+\subsection{目标节点与目标 GPU 候选集}
+
+算法 2 不能先决定备份层、再任意挑选目标 GPU，因为路径带宽、已有覆盖和目标负载
+都会改变收益与容量成本。对块 $s$ 和层 $a$，先构造可行目标集合：
+\begin{equation}
+  \begin{aligned}
+    \mathcal C_{s,a}^{(k)}
+    =\{(n,g):\;&
+      \operatorname{healthy}_{n,g}^{(k)}=1,\quad
+      \operatorname{domain}(n,g)\neq o_s,\\
+    &\operatorname{compatible}(v_s,n,g)=1,\quad
+      BW_{o_s,n,g,a}^{(k)}>0,\\
+    &\operatorname{tierAvailable}(n,g,a)=1\}.
+  \end{aligned}
+  \label{eq:target-candidates}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:target-candidates} 说明。}
+$\mathcal C_{s,a}^{(k)}$ 是块 $s$ 在窗口 $k$ 执行动作 $a$ 时可选择的目标位置集合。
+集合元素 $(n,g)$ 表示节点 $n$ 及其接管 GPU $g$；对 L2，数据存放在节点 $n$ 的
+Host DRAM，$g$ 仍表示故障后接收 H2D 回载的 GPU。$\operatorname{healthy}$ 是健康
+布尔量；$\operatorname{domain}(n,g)\neq o_s$ 要求目标与块所有者处于不同故障域；
+$\operatorname{compatible}(v_s,n,g)$ 检查块版本、模型和并行布局；$BW>0$ 表示存在
+有效写入路径；$\operatorname{tierAvailable}$ 检查目标层及其恢复能力是否可用。只有
+所有条件同时为真，$(n,g)$ 才进入候选集合。
+
+候选过滤至少包含以下约束：
+
+\begin{itemize}
+  \item 目标 GPU 与所有者不处于同一故障域，避免一次故障同时破坏主副本；
+  \item 目标健康、路由可达，并支持当前 KV 布局、模型版本和并行配置；
+  \item L1 候选具有可用 HBM 与 P2P/网络复制路径；
+  \item L2 候选具有可用 Host DRAM、页锁定/回载能力和对应的接管 GPU；
+  \item 已有更新版本或冲突所有权的目录条目不能作为可复用覆盖。
+\end{itemize}
+
+通过把 $(n,g,a)$ 直接纳入决策变量，目标 GPU 选择成为备份优化的一部分，而不是
+优化完成后的附加步骤。
+
+\subsection{增量容量与恢复时延}
+
+目标位置可能已经拥有块 $s$ 的有效前缀。真正新增的容量为
+\begin{equation}
+  m_{s,n,g,a}
+  =
+  \pos{
+    b_s-\operatorname{coveredBytes}(s,n,g,a)
+  }.
+  \label{eq:incremental-bytes}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:incremental-bytes} 说明。}
+$b_s$ 是块 $s$ 的总字节数，$\operatorname{coveredBytes}(s,n,g,a)$ 是目标位置已有的
+verified、版本匹配且连续的前缀字节数。正部算子保证 $m\ge 0$。例如块大小为
+64 MiB、目标已有 16 MiB 有效前缀时，$m=48$ MiB；已有完整覆盖时 $m=0$。该新增
+字节数同时进入写入时间和容量约束，避免为已有数据重复计费。
+
+三条恢复路径的时延写为
+\begin{equation}
+  R_{s,n,g,a}=
+  \begin{cases}
+    q_{n,g,\BOne}^{\mathrm{rec}}
+    +m_{s,n,g,\BOne}/BW_{n,g,\BOne}^{\mathrm{P2P}}
+    +R_s^{\mathrm{tail}}, & a=\BOne,\\[0.35em]
+    q_{n,g,\BTwo}^{\mathrm{rec}}
+    +m_{s,n,g,\BTwo}/BW_{n,g,\BTwo}^{\mathrm{H2D}}
+    +R_s^{\mathrm{tail}}, & a=\BTwo,\\[0.35em]
+    R_s^{\mathrm{prefill}}+R_s^{\mathrm{tail}}, & a=\Recompute.
+  \end{cases}
+  \label{eq:recovery-time}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:recovery-time} 说明。}
+$R_{s,n,g,a}$ 的单位为秒。L1 的三项依次是恢复建立/排队时间、缺失字节经 P2P
+传输的时间和尾部重放时间；L2 将 P2P 项替换为 Host 到接管 GPU 的 H2D 回载时间；
+Recompute 不读取备份，代价是重新执行 prefill 加尾部重放。$q^{\mathrm{rec}}$、
+$R_s^{\mathrm{prefill}}$ 和 $R_s^{\mathrm{tail}}$ 均为秒，$m/BW$ 也因“字节除以
+字节/秒”得到秒。该式输出每个动作的预计恢复总时延。
+
+\subsection{从工作流松弛到净恢复价值}
+
+对引用块 $s$ 的每个工作流，只计算该工作流内最大的可见恢复惩罚，避免共享块在
+同一工作流中重复计价：
+\begin{equation}
+  \Gamma_{s,n,g,a}(t)
+  =
+  \sum_{w\in\mathcal W_s}
+  \max_{r\in\mathcal R_s(t)\cap\mathcal R_w}
+  \pos{
+    R_{s,n,g,a}-\widehat{\sigma}_r(t)
+  }.
+  \label{eq:visible-penalty}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:visible-penalty} 说明。}
+$\mathcal W_s$ 是引用块 $s$ 的工作流集合，$\mathcal R_s(t)$ 是时刻 $t$ 仍引用该块
+的活跃请求集合，$\mathcal R_w$ 是工作流 $w$ 的请求集合。对每个请求，
+$\pos{R-\widehat\sigma_r}$ 表示恢复时延超过请求松弛后真正暴露到 WCT 上的秒数；
+同一工作流只取最大值，避免共享块被该工作流内多个请求重复计价，再对不同工作流
+求和。若交集为空，约定该工作流的最大值为零。$\Gamma$ 的单位为秒，且符号
+$\Gamma$ 专用于可见恢复惩罚，与算法 3 的工作负载压力 $P$ 区分。
+
+相对 Recompute，备份候选项的恢复收益、正常路径写入成本和净价值分别为
+\begin{equation}
+  \begin{aligned}
+    G_{s,n,g,a}(t)
+      &=\pos{\Gamma_{s,\Recompute}(t)-\Gamma_{s,n,g,a}(t)},\\
+    C_{s,n,g,a}^{\mathrm{write}}
+      &=q_{n,g,a}^{\mathrm{write}}
+        +\frac{m_{s,n,g,a}}{BW_{o_s,n,g,a}^{\mathrm{write}}},\\
+    V_{s,n,g,a}(t)
+      &=G_{s,n,g,a}(t)
+        -\lambda_a C_{s,n,g,a}^{\mathrm{write}}.
+  \end{aligned}
+  \label{eq:net-value}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:net-value} 说明。}
+第一行用 Recompute 的可见惩罚减去候选动作的可见惩罚，得到备份减少的可见恢复
+时间 $G$；$\Gamma_{s,\Recompute}$ 与目标位置无关。第二行把固定写入开销
+$q^{\mathrm{write}}$ 与缺失字节的传输时间相加，得到正常路径写入成本
+$C^{\mathrm{write}}$。第三行以非负权重 $\lambda_a$ 折算写入成本，得到秒等价净价值
+$V$。$\lambda_a=0$ 表示只关心恢复收益，较大的 $\lambda_a$ 更强地抑制正常路径写入
+开销。只有 $V_{s,n,g,a}>0$ 的候选项才值得占用备份容量。首版不估计逐块故障概率；若不同
+故障域的风险差异被实测证实，可在后续版本中对 $G$ 乘以故障域级固定权重。
+
+在线近似使用单位增量字节净价值
+\begin{equation}
+  \rho_{s,n,g,a}(t)
+  =
+  \frac{V_{s,n,g,a}(t)}
+       {\max(m_{s,n,g,a},1)}
+  \label{eq:value-density}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:value-density} 说明。}
+$\rho$ 用净价值 $V$ 除以新增容量 $m$，单位为秒等价收益/字节；分母至少取 1 字节，
+避免已有完整覆盖时除以零。在线系统按 $\rho$ 从高到低执行 admit/replace。
+$\rho$ 解决“每字节带来多少收益”的局部排序问题；最终动作仍
+必须满足目标节点容量和单块唯一动作约束。
+
+\subsection{收益与容量的联合权衡}
+
+窗口 $k$ 中，算法 3 已发布的容量为
+\begin{equation}
+  c_{n,g,1}^{(k)}=\alpha_n^{(k)}M_{n,g},\qquad
+  c_{n,2}^{(k)}=\beta_n^{(k)}H_n.
+  \label{eq:current-capacity}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:current-capacity} 说明。}
+$c_{n,g,1}^{(k)}$ 是节点 $n$ 中 GPU $g$ 可用于 L1 Backup 的字节预算；同一节点的
+所有 GPU 共用比例 $\alpha_n^{(k)}$，但分别乘以自身容量 $M_{n,g}$。$c_{n,2}^{(k)}$
+是节点级 L2 字节预算，由 $\beta_n^{(k)}H_n$ 给出。算法 2 在整个窗口 $k$ 固定读取
+这些预算，不在窗口内自行修改 $\alpha$ 或 $\beta$。
+精确问题可写成一个带多目标位置的 0--1 容量约束优化：
+\begin{equation}
+  \begin{aligned}
+    \max_{\mathbf x^{(k)}}\quad
+      &\sum_{s,n,g}\sum_{a\in\{\BOne,\BTwo\}}
+       V_{s,n,g,a}^{(k)}x_{s,n,g,a}^{(k)},\\
+    \mathrm{s.t.}\quad
+      &\sum_s m_{s,n,g,\BOne}x_{s,n,g,\BOne}^{(k)}
+       \le c_{n,g,1}^{(k)},\quad\forall n,g,\\
+      &\sum_{s,g}m_{s,n,g,\BTwo}x_{s,n,g,\BTwo}^{(k)}
+       \le c_{n,2}^{(k)},\quad\forall n,\\
+      &\sum_{n,g}\sum_{a\in\{\BOne,\BTwo\}}
+       x_{s,n,g,a}^{(k)}\le 1,\quad\forall s,\\
+      &x_{s,n,g,a}^{(k)}=0
+       \quad\text{if }(n,g)\notin\mathcal C_{s,a}^{(k)},\\
+      &x_{s_j,n,g,a}^{(k)}
+       \le x_{s_{j-1},n,g,a}^{(k)}+h_{s_{j-1},n,g,a}^{(k)},
+       \quad\forall j>1,\\
+      &x_{s,n,g,a}^{(k)}\in\{0,1\}.
+  \end{aligned}
+  \label{eq:placement}
+\end{equation}
+
+\noindent\textbf{式~\eqref{eq:placement} 说明。}
+$\mathbf x^{(k)}$ 收集窗口 $k$ 的所有二元选择变量，$V^{(k)}$ 表示候选在本窗口做
+决策时冻结的净价值。目标函数最大化所有已选备份动作的净价值总和；不选择 L1/L2
+就隐式使用 Recompute，因此 Recompute 不消耗容量，也不需要一个 $x$ 变量。
+$\mathrm{s.t.}$ 是 ``subject to''，表示其后均为约束。约束按
+出现顺序分别表示：每张 GPU 的 L1 字节上限、每个节点的 L2 字节上限、每块最多一个
+备份动作、不可行目标禁止选择、连续前缀以及二元取值。对按词元顺序排列的相邻块
+$s_{j-1},s_j$，最后一个结构约束表示只有前一块已在本计划中选择，或
+$h_{s_{j-1},n,g,a}^{(k)}=1$ 表明窗口开始前已有 verified 覆盖时，才可选择后继块
+$s_j$。因此恢复目录不会出现跨越缺口的孤立后缀。
+
+该式对“备份到一个节点的收益与容量如何取舍”给出了直接答案：目标函数累加净恢复
+价值，约束消耗增量容量；同一个块在 L1、L2 和不同目标 GPU 上形成不同候选项，
+优化器只保留一个正价值且可行的动作。
+在线系统不必每次求解整数规划，可以按 $\rho$ 维护每个节点和层的有序候选集合，
+并用更高密度候选替换更低密度条目。
+
+\subsection{算法 2 的跨窗口输出}
+
+算法 2 的输出不应只有一个 KV 优先级。窗口 $k$ 结束时，它只发布当前动作和算法 3
+真正需要的两类聚合反馈：
+
+\begin{itemize}
+  \item \textbf{放置计划 $\Pi^{(k)}$：}包含块、版本、动作、目标节点/GPU、状态和
+    计划版本，用于驱动当前窗口的数据面；
+  \item \textbf{实际占用 $U^{(k)}$：}当前容量预算最终容纳了多少备份字节；
+  \item \textbf{未满足收益 $E^{(k)}$：}满足其他可行性条件，但仅因当前层容量不足
+    而未能获得的正增量收益。
+\end{itemize}
+
+为避免同一个块的多个目标候选重复计数，先令该块已选动作的价值为
+\begin{equation}
+  V_s^{\mathrm{sel},(k)}
+    =\sum_{n,g}\sum_{a\in\{\BOne,\BTwo\}}
+      V_{s,n,g,a}^{(k)}x_{s,n,g,a}^{(k)},
+  \qquad
+  \Delta V_{s,n,g,a}^{(k)}
+    =\pos{V_{s,n,g,a}^{(k)}-V_s^{\mathrm{sel},(k)}}.
+  \label{eq:marginal-rejected-value}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:marginal-rejected-value} 说明。}
+$V_s^{\mathrm{sel},(k)}$ 是块 $s$ 实际已选动作的价值；由于单块唯一动作约束，该和式
+至多有一项非零，未选备份时值为零。$\Delta V_{s,n,g,a}^{(k)}$ 是某个未选候选相对
+当前动作还能增加的价值，并由正部算子去掉没有改进的替代动作。它衡量的是“再增加
+容量可获得多少额外收益”，而不是重复计算候选的全部价值。
+对每个块，在线规划器至多记录一个仅因容量不足而被拒绝、且
+$\Delta V>0$ 的最佳替代动作；“最佳”首先指 $\Delta V$ 最大，平局时依次按 $\rho$
+和稳定目标编号选择。令 $\mathcal R_{n,\ell}^{(k)}$ 表示其中目标为节点
+$n$、层 $\ell$ 的记录集合。逐节点、逐层反馈定义为
+\begin{equation}
+  \begin{aligned}
+    U_{n,\ell}^{(k)}
+      &=\sum_{s,g}m_{s,n,g,B_\ell}
+        x_{s,n,g,B_\ell}^{(k)},\\
+    E_{n,\ell}^{(k)}
+      &=\sum_{(s,g)\in\mathcal R_{n,\ell}^{(k)}}
+        \Delta V_{s,n,g,B_\ell}^{(k)},
+      \qquad \ell\in\{1,2\}.
+  \end{aligned}
+  \label{eq:ue-feedback}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:ue-feedback} 说明。}
+第一行把节点 $n$、层 $\ell$ 所有已选动作的新增字节相加，得到实际占用 $U$；其中
+$B_1=\BOne$、$B_2=\BTwo$。第二行只遍历容量受限记录集合
+$\mathcal R_{n,\ell}^{(k)}$，累加每个块唯一最佳替代动作的 $\Delta V$，得到未满足
+增量收益 $E$。因此 $U$ 的单位是字节，$E$ 的单位是秒等价收益，二者不能直接相加，
+必须在算法 3 中分别归一化。
+
+$U$ 回答“当前配额实际用了多少”，$E$ 回答“当前配额挡住了多少额外恢复收益”。
+若一个块已被放入 L2，则容量不足的 L1 动作只按相对 L2 的增量价值计入；同一块的
+多个目标候选只保留一个最佳替代动作。净增量价值不为正、版本失效、目标不健康或
+违反连续前缀约束的候选不计入 $E$。该定义直接来自在线决策结果，不额外求解容量
+移除后的影子问题。
+
+\subsection{算法 2 执行过程}
+
+\begin{enumerate}
+  \item 读取窗口 $k$ 生效的
+    $(\boldsymbol\alpha^{(k)},\boldsymbol\beta^{(k)})$ 和预算版本。
+  \item 在 KV 块提交或扩展时，按式~\eqref{eq:target-candidates} 生成可行目标。
+  \item 计算缺失字节、恢复时延、可见惩罚、净价值和价值密度。
+  \item 在式~\eqref{eq:placement} 的当前预算内执行 admit/replace，生成计划
+    $\Pi^{(k)}$。
+  \item 只有复制完成并收到 ACK 后才提交目录项；失败或失效候选保持 Recompute。
+  \item 记录仅因容量不足而被拒绝的最佳正增量候选，并按式~\eqref{eq:ue-feedback}
+    聚合 $U^{(k)},E^{(k)}$。
+  \item 窗口封口时发布 $\Pi^{(k)},U^{(k)},E^{(k)}$。
+\end{enumerate}
+
+\section{算法 3：反馈驱动的 L1/L2 容量控制}
+
+\subsection{\texorpdfstring{$\alpha$ 与 $\beta$}{alpha 与 beta} 的含义}
+
+算法 3 将每个节点的两层资源划分为备份区和正常服务区：
+\begin{equation}
+  \begin{aligned}
+    M_n^{\BOne}(k)&=\alpha_n^{(k)}M_n,
+    &M_n^{\mathrm{serve}}(k)&=(1-\alpha_n^{(k)})M_n,\\
+    H_n^{\BTwo}(k)&=\beta_n^{(k)}H_n,
+    &H_n^{\mathrm{cache}}(k)&=(1-\beta_n^{(k)})H_n.
+  \end{aligned}
+  \label{eq:tier-partition}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:tier-partition} 说明。}
+$M_n^{\BOne}(k)$ 和 $M_n^{\mathrm{serve}}(k)$ 分别是节点 $n$ 在窗口 $k$ 分给 L1
+Backup 与正常 GPU 服务的 HBM 字节数；二者之和为 $M_n$。$H_n^{\BTwo}(k)$ 和
+$H_n^{\mathrm{cache}}(k)$ 分别是分给 L2 Backup 与正常 Host Cache 的 DRAM 字节数；
+二者之和为 $H_n$。因此 $\alpha_n^{(k)}$、$\beta_n^{(k)}$ 是无量纲容量比例，而不是
+具体字节数；具体预算由比例乘相应总容量得到。
+因此 $\alpha$ 和 $\beta$ 都不是“尽量增大”的恢复参数。它们分别控制 L1 和 L2
+为备份让出的资源比例，必须同时满足正常服务安全性和正价值备份需求。
+
+\subsection{正常服务安全上限}
+
+设 $L_{n,g,1}^{(k)}$ 和 $L_{n,2}^{(k)}$ 是窗口 $k$ 观测到的正常 L1/L2 负载，
+$r_{n,g,1},r_{n,2}$ 是为突发保留的安全余量。对风险目标
+$\varepsilon_{n,1},\varepsilon_{n,2}$，先把正常服务压力归一化为
+\begin{equation}
+  \begin{aligned}
+    P_{n,1}^{(k)}
+      &=\max_g\clip{
+        \frac{Q_{1-\varepsilon_{n,1}}(L_{n,g,1}^{(k)})+r_{n,g,1}}
+             {M_{n,g}}},\\
+    P_{n,2}^{(k)}
+      &=\clip{
+        \frac{Q_{1-\varepsilon_{n,2}}(L_{n,2}^{(k)})+r_{n,2}}
+             {H_n}}.
+  \end{aligned}
+  \label{eq:workload-pressure}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:workload-pressure} 说明。}
+$L_{n,g,1}^{(k)}$ 与 $L_{n,2}^{(k)}$ 分别是窗口 $k$ 采集的正常 HBM 和 Host DRAM
+占用样本，单位为字节。$Q_{1-\varepsilon}(L)$ 取其高分位数；例如
+$\varepsilon=0.01$ 时使用第 99 百分位。再加突发余量 $r$、除以物理容量并截断到
+$[0,1]$，得到无量纲压力 $P$。L1 还在节点内对所有 GPU 取最大值，因为同一个节点
+比例 $\alpha_n$ 会应用到每张 GPU，最忙 GPU 决定安全边界。
+
+下一窗口可用于备份的安全上限为
+\begin{equation}
+  \begin{aligned}
+    A_n^{\mathrm{safe},(k+1)}
+      &=\min\{\alpha_n^{\max},1-P_{n,1}^{(k)}\},\\
+    B_n^{\mathrm{safe},(k+1)}
+      &=\min\{\beta_n^{\max},1-P_{n,2}^{(k)}\}.
+  \end{aligned}
+  \label{eq:safe-cap}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:safe-cap} 说明。}
+$1-P$ 是满足正常服务高分位负载和突发余量后仍可分给备份的容量比例；
+$\alpha_n^{\max}$、$\beta_n^{\max}$ 是离线扫描给出的绝对上限。两者取最小值，分别
+得到下一窗口 L1 的 $A_n^{\mathrm{safe},(k+1)}$ 和 L2 的
+$B_n^{\mathrm{safe},(k+1)}$。例如 $P_{n,1}=0.82$ 且 $\alpha_n^{\max}=0.25$ 时，
+L1 安全上限为 $\min(0.25,0.18)=0.18$。
+
+$\alpha_n^{\max}$ 和 $\beta_n^{\max}$ 来自匹配负载下的无故障扫描。L1 扫描检查
+活跃 KV、前缀缓存、p99 和 OOM；L2 扫描检查主机缓存命中、回载、预取、页锁定
+内存压力和 Host OOM。式~\eqref{eq:safe-cap} 只回答“最多可以给备份多少容量”，
+并不等价于下一窗口的实际需求。
+
+\subsection{收益--负载线性控制}
+
+算法 3 只使用算法 2 的实际占用与未满足收益，并将它们归一化为可比较的窗口信号：
+\begin{equation}
+  \begin{aligned}
+    \bar U_{n,1}^{(k)}&=\frac{U_{n,1}^{(k)}}{M_n},
+    &\bar U_{n,2}^{(k)}&=\frac{U_{n,2}^{(k)}}{H_n},\\
+    \bar E_{n,\ell}^{(k)}
+      &=\clip{\frac{E_{n,\ell}^{(k)}}{E_{n,\ell}^{\mathrm{ref}}}},
+    &\ell&\in\{1,2\},
+  \end{aligned}
+  \label{eq:normalized-feedback}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:normalized-feedback} 说明。}
+$U_{n,1}/M_n$ 和 $U_{n,2}/H_n$ 将实际备份字节分别变成 L1/L2 总容量占用比例。
+$E_{n,\ell}^{\mathrm{ref}}>0$ 是离线回放确定的收益参考尺度，与 $E$ 具有相同单位；
+$E/E^{\mathrm{ref}}$ 再截断到 $[0,1]$，得到无量纲 $\bar E$。参考尺度只负责让不同
+窗口的 $E$ 可比较，不参与算法 2 的候选排序。工作负载压力 $P$ 已由
+式~\eqref{eq:workload-pressure} 给出。
+
+下一窗口的原始比例由线性关系给出：
+\begin{equation}
+  \begin{aligned}
+    \widetilde\alpha_n^{(k+1)}
+      &=\operatorname{clip}\!\Bigl(
+        \theta_{\alpha,0}
+        +\theta_{\alpha,U}\bar U_{n,1}^{(k)}
+        +\theta_{\alpha,E}\bar E_{n,1}^{(k)}
+        -\theta_{\alpha,P}P_{n,1}^{(k)};
+        0,A_n^{\mathrm{safe},(k+1)}
+      \Bigr),\\
+    \widetilde\beta_n^{(k+1)}
+      &=\operatorname{clip}\!\Bigl(
+        \theta_{\beta,0}
+        +\theta_{\beta,U}\bar U_{n,2}^{(k)}
+        +\theta_{\beta,E}\bar E_{n,2}^{(k)}
+        -\theta_{\beta,P}P_{n,2}^{(k)};
+        0,B_n^{\mathrm{safe},(k+1)}
+      \Bigr).
+  \end{aligned}
+  \label{eq:linear-budget-control}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:linear-budget-control} 说明。}
+$\widetilde\alpha$、$\widetilde\beta$ 是尚未做时间平滑的下一窗口比例。对每一层，
+$\theta_{z,0}$ 是基础比例；$\theta_{z,U}\bar U$ 保留已被有效使用的备份容量；
+$\theta_{z,E}\bar E$ 在容量挡住正增量收益时推动扩容；
+$\theta_{z,P}P$ 在正常服务压力升高时推动缩容。所有 $\theta$ 系数均非负，通过离线
+profiling、网格搜索或带单调约束的线性回归确定。最外层
+$\operatorname{clip}(\cdot;0,A^{\mathrm{safe}})$ 或
+$\operatorname{clip}(\cdot;0,B^{\mathrm{safe}})$ 保证输出非负且不超过正常服务安全
+上限。式中所有输入和输出均无量纲。算法 3
+不使用 MDP、强化学习或额外的价值--容量优化器。
+
+\subsection{平滑、滞回与版本化发布}
+
+为避免短时噪声引发分区振荡，最终比例采用指数平滑：
+\begin{equation}
+  \begin{aligned}
+    \alpha_n^{(k+1)}
+      &=\operatorname{clip}\!\Bigl(
+        (1-\eta_1)\alpha_n^{(k)}
+        +\eta_1\widetilde\alpha_n^{(k+1)};
+        0,A_n^{\mathrm{safe},(k+1)}\Bigr),\\
+    \beta_n^{(k+1)}
+      &=\operatorname{clip}\!\Bigl(
+        (1-\eta_2)\beta_n^{(k)}
+        +\eta_2\widetilde\beta_n^{(k+1)};
+        0,B_n^{\mathrm{safe},(k+1)}\Bigr).
+  \end{aligned}
+  \label{eq:smoothing}
+\end{equation}
+\noindent\textbf{式~\eqref{eq:smoothing} 说明。}
+新比例是当前已生效比例与线性控制器原始输出的加权平均。$\eta_1,\eta_2\in(0,1]$
+分别是 L1/L2 步长；$\eta=1$ 表示立即采用原始输出，较小值表示更平滑、响应更慢。
+外层再次按最新安全上限截断，保证即使旧比例高于新上限，也能立即安全缩容。
+只有变化超过滞回阈值时才发布新预算；若旧比例超过新的安全上限，则安全缩容不受
+滞回限制。发布内容包括节点标识、L1/L2 比例、预算
+版本和生效窗口，对应字段为 \code{node\_id}、\code{alpha}/\code{beta}、
+\code{budget\_version} 和 \code{effective\_window}。L1 只在显存调整屏障处
+切换；L2 缩容时先将超预算条目标为待逐出，再原子切换配额版本。
+
+\subsection{用公式表示跨窗口因果关系}
+
+算法之间的先后关系由下列方程定义，而不是由同窗口的循环调用定义：
+\begin{align}
+  c_{n,g,1}^{(k)}
+    &=\alpha_n^{(k)}M_{n,g},
+  &
+  c_{n,2}^{(k)}
+    &=\beta_n^{(k)}H_n,
+  \label{eq:causal-budget}\\
+  \mathbf x^{(k)}
+    &\in
+    \arg\max_{\mathbf x\in
+      \mathcal X(\mathbf c^{(k)})}
+    \sum_{s,n,g}\sum_{a\in\{\BOne,\BTwo\}}
+      V_{s,n,g,a}^{(k)}x_{s,n,g,a},
+  \label{eq:causal-placement}\\
+  U_{n,\ell}^{(k)}
+    &=\sum_{s,g}
+      m_{s,n,g,B_\ell}x_{s,n,g,B_\ell}^{(k)},
+  &
+  E_{n,\ell}^{(k)}
+    &=\sum_{(s,g)\in\mathcal R_{n,\ell}^{(k)}}
+      \Delta V_{s,n,g,B_\ell}^{(k)},
+  \label{eq:causal-feedback}\\
+  (\boldsymbol\alpha^{(k+1)},\boldsymbol\beta^{(k+1)})
+    &=
+    \mathcal A_3\!\left(
+      \mathbf L^{(k)},
+      \mathbf U^{(k)},
+      \mathbf E^{(k)};
+      \boldsymbol\alpha^{(k)},
+      \boldsymbol\beta^{(k)}
+    \right).
+  \label{eq:causal-next}
+\end{align}
+
+\noindent\textbf{式~\eqref{eq:causal-budget}--\eqref{eq:causal-next} 说明。}
+$\mathbf c^{(k)}$ 汇总所有 $c_{n,g,1}^{(k)}$ 和 $c_{n,2}^{(k)}$；
+$\mathcal X(\mathbf c^{(k)})$ 是满足式~\eqref{eq:placement} 全部容量、目标、唯一动作和
+连续前缀约束的可行放置集合。$\mathbf x^{(k)}\in\arg\max$ 表示算法 2 选择其中净价值
+最大的放置；若并列，实现按固定目标编号和块编号打破平局。随后按已选 $\mathbf x$
+计算实际占用 $\mathbf U^{(k)}$，并从容量受限记录计算未满足增量收益
+$\mathbf E^{(k)}$。$\mathbf L^{(k)}$ 汇总该窗口的正常服务负载样本；
+$\mathcal A_3$ 表示式~\eqref{eq:workload-pressure}--\eqref{eq:smoothing} 组成的确定性
+控制过程。粗体 $\boldsymbol\alpha$ 和 $\boldsymbol\beta$ 收集所有节点的比例。
+
+这些公式的窗口索引同时给出了严格先后次序：
+算法 2 只能读取窗口 $k$ 已生效的预算；算法 3 只能读取已经封口的窗口 $k$ 反馈；
+新比例从窗口 $k+1$ 生效。因此，算法 2 的信息会影响下一个窗口的算法 3，但不会
+修改同一窗口内已经提交的备份动作。
+
+\subsection{算法 3 执行过程}
+
+\begin{enumerate}
+  \item 窗口 $k$ 封口后，收集正常服务负载
+    $\mathbf L^{(k)}$ 和算法 2 发布的 $U^{(k)},E^{(k)}$。
+  \item 根据式~\eqref{eq:safe-cap} 计算 L1/L2 的正常服务安全上限。
+  \item 按式~\eqref{eq:normalized-feedback} 归一化占用和未满足收益。
+  \item 使用式~\eqref{eq:linear-budget-control} 计算下一窗口原始比例。
+  \item 进行平滑和滞回，并分别检查 L1/L2 安全上限。
+  \item 在对应层的调整屏障上发布新预算版本，使其从窗口 $k+1$ 生效。
+  \item 若出现 SLO 违约、反馈过期或分区调整失败，回退到最近验证可行的预算对。
+\end{enumerate}
+
+\section{恢复数据面}
+
+\subsection{复制状态机}
+
+一个备份动作至少经历
+\code{planned}、\code{copying}、\code{verified}、
+\code{committed}、\code{invalidating} 和 \code{evicted} 状态。
+只有 \code{committed} 条目可以进入故障恢复候选集。目录项至少包含：
+
+\begin{itemize}
+  \item KV 块标识、词元区间、模型/并行布局和版本；
+  \item 所有者故障域、目标节点、目标 GPU 和备份层；
+  \item 已提交字节范围、校验信息和最后验证时间；
+  \item plan 版本、budget 版本和副本状态。
+\end{itemize}
+
+复制失败、版本变化或目标不可达只会使该候选动作失效，不会破坏 Recompute 路径。
+
+\subsection{故障恢复顺序}
+
+对故障请求，恢复器按以下顺序处理：
+
+\begin{enumerate}
+  \item 从目录中选择版本匹配且连续的最长 verified prefix；
+  \item 若存在 L1 Backup，则优先在接管 GPU 上复用或通过 P2P 搬运；
+  \item 否则若存在 L2 Backup，则执行 H2D 回载；
+  \item 对任何缺失、未提交或校验失败的区间执行 Recompute；
+  \item 从安全恢复前沿继续重放，并恢复正常调度。
+\end{enumerate}
+
+\subsection{正确性不变量}
+
+\AegisKV 的实现必须维护以下不变量：
+
+\begin{itemize}
+  \item \textbf{版本一致性：}恢复只能读取与请求状态匹配的 KV 版本；
+  \item \textbf{前缀连续性：}目录中零散的后缀不能跨越缺失区间直接拼接；
+  \item \textbf{提交后可见：}复制完成、校验和目录提交之前，副本不可用于恢复；
+  \item \textbf{单块单动作：}一个计划版本中，同一块至多提交一个目标层和目标位置；
+  \item \textbf{跨故障域：}主副本不能共享设计所防护的同一故障域；
+  \item \textbf{可回退：}任意优化路径失败后都必须能退回 Recompute。
+\end{itemize}
+
+\section{控制面接口与时间线}
+
+\subsection{算法 2 发布接口}
+
+\begin{table}[H]
+  \centering
+  \caption{算法 2 的窗口输出}
+  \label{tab:algorithm2-output}
+  \begin{tabularx}{\textwidth}{p{0.27\textwidth}X}
+    \toprule
+    字段 & 语义 \\
+    \midrule
+    \code{plan\_version}
+      & 本窗口备份计划版本；目录提交和恢复查找均携带该版本。 \\
+    \code{effective\_window}
+      & 计划执行的窗口编号。 \\
+    $\Pi^{(k)}$
+      & 容量约束后的块、动作和目标 GPU 放置计划。 \\
+    $U^{(k)}$
+      & 逐节点、逐层的实际备份占用字节。 \\
+    $E^{(k)}$
+      & 逐节点、逐层因容量不足而未获得的正增量收益。 \\
+    \code{feedback\_sealed}
+      & 表示窗口统计已经封口，不再接受迟到更新。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{算法 3 发布接口}
+
+\begin{table}[H]
+  \centering
+  \caption{算法 3 的预算输出}
+  \label{tab:algorithm3-output}
+  \begin{tabularx}{\textwidth}{p{0.27\textwidth}X}
+    \toprule
+    字段 & 语义 \\
+    \midrule
+    \code{node\_id}
+      & 预算适用的节点；不同节点可以具有不同的容量比例。 \\
+    \code{alpha}, \code{beta}
+      & L1 HBM 与 L2 Host DRAM 的备份容量比例。 \\
+    \code{budget\_version}
+      & 单调递增的预算版本。 \\
+    \code{effective\_window}
+      & 新比例开始生效的窗口，必须不早于 $k+1$。 \\
+    \code{safe\_cap}
+      & 正常服务负载导出的两层安全上限，用于审计与回退。 \\
+    \code{fallback\_version}
+      & 最近验证可行的预算版本。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{窗口边界}
+
+每个窗口的控制时间线如下：
+
+\begin{enumerate}
+  \item 窗口开始时，算法 2 固定读取一次预算版本；
+  \item 窗口内持续生成、更新和失效 KV 块候选，并提交已完成的复制；
+  \item 窗口结束时冻结候选快照，计算并封口 $U^{(k)},E^{(k)}$；
+  \item 算法 3 在封口后读取反馈和负载样本，计算下一版本；
+  \item 新预算在下一个窗口的层调整屏障处生效。
+\end{enumerate}
+
+迟到反馈归入后续窗口，不能改写已经封口的统计；这使复现实验、故障审计和控制器
+回放具有确定的版本边界。
+
+\section{实现建议}
+
+\subsection{精确模型与在线近似的边界}
+
+式~\eqref{eq:placement} 定义了精确设计目标，但不要求在线服务路径每次调用通用
+整数规划求解器。首版实现可采用：
+
+\begin{itemize}
+  \item 每个节点、每个层维护按 $\rho$ 排序的候选堆；
+  \item KV 块变化时只增量重算相关候选；
+  \item 每个块只生成能够连续扩展 verified prefix 的下一候选；
+  \item 新候选能直接放入时 admit，空间不足时与最低密度条目比较并 replace；
+  \item 决策时同步记录仅因容量不足被拒绝的最佳增量动作，不执行第二次影子优化；
+  \item 周期性离线求解小规模精确问题，用于测量在线近似的 optimality gap。
+\end{itemize}
+
+\subsection{需要监控的指标}
+
+实现至少应记录以下指标：
+
+\begin{itemize}
+  \item 各节点 L1/L2 正常负载、备份占用、安全上限和 $\alpha/\beta$；
+  \item 候选数量、正价值候选数量、admit/replace/evict 次数；
+  \item $U/E$、因容量不足被拒绝的块数、增量收益和增量字节；
+  \item 线性控制器的归一化输入、系数、平滑前后比例和预算版本；
+  \item 复制队列、有效带宽、复制完成时间和正常路径可见开销；
+  \item 故障恢复时的 L1 命中、L2 命中、Recompute 字节和恢复前沿；
+  \item 请求恢复时间、工作流完成时间、p99 变化和 OOM/SLO 事件。
+\end{itemize}
+
+\section{评估计划与证据边界}
+
+技术评估应把正常路径成本、故障收益和控制稳定性分开测量。
+
+\subsection{算法 1}
+
+报告剩余时间预测误差、分位数覆盖率、松弛估计误差，以及错误松弛排序对备份决策
+和 WCT 的敏感性。训练集和测试集必须按工作流隔离，避免同一工作流片段泄漏。
+
+\subsection{算法 2}
+
+至少比较 Recompute-only、固定 L1、固定 L2、LRU/大小启发式、只按重算时间、
+只按松弛时间、价值密度在线近似和小规模精确求解。主要指标包括 WCT、恢复时延、
+复制开销、单位容量收益、目标负载均衡和在线近似的 optimality gap。
+
+\subsection{算法 3}
+
+至少比较固定统一比例、逐节点固定比例、只使用工作负载压力、只使用备份收益反馈、
+无平滑以及完整线性控制器。需要同时扫描 $\alpha$ 与 $\beta$，测量 p99、缓存命中、
+OOM、预算振荡、未满足增量收益和故障恢复收益。
+
+\subsection{端到端故障实验}
+
+故障实验应明确故障域、注入时刻、主副本可见性、备份写入成本是否计入，以及恢复
+路径是否发生真实数据搬运。模拟器或回放结果可以验证策略趋势，但不能替代真实
+GPU/Host 数据面上的最终恢复证据。
+
+\section{限制与后续工作}
+
+当前设计以启动前固定的有限 DAG 为前提；运行时新增的未知分支、无限反馈循环和
+拓扑学习不在算法 1 的范围内。执行时长估计、有效带宽和写入成本若发生明显分布
+漂移，也会降低算法 2 的价值排序质量。
+
+后续工作包括：
+
+\begin{itemize}
+  \item 在不同负载轨迹上校准 $E^{\mathrm{ref}}$ 和线性系数，并报告稳定区间；
+  \item 验证独立的 L1/L2 线性控制是否足够；只有实测出现稳定的层间耦合时才加入
+    交叉项或联合约束；
+  \item 将复制带宽和恢复带宽争用纳入节点/GPU 目标选择；
+  \item 研究同一 KV 块的纠删码或多副本扩展，同时保持故障域独立；
+  \item 完成真实数据面上的端到端恢复实验，并将设计结论与实测证据严格区分。
+\end{itemize}
+
+\section{总结}
+
+\AegisKV 将工作流关键路径、KV 块恢复价值、目标 GPU 选择和两层备份容量控制组合
+成一个版本化的跨窗口系统。算法 1 计算可隐藏延迟；算法 2 在当前
+$\alpha,\beta$ 预算内联合选择 KV 块、备份层与目标位置，并发布
+$\Pi,U,E$；算法 3 通过线性关系将这些反馈与正常服务压力结合，确定下一窗口的
+$\alpha,\beta$。L1/L2 提供性能优化，Recompute 保持恢复正确性。这个分层结构既
+避免同窗口循环依赖，也为实现、审计和实验提供了清晰接口。
+
+\end{document}

@@ -1,0 +1,307 @@
+% !TeX root = ../paper_outline.tex
+\section{系统集成、恢复与验证}
+
+\begin{frame}{AegisKV | 三个算法通过版本化窄接口集成}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\textwidth}{p{0.13\textwidth}p{0.22\textwidth}p{0.25\textwidth}X}
+    \toprule
+    算法 & 私有状态 & 发布结果 & 消费者 \\
+    \midrule
+    算法 1
+      & 固定 DAG、剩余节点状态、时长模型
+      & \code{predicted\_slack\_ms}, \code{slack\_version}
+      & 算法 2 \\
+    算法 2
+      & 固定 Backup Rank、KV 块目录、松弛时间、路径性能与当前预算
+      & \code{placement\_plan/version}\newline
+        \code{desired\_bytes}\newline
+        \code{used\_bytes}\newline
+        \code{overflow\_bytes}\newline
+        \code{recovery\_hint}
+      & 备份数据面、算法 3 与 Router hint shadow \\
+    算法 3
+      & L1/L2 正常负载、算法 2 需求反馈、服务安全边界
+      & \code{alpha}, \code{beta}, \code{budget\_version},
+        \code{effective\_window}
+      & 分区管理器与算法 2 \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.12cm}
+  \renewcommand{\arraystretch}{1.14}
+  \begin{tabularx}{\textwidth}{p{0.19\textwidth}p{0.27\textwidth}X}
+    \toprule
+    时间尺度 & 触发 & Snapshot 过期时 \\
+    \midrule
+    算法 1 & 轮次/节点进度或时长模型更新 & 请求松弛时间置 0 \\
+    算法 2 & KV 块/松弛时间/路径性能或预算版本变化 & 保留最近有效 plan，新增块重计算 \\
+    算法 3 & 30--60s 负载与需求反馈窗口 & 保留最近验证可行的容量预算 \\
+    Router reroute & failure detector event & Hint 过期时不给 Backup Rank 恢复折扣 \\
+    Recovery data plane & Retry Rank 已选择 & 无 verified chunk 时重算 \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.08cm}
+  \takeaway{算法 2 发布窗口 $k$ 的需求反馈；算法 3 发布窗口 $k+1$ 的容量预算，
+  两者通过窗口号和版本号形成单向时序闭环。}
+\end{frame}
+
+\begin{frame}{AegisKV | Recovery Chunk State Machine}
+  \centering
+  \begin{tikzpicture}[
+    x=1cm,y=1cm,
+    state/.style={draw,rounded corners=3pt,minimum width=2.3cm,
+                  minimum height=0.82cm,align=center,font=\scriptsize},
+    arr/.style={-{Stealth[length=1.8mm]},thick,draw=AegisGray},
+    bad/.style={-{Stealth[length=1.8mm]},thick,draw=AegisRed}
+  ]
+    \node[state,draw=AegisGray,fill=AegisGrayLight] (u) at (0,1.3)
+      {Unprotected\\effective action = $R$};
+    \node[state,draw=AegisOrange,fill=AegisOrangeLight] (c) at (3.4,1.3)
+      {Copying\\target = $B_1$ or $B_2$};
+    \node[state,draw=AegisGreen,fill=AegisGreenLight] (p) at (6.8,1.3)
+      {Protected\\ACK + version valid};
+    \node[state,draw=AegisRed,fill=AegisRedLight] (i) at (10.2,1.3)
+      {Invalid\\effective action = $R$};
+
+    \draw[arr] (u) -- node[above,font=\tiny]{plan} (c);
+    \draw[arr] (c) -- node[above,font=\tiny]{目标 DP ACK} (p);
+    \draw[bad] (p) -- node[above,font=\tiny]{evict/version} (i);
+    \draw[bad] (c.south) to[out=-120,in=-60,looseness=1.0]
+      node[below,font=\tiny]{timeout/failure} (u.south);
+    \draw[arr] (i.south) to[out=-120,in=-60,looseness=1.0]
+      node[below,font=\tiny]{new epoch} (c.south);
+  \end{tikzpicture}
+
+  \vspace{0.20cm}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\textwidth}{p{0.22\textwidth}X}
+    \toprule
+    Transition guard & 必须满足的原子条件 \\
+    \midrule
+    Copying $\rightarrow$ Protected
+      & ACK 的 \code{chunk\_id/span/version/destination/budget\_epoch} 与 plan 一致 \\
+    Protected $\rightarrow$ Router shadow
+      & 目标 DP 聚合 frontier 后异步发布带 sequence/lease 的 Recovery Hint \\
+    Protected $\rightarrow$ Invalid
+      & owner commit frontier 前移、destination evict/down、version 或 capacity epoch 失效 \\
+    Failure lookup
+      & 只读取 Protected 且 failure domain 独立的最长连续 prefix \\
+    \bottomrule
+  \end{tabularx}
+
+  \takeaway{选中 backup 不等于已经受到保护；可恢复性只在 ACK 后成立。}
+\end{frame}
+
+\begin{frame}{AegisKV | 零查询的 Recovery-Aware Reroute}
+  \small
+  目标 DP rank 保存 ACK 权威状态，并在正常路径异步推送只读摘要
+  $\mathcal H_r$；Router 不保存容量占用，只缓存：
+  \begin{equation}
+    \mathcal H_r=
+    \bigl(b(r),\mathrm{epoch}_r,F_r^{B_1},F_r^{B_2},
+      \widehat R_r^{\mathrm{hint}},s_r,\mathrm{seq}_r,\tau_r\bigr).
+    \label{eq:recovery-hint}
+  \end{equation}
+  Failure 后，Router 直接用当前负载与 Cache-Aware 前缀估计计算：
+  \begin{equation}
+    \begin{aligned}
+      \widehat J_{r,d}(t)
+        &=\widehat W_d(t)+\widehat R_{r,d}(t),\\
+      \widehat R_{r,d}(t)
+        &=\begin{cases}
+          \widehat R_r^{\mathrm{hint}},
+            &d=b(r)\ \land\ \mathcal H_r\text{ 有效},\\
+          T_{\mathrm{prefill}}\!\left(N_r-M_{r,d}(t)\right),
+            &\text{其他情况},
+        \end{cases}\\
+      d_r^{\mathrm{retry}}(t)
+        &=\arg\min_{d\in\mathcal D_{\mathrm{healthy}}(t)}
+          \widehat J_{r,d}(t).
+    \end{aligned}
+    \label{eq:recovery-aware-reroute}
+  \end{equation}
+
+  \scriptsize
+  $\widehat W_d$ 是 Rank $d$ 的预计排队时间；$M_{r,d}$ 是 Router Radix Tree
+  估计的可复用前缀；$N_r$ 是失败前已提交 token 数；$\tau_r$ 是 Hint lease。
+
+  \vspace{0.05cm}
+  \takeaway{Backup Rank 是带恢复折扣的候选，而不是强制 Retry 目标；Recovery Hint 在 failure 前到达，因此故障路径没有同步查询 RTT。}
+\end{frame}
+
+\begin{frame}{AegisKV | Failure-Time Recovery Protocol}
+  \small
+  Router 选定 Retry Rank $d_r^{\mathrm{retry}}$ 后，该 Rank 校验本地 cache
+  和目标 DP 发布的有效 Hint。连续恢复点与重算量为：
+  \begin{equation}
+    \begin{aligned}
+      \chi_r(d)
+        &=\mathbf 1[d=b(r)\land\mathcal H_r\text{ 有效}],\\
+      F_{r,d}^{\mathrm{safe}}
+        &=\max\!\left(
+          F_{r,d}^{\mathrm{cache}},
+          \chi_r(d)F_r^{B_1},
+          \chi_r(d)F_r^{B_2}
+        \right),\\
+      N_{r,d}^{\mathrm{replay}}
+        &=\left[N_r^{\mathrm{committed}}-F_{r,d}^{\mathrm{safe}}\right]_+.
+    \end{aligned}
+    \label{eq:safe-frontier}
+  \end{equation}
+
+  \scriptsize
+  $F_{r,d}^{\mathrm{cache}}$ 是 Retry Rank $d$ 上已有的 valid prefix；
+  $F_r^{B_1},F_r^{B_2}$ 是 version-verified L1/L2 连续 prefix；
+  $N_r^{\mathrm{committed}}$ 是失败前已提交 token 数；
+  $N_{r,d}^{\mathrm{replay}}$ 是在所选 Retry Rank 上必须重新 prefill 的 token 数。
+
+  \vspace{0.08cm}
+  \begin{paperalgo}{Failure-Time Recovery Procedure (Data Plane)}
+    \algline{failure detector 冻结 owner 的 commit frontier，并生成单调递增的 \code{failure\_epoch}。}
+    \algline{Router 按式~\eqref{eq:recovery-aware-reroute} 读取本地 Hint shadow，零查询选择 Retry Rank。}
+    \algline{Retry Rank 校验 chunk identifier、version、ACK、destination health 与 failure-domain separation。}
+    \algline{按式~\eqref{eq:safe-frontier} 选择最长连续 verified prefix；L1 Backup 直接接管，L2 Backup 执行 H2D。}
+    \algline{从输入与 workflow state 重放 $N_{r,d}^{\mathrm{replay}}$ tokens，并重建 mutable tail。}
+    \algline{原子安装新 owner/version，恢复 decode；旧 epoch 的迟到 ACK 全部丢弃。}
+  \end{paperalgo}
+\end{frame}
+
+\begin{frame}{AegisKV | 组件与实现接口}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.13}
+  \begin{tabularx}{\textwidth}{p{0.22\textwidth}p{0.31\textwidth}X}
+    \toprule
+    组件 & 接口/状态 & SGLSim 数据路径锚点 \\
+    \midrule
+    工作流监视器
+      & 固定 DAG、节点进度、时长特征、松弛时间快照
+      & 请求元数据进入 Engine/Controller \\
+    Cache-Aware Router
+      & load/radix snapshot、$e(r)/b(r)$、Recovery Hint shadow
+      & Rust Cache-Aware 语义的 Top-2 扩展 \\
+    DP Backup Connector（算法 2）
+      & 固定目的 Rank、chunk score、L1/L2 plan、$D/U/O$
+      & DP rank 本地 Backup Manager \\
+    DP Budget Adapter（算法 3）
+      & $L_{n,1/2}$、$D/U/O$、$\alpha_n/\beta_n$、tier barriers
+      & DP rank 本地分区管理器 \\
+    Backup Directory
+      & ACK committed span/version、D2H/H2D events
+      & 目标 DP 权威状态 + Router 只读 Hint shadow \\
+    Recovery Executor
+      & failure epoch、safe frontier、restore/replay action
+      & \code{Scheduler} recovery stats 与 \code{recovery\_model.py} \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.10cm}
+  \begin{block}{实现顺序}
+    \footnotesize
+    算法 2 读取带 \code{effective\_window} 的预算快照，提交备份 plan 后在
+    窗口边界发布需求反馈；算法 3 只消费已封口窗口的反馈，避免同窗口循环。
+    反馈暂时不可用时沿用最近需求预测，预算暂时不可用时沿用最近安全预算。
+    数据面始终保留 Recompute fallback，允许三个控制算法分别上线。
+  \end{block}
+\end{frame}
+
+\begin{frame}{AegisKV | 复杂度与控制开销}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.16}
+  \begin{tabularx}{\textwidth}{p{0.16\textwidth}p{0.31\textwidth}p{0.20\textwidth}X}
+    \toprule
+    模块 & 每次计算 & 时间复杂度 & 不阻塞数据面的方式 \\
+    \midrule
+    算法 1
+      & $K$ 次剩余 DAG 的 CPM
+      & $O(K(|V|+|E|))$
+      & 进度事件后异步更新，旧快照可读 \\
+    算法 2
+      & $S$ 个 KV 块、每块 $C$ 个候选项的评分、影子选择与容量截断
+      & $O(SC+SC\log(SC))$
+      & 异步更新，旧 plan 可读，新增块可重计算 \\
+    算法 3
+      & $N$ 个节点、窗口 $W$ 的负载分位数与需求预测
+      & $O(NW\log W)$
+      & 慢速窗口，只在屏障处调整分区 \\
+    Recovery
+      & Router 比较 $D$ 个 Rank；目标端校验 $J_r$ 个 chunks
+      & $O(D+J_r)$
+      & Hint 预推送，failure 路径无同步查询 \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.12cm}
+  \scriptsize
+  $S$ 是路由轮次中的活跃 KV 块数，$C$ 是每个块的恢复候选项数，
+  $N$ 是节点数，$W$ 是每节点负载样本数，$J_r$ 是请求的
+  committed chunks。所有 controller state 以 immutable snapshot 发布；
+  serving thread 只做 version check 与 directory lookup。
+
+  \takeaway{控制面可能暂时变旧，但不会让推理线程等待 solver 或 predictor。}
+\end{frame}
+
+\begin{frame}{AegisKV | Evaluation Matrix}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.14}
+  \begin{tabularx}{\textwidth}{p{0.14\textwidth}p{0.25\textwidth}p{0.26\textwidth}X}
+    \toprule
+    范围 & 主要问题 & 指标 & Baselines / Ablations \\
+    \midrule
+    算法 1
+      & 时长与松弛时间是否校准？
+      & Median/P90 AE、覆盖率、$\Delta$WCT 误差、运行时间
+      & 零松弛时间、角色/轮次、点预测 GBDT、真实时长 \\
+    算法 2
+      & 松弛感知备份决策是否把有限容量留给高收益 KV 块？
+      & failure WCT、动作分布、需求截断量、restore/replay tokens
+      & FIFO、按块大小、按故障概率、零松弛时间、无 L1 或无 L2 \\
+    算法 3
+      & 需求反馈驱动的双层预算是否跟踪需求并保护正常服务？
+      & 需求满足率、可用 HBM/DRAM、OOM、p99、调整次数
+      & 静态统一值、仅负载、仅需求、无平滑、逐节点 $\alpha/\beta$ \\
+    End-to-end
+      & 三者组合是否改善 WCT/SLO Pareto？
+      & mean/p95 WCT、failure recovery、throughput、controller overhead
+      & 算法 1/2/3 leave-one-out 与 full oracle \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.11cm}
+  \begin{block}{公平性约束}
+    \footnotesize
+    所有 policy 使用相同 arrival trace、failure schedule、random seed、模型与
+    HBM/DRAM 总预算；无故障与故障实验分开报告；prediction、simulation 与
+    physical microbench 的指标分别标注来源。
+  \end{block}
+\end{frame}
+
+\begin{frame}{AegisKV | Evidence Provenance 与 Claim 对应关系}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\textwidth}{p{0.24\textwidth}p{0.28\textwidth}X}
+    \toprule
+    设计判断 & 本稿证据 & End-to-end 验证 \\
+    \midrule
+    剩余时间需要分布预测
+      & 393 个 Real CC 工作流；GBDT MedianAE 下降 29.5\%，但 $R^2<0$ 且长尾显著
+      & 预测松弛时间对比零松弛时间和真实松弛时间 \\
+    Slack 改变 KV 块备份动作
+      & 4,096-token $R_G/R_H/R_R=4.58/31.71/48.24$ms
+      & delay injection 验证 $\rho_{s,n,a}$ 与 L1/L2/R 动作变化 \\
+    Per-node 负载安全上限优于统一值
+      & L1 replay 中负载导出的 $\alpha_n=79.2\%$--$89.2\%$，
+        比统一安全比例多提供 4.0\% 容量；$\beta_n$ 尚待测
+      & matched L1/L2 demand-feedback 与 per-node/uniform actuation sweep \\
+    ACK/version 保证安全恢复
+      & 状态机与不变量 I1--I4
+      & copy/failure race、stale ACK、destination loss fault injection \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.10cm}
+  \takeaway{现有容量 replay 只验证正常负载安全上限；完整算法 3 还需要验证
+  算法 2 的需求反馈是否正确改变下一窗口 $\alpha,\beta$。}
+\end{frame}

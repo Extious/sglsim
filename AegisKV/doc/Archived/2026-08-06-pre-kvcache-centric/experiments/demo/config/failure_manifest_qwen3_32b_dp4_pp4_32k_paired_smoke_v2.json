@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "description": "Calibration-only matched failure for scaled workflow 00ca01c4. Rank 3 is idle after the selected p2 victim, so the outage does not perturb later primary routes.",
+  "deployment": {
+    "nodes": 4,
+    "gpus_per_node": 4,
+    "dp_size": 4,
+    "pp_size": 4,
+    "failure_scope": "gpu",
+    "simulator_boundary": "pp_rank identifies the failed stage; SGLSim makes the containing DP replica unavailable during replacement"
+  },
+  "events": [
+    {
+      "event_id": "paired-smoke-failure-rank3-v2",
+      "offset_s": 6.0,
+      "dp_rank": 3,
+      "pp_rank": 0,
+      "failure_scope": "gpu",
+      "duration_s": 3.0,
+      "victims": [
+        {
+          "backup_key": "00ca01c4-p2-s1-t1",
+          "execution_dp_rank": 3,
+          "backup_dp_rank": 2,
+          "pp_rank": 0,
+          "failure_scope": "gpu"
+        }
+      ]
+    }
+  ]
+}

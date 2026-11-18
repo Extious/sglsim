@@ -70,6 +70,14 @@ class HiRadixCache:
         )
         self.ongoing_load_back: dict[int, TreeNode] = {}
         self.ongoing_write_through: dict[int, TreeNode] = {}
+        # Offline GlobalDES keeps D2H host copies non-recoverable until the
+        # physical transfer ACK, while H2D device metadata is provisional and
+        # cannot drive compute until the parent dependency gate opens.
+        self._offline_pending_d2h: dict[str, tuple[TreeNode, list[int]]] = {}
+        self._offline_pending_d2h_by_node: dict[int, str] = {}
+        self._offline_pending_h2d: dict[
+            str, tuple[TreeNode, list[tuple[TreeNode, list[int]]], list[int]]
+        ] = {}
         self._write_through_lock_counts: dict[int, int] = {}
         self.ongoing_prefetch: dict[str, tuple[TreeNode, list[int], list[int], PrefetchOperation]] = {}
         self._chunked_prefetch: PrefetchOperation | None = None
@@ -78,6 +86,45 @@ class HiRadixCache:
     @property
     def hierarchical_enabled(self) -> bool:
         return self.cache_controller.hierarchical_enabled
+
+    def clear_l1_for_gpu_failure(self) -> dict[str, int]:
+        """Model volatile GPU KV loss while retaining Host-memory backups.
+
+        The scheduler calls this only after the failed rank becomes idle.  D2H
+        metadata is therefore completed first; pending H2D work is discarded
+        because its destination GPU pages no longer survive the failure.
+        """
+
+        self.flush_write_through_acks()
+        if self.cache_controller.offline_des_enabled:
+            pending_acks = [
+                {"intent_id": intent_id, "state": "ABORTED"}
+                for intent_id in (
+                    *self._offline_pending_d2h,
+                    *self._offline_pending_h2d,
+                )
+            ]
+            if pending_acks:
+                self.apply_offline_hicache_acks(pending_acks)
+        host_pool = self.mem_pool_host
+        host_pages_before = host_pool.used_pages if host_pool is not None else 0
+        device_pages_before = self.mem_pool_device.used_pages
+
+        self.cache_controller.load_queue.clear()
+        self.ongoing_load_back.clear()
+        self._loads_drained = False
+        self.cache_controller.pending_backup_dur = 0.0
+        self.cache_controller.pending_write_pages = 0
+
+        cleared_tokens = self.tree.clear_device_residency()
+        cleared_pages = self.mem_pool_device.clear()
+        return {
+            "cleared_device_tokens": int(cleared_tokens),
+            "cleared_device_pages": int(cleared_pages),
+            "device_pages_before": int(device_pages_before),
+            "preserved_host_pages": int(host_pages_before),
+            "preserved_host_tokens": int(host_pages_before * self.page_size),
+        }
 
     def match_prefix(self, token_ids: list[int]) -> PrefixMatch:
         return self.tree.match_prefix(token_ids)
@@ -166,7 +213,28 @@ class HiRadixCache:
         allocated_pages: list[KVPage] = []
 
         if missing_tokens > 0:
+            # An ACK proves that a backup exists, but the retry rank can still
+            # be serving other requests. Materialize only what its current
+            # free+evictable L1 capacity can hold; the scheduler converts the
+            # remainder to recompute instead of crashing the rank.
+            capacity_tokens = _page_align(
+                self.available_and_evictable_tokens(),
+                self.page_size,
+            )
+            target = min(target, device_covered + capacity_tokens)
+            target = _page_align(target, self.page_size)
+            if target <= 0:
+                return 0, last_node_id
+            aligned_ids = token_ids[:target]
+            missing_tokens = max(target - device_covered, 0)
             self.evict_from_tree_cache(missing_tokens, owner=req_id)
+            available_tokens = self.mem_pool_device.available_size * self.page_size
+            if available_tokens < missing_tokens:
+                missing_tokens = _page_align(available_tokens, self.page_size)
+                target = _page_align(device_covered + missing_tokens, self.page_size)
+                aligned_ids = token_ids[:target]
+            if missing_tokens <= 0 and device_covered <= 0:
+                return 0, last_node_id
             allocated_pages = self._alloc_device_pages(
                 ceil(missing_tokens / self.page_size),
                 owner=req_id,
@@ -754,6 +822,11 @@ class HiRadixCache:
     def write_backup(self, node: TreeNode, req_id: str, *, write_back: bool = False) -> float:
         if not self.hierarchical_enabled or node.value is None or node.backuped:
             return 0.0
+        if (
+            self.cache_controller.offline_des_enabled
+            and node.id in self._offline_pending_d2h_by_node
+        ):
+            return 0.0
         unique_device = list(dict.fromkeys(node.value))
         before = self.cache_controller.pending_backup_dur
         host_ids, _ = self.cache_controller.write(
@@ -761,10 +834,22 @@ class HiRadixCache:
             node_id=node.id,
             owner=req_id,
             host_evict_fn=self.evict_host,
+            offline_dependency=write_back,
         )
         if host_ids is None:
             return 0.0
-        self.tree.set_host_value(node, self._expand_host_ids(node, host_ids))
+        expanded_host_ids = self._expand_host_ids(node, host_ids)
+        if self.cache_controller.offline_des_enabled:
+            operation = self.cache_controller.write_queue[-1]
+            if operation.intent_id is None:
+                raise RuntimeError("offline D2H operation has no intent ID")
+            self._offline_pending_d2h[operation.intent_id] = (
+                node,
+                list(host_ids),
+            )
+            self._offline_pending_d2h_by_node[node.id] = operation.intent_id
+        else:
+            self.tree.set_host_value(node, expanded_host_ids)
         self.ongoing_write_through[node.id] = node
         # SGLSim writes host metadata synchronously and keeps only transfer
         # duration pending for wall-clock accounting. Do not mix that pending
@@ -777,6 +862,10 @@ class HiRadixCache:
         return added
 
     def writing_check(self, *, write_back: bool = False) -> int:
+        if self.cache_controller.offline_des_enabled:
+            # Parent ACK commands, not rank-local aggregate duration, make
+            # ordinary host copies recoverable in offline GlobalDES mode.
+            return 0
         if write_back:
             while self.cache_controller.write_queue:
                 op = self.cache_controller.write_queue.pop(0)
@@ -814,6 +903,132 @@ class HiRadixCache:
     def flush_write_through_acks(self) -> int:
         """Eagerly flush completed write-through metadata acks."""
         return self.writing_check(write_back=False)
+
+    @staticmethod
+    def _remove_intent_operation(
+        queue: list,
+        intent_id: str,
+    ) -> None:
+        queue[:] = [op for op in queue if op.intent_id != intent_id]
+
+    def apply_offline_hicache_acks(
+        self,
+        acknowledgements: list[dict],
+    ) -> list[dict]:
+        """Apply parent-ordered physical transfer outcomes.
+
+        This is the metadata analogue of SGLang's ``writing_check`` and
+        ``loading_check``.  D2H becomes a host hit only after COMMITTED.  H2D
+        was provisionally materialized during admission, but the parent does
+        not schedule compute until every physical TP shard commits.
+        """
+
+        results: list[dict] = []
+        for acknowledgement in acknowledgements:
+            intent_id = str(acknowledgement.get("intent_id") or "")
+            state = str(acknowledgement.get("state") or "")
+            if state not in {"COMMITTED", "ABORTED"}:
+                raise ValueError(
+                    f"offline HiCache ACK {intent_id!r} has invalid state {state!r}"
+                )
+            intent = self.cache_controller.offline_intent(intent_id)
+            committed = state == "COMMITTED"
+            # Idempotent ACK replay is allowed only for the same terminal state.
+            if intent.state.value != "PENDING":
+                if intent.state.value != state:
+                    raise RuntimeError(
+                        f"conflicting offline HiCache ACK for {intent_id}"
+                    )
+                results.append(intent.as_dict())
+                continue
+
+            if intent.direction.value == "d2h":
+                pending = self._offline_pending_d2h.pop(intent_id, None)
+                if pending is None:
+                    raise RuntimeError(
+                        f"offline D2H intent {intent_id} has no provisional host copy"
+                    )
+                node, unique_host_ids = pending
+                self._offline_pending_d2h_by_node.pop(node.id, None)
+                self._remove_intent_operation(
+                    self.cache_controller.write_queue,
+                    intent_id,
+                )
+                self.ongoing_write_through.pop(node.id, None)
+                if committed:
+                    self.tree.set_host_value(
+                        node,
+                        self._expand_host_ids(node, unique_host_ids),
+                    )
+                    self.tree._update_host_leaf_status(node)
+                    if self.enable_storage:
+                        self.write_backup_storage(node)
+                else:
+                    host_pool = self.mem_pool_host
+                    if host_pool is not None:
+                        pages_by_id = host_pool._allocator._pages_by_id
+                        pages = [
+                            pages_by_id[page_id]
+                            for page_id in unique_host_ids
+                            if page_id in pages_by_id
+                            and page_id not in host_pool._allocator._free_page_ids
+                        ]
+                        host_pool.free(pages)
+            else:
+                pending = self._offline_pending_h2d.pop(intent_id, None)
+                if pending is None:
+                    raise RuntimeError(
+                        f"offline H2D intent {intent_id} has no provisional device copy"
+                    )
+                last_node, updates, unique_device_ids = pending
+                self._remove_intent_operation(
+                    self.cache_controller.load_queue,
+                    intent_id,
+                )
+                self.ongoing_load_back.pop(last_node.id, None)
+                if committed:
+                    if last_node.lock_ref > 0:
+                        self.tree.dec_lock_ref(last_node)
+                else:
+                    for load_node, _expanded in updates:
+                        load_node.value = None
+                        self.tree._update_leaf_status(load_node)
+                        self.tree._update_host_leaf_status(load_node)
+                    device_pool = self.mem_pool_device
+                    pages_by_id = device_pool._allocator._pages_by_id
+                    pages = [
+                        pages_by_id[page_id]
+                        for page_id in unique_device_ids
+                        if page_id in pages_by_id
+                        and page_id not in device_pool._allocator._free_page_ids
+                    ]
+                    device_pool.free(pages)
+                    # The provisional load's path lock is no longer meaningful;
+                    # reconcile from surviving device residency instead of
+                    # trying to partially reverse path-level counters.
+                    self.tree.reconcile_accounting()
+                self._loads_drained = False
+
+            terminal = self.cache_controller.mark_offline_intent_terminal(
+                intent_id,
+                committed=committed,
+            )
+            results.append(terminal.as_dict())
+        return results
+
+    def offline_hicache_intent_audit(self) -> list[str]:
+        errors = self.cache_controller.offline_intent_audit()
+        if self._offline_pending_d2h:
+            errors.append(
+                "ordinary HiCache provisional D2H copies remain: "
+                + ",".join(sorted(self._offline_pending_d2h))
+            )
+        if self._offline_pending_h2d:
+            errors.append(
+                "ordinary HiCache provisional H2D copies remain: "
+                + ",".join(sorted(self._offline_pending_h2d))
+            )
+        return errors
 
     def write_backup_storage(self, node: TreeNode) -> None:
         if not self.enable_storage or self.storage is None or node.host_value is None:
@@ -904,6 +1119,13 @@ class HiRadixCache:
         if device_ids is None:
             return 0
 
+        offline_intent_id: str | None = None
+        if self.cache_controller.offline_des_enabled:
+            operation = self.cache_controller.load_queue[-1]
+            offline_intent_id = operation.intent_id
+            if offline_intent_id is None:
+                raise RuntimeError("offline H2D operation has no intent ID")
+
         offset = 0
         updates: list[tuple[TreeNode, list[int]]] = []
         for load_node in nodes_to_load:
@@ -933,6 +1155,12 @@ class HiRadixCache:
         self.tree.evictable_size_ += len(device_ids)
         self.ongoing_load_back[last_host_node.id] = last_host_node
         self.tree.inc_lock_ref(last_host_node)
+        if offline_intent_id is not None:
+            self._offline_pending_h2d[offline_intent_id] = (
+                last_host_node,
+                updates,
+                list(device_ids),
+            )
         return host_tokens
 
     def _assert_evictable_invariant(self, *, context: str = "") -> None:
@@ -1212,6 +1440,20 @@ class HiRadixCache:
                 "prefetch_pages": 0,
                 "l3_write_pages": 0,
                 "l3_prefetch_tokens": 0,
+                "load_completed_tokens": 0,
+            }
+        if self.cache_controller.offline_des_enabled:
+            # L1<->L2 operations are completed only by parent GlobalDES ACKs.
+            # Storage (L2<->L3) remains the existing metadata path; ordinary
+            # pending copies must not be consumed as rank-local durations.
+            prefetch_tokens = self.handle_prefetch_operation(remain_dur)
+            l3_pages, _ = self.cache_controller.drain_l3_backup_queue()
+            write_pages = self.cache_controller.pop_write_pages_since_check()
+            return {
+                "l2_write_pages": write_pages,
+                "prefetch_pages": 0,
+                "l3_write_pages": l3_pages,
+                "l3_prefetch_tokens": prefetch_tokens,
                 "load_completed_tokens": 0,
             }
         self.writing_check()

@@ -27,6 +27,22 @@ def test_infer_l1_max_tokens_mock_model():
     assert tokens == 65536
 
 
+def test_qwen32_pp4_capacity_accounts_for_pipeline_partitioning():
+    sched = SchedulerSimConfig(
+        mem_fraction_static=0.50,
+        tp_size=1,
+        pp_size=4,
+        dp_size=4,
+    )
+    tokens = infer_l1_max_tokens(
+        model_path="Qwen/Qwen3-32B",
+        hbm_capacity_gb=80,
+        mem_fraction_static=0.50,
+        sched=sched,
+    )
+    assert tokens >= 32768
+
+
 def test_resolve_cache_config_applies_kv_capacity_scale_factor():
     sched = SchedulerSimConfig(mem_fraction_static=0.88)
     cache = resolve_cache_config(

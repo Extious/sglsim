@@ -1,0 +1,213 @@
+{
+  "schema_version": "aegiskv.parameter-provenance.v1",
+  "evidence_classes": [
+    "artifact_observation",
+    "paper_measurement",
+    "vendor_specification",
+    "derived_from_primary_source",
+    "controlled_experiment_design",
+    "modeled_uncalibrated"
+  ],
+  "parameters": {
+    "request.trace_artifact": {
+      "config_paths": ["common/request.json#/workload/dataset_id", "common/request.json#/workload/sha256"],
+      "value": "TraceLab v0.0.2 DuckDB, SHA256 a7bab286bc640844560850965ccf47975cf66407154132abaab90f27ec9be744",
+      "evidence_class": "artifact_observation",
+      "sources": ["tracelab_release", "tracelab_repo", "tracelab_artifact_audit"],
+      "scope": "Real Claude Code and Codex token/timing records; no prompt text or ground-truth cross-session KV identity."
+    },
+    "request.trace_cardinality": {
+      "config_paths": ["common/request.json#/workload/profile"],
+      "value": "665453 rounds, 8058 provider sessions, 743819 tool calls",
+      "evidence_class": "artifact_observation",
+      "sources": ["tracelab_artifact_audit", "nvidia_aiperf_tracelab"],
+      "scope": "Counts are queried from the pinned artifact rather than copied from an older paper draft."
+    },
+    "request.sampling_unit": {
+      "config_paths": ["common/request.json#/workload/sampling_unit", "common/request.json#/workload/strata"],
+      "value": "provider-session stratified by provider and session-round-count bin",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["tracelab_paper", "nvidia_aiperf_tracelab"],
+      "scope": "Session, not round, is the independent resampling unit; seeds select disjoint deterministic samples only probabilistically."
+    },
+    "request.arrival_model": {
+      "config_paths": ["common/request.json#/workload/arrival_model", "common/request.json#/workload/session_arrival_rate_per_s"],
+      "value": "controlled Poisson session starts plus capped observed within-session gaps",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["nvidia_aiperf_tracelab", "servegen_nsdi26", "dejavu_local", "lumen_local"],
+      "scope": "This is a load-controlled time-compressed replay, not TraceLab fixed-schedule replay or a production arrival claim."
+    },
+    "request.gap_cap": {
+      "config_paths": ["common/request.json#/workload/within_session_gap_cap_ms", "common/request.json#/workload/within_session_gap_scale"],
+      "value": "30000 ms cap and 1.0 scale in the primary workload",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["nvidia_aiperf_tracelab"],
+      "scope": "Long human/tool pauses are intentionally capped; uncapped fixed-schedule replay remains a required external-validity check."
+    },
+    "request.context_projection": {
+      "config_paths": ["common/request.json#/workload/context_projection", "S3/request.json#/axes/context_tokens"],
+      "value": "rank-preserving scale followed by clipping at 8192/16384/32768/40960 total-token contexts",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["tracelab_artifact_audit", "qwen3_8b_config", "qwen3_32b_config"],
+      "scope": "Projected Qwen3-compatible workload; it must not be called unmodified TraceLab replay."
+    },
+    "request.controlled_fork_join": {
+      "config_paths": ["S4/request.json#/workload/profile", "S5/request.json#/workload/profile", "S9/request.json#/workload/profile"],
+      "value": "controlled four-branch fork/join",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["pythia_local", "sglsim_complete_source"],
+      "scope": "Mechanism stress topology, not an observed TraceLab DAG and not a Pythia trace reproduction."
+    },
+    "request.agentx_external_validity": {
+      "config_paths": ["E1/request.json#/workload/dataset_id", "E1/request.json#/workload/sha256", "E1/request.json#/workload/arrival_model"],
+      "value": "full 393-workflow AgentX/Weka JSONL; SHA256 29b6a19e751ff5230771519aab755f80a0f43a4ba9cf96b72d3a6a437ec99276; recorded intra-workflow request schedule; 20 workflows in ten disjoint two-workflow paper partitions from the 27 observed parallel DAGs with at most 128 requests",
+      "evidence_class": "artifact_observation",
+      "sources": ["agentx_methodology", "aiperf_weka", "agentx_artifact_audit"],
+      "scope": "Observed public multi-agent workflow topology, timing, token counts, and prefix hashes. Workflows are not truncated, but the at-most-128-request eligibility filter excludes long DAGs to keep complete event-level Aegis protection simulation tractable; workflow interleaving and Qwen3 token projection remain controlled choices."
+    },
+    "request.causal_slack_prediction": {
+      "config_paths": ["E1/request.json#/workload/causal_slack_predictor"],
+      "value": "five-fold workflow-disjoint dual-head GBDT plus workflow-maximum split conformal 95-percent interval; late or unavailable tickets fail close to zero",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["agentx_artifact_audit", "weka_causal_source", "sglsim_complete_source"],
+      "scope": "Only request-return-prefix features are admitted. Oracle actual remaining time is retained for held-out scoring only and never enters a runtime Slack ticket."
+    },
+    "request.uncertainty": {
+      "config_paths": ["suite.json#/profiles/paper/minimum_distinct_seeds"],
+      "value": "10 seeds for S1-S4/S6-S8 and E1, 5 for S5, 3 formula-verification seeds for S9",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["sglsim_complete_source"],
+      "scope": "Two-sided Student-t 95 percent CIs use seed-level aggregates; within-seed sessions are paired observations."
+    },
+    "failure.type": {
+      "config_paths": ["common/failure.json#/fault_model/type"],
+      "value": "fail-stop",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["failsafe_local", "lumen_local", "dejavu_local"],
+      "scope": "AegisKV protects state loss after hard worker failure; fail-slow and silent corruption are outside this experiment contract."
+    },
+    "failure.conditional_trigger": {
+      "config_paths": ["common/failure.json#/fault_model/trigger", "common/failure.json#/fault_model/failure_time_fraction"],
+      "value": "policy-independent shadow-schedule active critical tail at the 0.5 quantile",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["sglsim_complete_source"],
+      "scope": "Conditional-on-failure estimand chosen to exercise recovery; not a field failure-time distribution."
+    },
+    "failure.count_and_domain": {
+      "config_paths": ["S8/failure.json#/axes/failure_scenario", "common/failure.json#/fault_model/correlated_node_failure"],
+      "value": "1/2/4 workers and one whole 8-GPU node",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["failsafe_local", "lumen_local"],
+      "scope": "Covers single failures, increasing failed-worker counts, and a correlated domain failure."
+    },
+    "failure.capacity_restoration_horizon": {
+      "config_paths": ["common/failure.json#/fault_model/repair_time_ms", "S7/failure.json#/axes/repair_time_ms"],
+      "value": "30000 ms central; 1000/5000/15000/30000 ms sensitivity",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["lumen_local", "failsafe_local"],
+      "scope": "30 seconds is anchored to LUMEN's 29.9-second failure-impact window; it is not asserted as a hardware repair distribution."
+    },
+    "failure.failover_delay": {
+      "config_paths": ["common/failure.json#/fault_model/replacement_delay_ms", "common/failure.json#/fault_model/queue_outage_ms"],
+      "value": "100 ms replacement delay and 50 ms routing outage",
+      "evidence_class": "modeled_uncalibrated",
+      "sources": ["failsafe_local", "sglsim_complete_source"],
+      "scope": "Controlled failover decomposition near FailSafe's 120 ms full-recovery example, but not same-topology Qwen/A100 calibration."
+    },
+    "failure.field_hazard": {
+      "config_paths": ["common/failure.json#/hazard_weighting/central_mttf_gpu_hours", "common/failure.json#/hazard_weighting/sensitivity_mttf_gpu_hours"],
+      "value": "9600 GPU-hours central; 4800/9600/19200 sensitivity",
+      "evidence_class": "derived_from_primary_source",
+      "sources": ["aegis_nsdi_reliability", "meta_hpca_reliability"],
+      "scope": "Central value is 400 A100 days times 24; Meta's all-cause training-job MTTF gives an 8089.6 GPU-hour order-of-magnitude cross-check. Both are training-cluster proxies, not inference field measurements."
+    },
+    "deployment.node_topology": {
+      "config_paths": ["common/deployment.json#/cluster/node_count", "common/deployment.json#/cluster/gpus_per_node", "common/deployment.json#/cluster/gpu"],
+      "value": "4 nodes, 8 NVIDIA A100-40GB GPUs per node",
+      "evidence_class": "vendor_specification",
+      "sources": ["a100_ampere", "dgx_a100_guide"],
+      "scope": "Modeled 32-GPU DGX A100 deployment; the currently available 2xA100-80GB host is not topology-equivalent."
+    },
+    "deployment.host_memory": {
+      "config_paths": ["common/deployment.json#/cluster/host_memory_gib_per_node", "common/deployment.json#/cluster/aegiskv_host_dram_gib_per_node"],
+      "value": "1024 GiB installed and 512 GiB assigned to AegisKV per node",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["dgx_a100_guide", "mooncake_local"],
+      "scope": "Installed memory is a DGX specification; the 50-percent AegisKV allocation is a conservative design budget, not a measured production reservation."
+    },
+    "deployment.model_geometry": {
+      "config_paths": ["common/deployment.json#/models/qwen3-8b", "common/deployment.json#/models/qwen3-32b"],
+      "value": "Qwen3-8B: 36 layers; Qwen3-32B: 64 layers; both 8 KV heads x 128 dimensions, BF16, 40960 default positions",
+      "evidence_class": "vendor_specification",
+      "sources": ["qwen3_8b_config", "qwen3_32b_config"],
+      "scope": "KV byte footprints are derived directly from the pinned model geometry."
+    },
+    "deployment.kv_bytes": {
+      "config_paths": ["common/deployment.json#/models/qwen3-8b/kv_bytes_per_token", "common/deployment.json#/models/qwen3-32b/kv_bytes_per_token"],
+      "value": "147456 bytes/token for Qwen3-8B and 262144 bytes/token for Qwen3-32B",
+      "evidence_class": "derived_from_primary_source",
+      "sources": ["qwen3_8b_config", "qwen3_32b_config"],
+      "scope": "2 for K/V times layers times KV heads times head dimension times 2 BF16 bytes."
+    },
+    "deployment.parallel_layout": {
+      "config_paths": ["common/deployment.json#/models/qwen3-8b/tp_size", "common/deployment.json#/models/qwen3-32b/tp_size"],
+      "value": "Qwen3-8B TP1/DP32 and Qwen3-32B TP4/DP8",
+      "evidence_class": "derived_from_primary_source",
+      "sources": ["qwen3_8b_config", "qwen3_32b_config", "a100_ampere"],
+      "scope": "Qwen3-32B BF16 weights cannot fit on one A100-40GB; TP4 leaves explicit HBM headroom."
+    },
+    "deployment.network_line_rate": {
+      "config_paths": ["common/deployment.json#/cluster/network_line_rate_Gbit_per_s"],
+      "value": "200 Gbit/s per configured cluster link",
+      "evidence_class": "vendor_specification",
+      "sources": ["dgx_a100_guide"],
+      "scope": "Line rate is not treated as application payload throughput."
+    },
+    "deployment.effective_transfer_bandwidth": {
+      "config_paths": ["common/deployment.json#/cluster/effective_cross_node_bandwidth_GB_per_s", "S7/deployment.json#/axes/effective_bandwidth_GB_per_s"],
+      "value": "20 GB/s central; 10/20/25 GB/s sensitivity",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["dgx_a100_guide", "a100_hgx_guide", "mooncake_local"],
+      "scope": "20 GB/s is below the 25 GB/s conversion of 200 Gbit/s line rate and near pinned host-device measurements; it remains a modeled end-to-end effective rate."
+    },
+    "deployment.diagnostic_bandwidths": {
+      "config_paths": ["common/deployment.json#/cluster/same_node_peer_bandwidth_GB_per_s_diagnostic_only", "common/deployment.json#/cluster/pinned_host_device_bandwidth_GB_per_s_diagnostic_only"],
+      "value": "270 GB/s same-node peer and 22.5 GB/s pinned host-device",
+      "evidence_class": "paper_measurement",
+      "sources": ["a100_hgx_guide"],
+      "scope": "Diagnostic bounds only; same-node peer bandwidth is not used for cross-node failure-domain-separated recovery."
+    },
+    "deployment.hbm_protection_budget": {
+      "config_paths": ["common/deployment.json#/models/qwen3-8b/hbm_reserve_gib_per_replica", "common/deployment.json#/models/qwen3-32b/hbm_reserve_gib_per_replica"],
+      "value": "6 GiB per 8B replica and 24 GiB per 32B TP4 replica",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["a100_ampere", "qwen3_8b_config", "qwen3_32b_config"],
+      "scope": "Six GiB per GPU is a protection budget chosen after accounting for BF16 weights and KV geometry; it is not a vendor default."
+    },
+    "deployment.chunking": {
+      "config_paths": ["common/deployment.json#/protection/prefix_chunk_tokens", "common/deployment.json#/protection/decode_chunk_tokens", "S9/deployment.json#/protection/prefix_chunk_tokens"],
+      "value": "4096-token prefix and 256-token decode chunks by default; S9 uses an explicit 1024-token prefix micro-verification override",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["aegiskv_current_design", "sglsim_complete_source"],
+      "scope": "The default exactly follows current_design.md. S9 is a labeled analytical-versus-DES transfer micro-verification and is not used to claim the default production chunk size."
+    },
+    "deployment.service_time": {
+      "config_paths": ["common/deployment.json#/models/qwen3-8b/service_time", "common/deployment.json#/models/qwen3-32b/service_time"],
+      "value": "existing SGLSim linear service coefficients",
+      "evidence_class": "modeled_uncalibrated",
+      "sources": ["sglsim_modeled_service"],
+      "scope": "Largest paper-readiness blocker: coefficients require same-topology A100 profiling and matched physical replay."
+    },
+    "deployment.control_policy": {
+      "config_paths": ["common/deployment.json#/protection"],
+      "value": "one-second AIMD window, alpha 0.1-0.9, multiplicative decrease 0.5, additive increase 0.05 after three stable windows",
+      "evidence_class": "controlled_experiment_design",
+      "sources": ["sglsim_complete_source"],
+      "scope": "Mechanism parameters are evaluated by trajectory and ablation; they are not claimed as universal production defaults."
+    }
+  },
+  "paper_readiness_blockers": [
+    "failure.failover_delay",
+    "deployment.service_time"
+  ]
+}

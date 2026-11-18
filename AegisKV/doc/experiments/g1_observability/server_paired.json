@@ -1,0 +1,47 @@
+{
+  "model_path": "mock-model",
+  "cache": {
+    "page_size": 1,
+    "l1_capacity_pages": 8192,
+    "l2_capacity_pages": 16384,
+    "enable_hierarchical_cache": true,
+    "hicache_write_policy": "write_through_selective"
+  },
+  "scheduler": {
+    "dp_size": 3,
+    "tp_size": 1,
+    "pp_size": 1,
+    "max_running_requests": 8,
+    "max_prefill_tokens": 512,
+    "chunked_prefill_size": 512,
+    "load_balance_method": "round_robin"
+  },
+  "predictor": {
+    "name": "heuristic",
+    "forward_scale": 0.01
+  },
+  "platform": {
+    "accelerator": {
+      "name": "a100_sxm",
+      "hbm_capacity_gb": 80
+    }
+  },
+  "aegis_l1_l2": {
+    "enabled": true,
+    "committed_copy_protocol": true,
+    "chunk_tokens": 64,
+    "modeled_model_reload_horizon_s": {
+      "soft": 0.25,
+      "hard": 2.0
+    },
+    "initial_alpha": 0.75,
+    "initial_beta": 0.75,
+    "host_alignment_tokens": 1,
+    "topology": {
+      "dp_rank_to_node": [0, 1, 2],
+      "pp_stages_per_node": 1,
+      "gpu_backup_requires_direct_retry_route": true,
+      "host_pool_scope": "node_shared_process_external"
+    }
+  }
+}

@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "experiment_id": "active_hbm_v313_accounting_batched_s2",
+  "status": "PREREGISTERED_BEFORE_EXECUTION",
+  "sources": {
+    "current_design": {
+      "path": "/home/comp/zhanzhao/Mooncake/aegiskv/design/current_design.md",
+      "sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac"
+    },
+    "v312_recovery": {
+      "path": "active_hbm_v312.py",
+      "sha256": "59cc237feae699ece7558473441c00336b98a88cfd0ae3d8a36dc32ba8afeb25"
+    },
+    "poisson_v1": {
+      "path": "poisson_fault_injection_v1.py",
+      "sha256": "d05926cd8ffbfa0ea2930d20017766219d8074c74e34389e744d552243c627c3"
+    },
+    "capacity_protocol": {
+      "path": "active_hbm_v3_protocol.json",
+      "sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f"
+    },
+    "composite_protocol": {
+      "path": "results/mechanism_pilot_v2/composite_protocol.json",
+      "sha256": "d095d7680694e51db52f186ec2f7831093d9f3dfc117ef994ee0685fdde3df8f"
+    },
+    "s1_s2_protocol": {
+      "path": "active_hbm_v311_s1_s2_protocol.json",
+      "sha256": "121621a0c2cd1cfe14e0e60c315b5d010b036679dc0164e6c776936316592b1d"
+    },
+    "v313_accounting": {
+      "path": "active_hbm_v313.py",
+      "sha256": "1f1facd8fc020e000a5ad66805d155102488c62ed38a60dece9049bbf0c9732b"
+    },
+    "batched_poisson": {
+      "path": "poisson_fault_batch_v2.py",
+      "sha256": "6104b61b3a15518eb23ef635948142ac6263c4d44dda16b86d3511163231cfc5"
+    },
+    "v313_test": {
+      "path": "test_active_hbm_v313.py",
+      "sha256": "1372dd53345ad9d10e70e651cccccbeb164ff2553a81cf0f2070dd97057dbc4c"
+    },
+    "batched_poisson_test": {
+      "path": "test_poisson_fault_batch_v2.py",
+      "sha256": "fc2c0862ac947a31000203c6a49f36116994b8d02c0ff44cd71ca6c63700d427"
+    }
+  },
+  "healthy_accounting": {
+    "policies": [
+      "Native Mooncake",
+      "Static",
+      "DejaVu",
+      "KevlarFlow",
+      "GhostServe",
+      "AegisKV"
+    ],
+    "display_to_internal_policy": {
+      "Native Mooncake": "Native Mooncake",
+      "Static": "Static FCFS",
+      "DejaVu": "DejaVu",
+      "KevlarFlow": "KevlarFlow",
+      "GhostServe": "GhostServe",
+      "AegisKV": "AegisKV"
+    },
+    "context_tokens": 40960,
+    "active_requests_per_gpu": 16,
+    "system_dp": 16,
+    "gpus_per_node": 8,
+    "cold_start_inclusive": {
+      "arrival_start_ms": 0.0,
+      "arrival_cutoff_ms": 5000.0,
+      "measurement_cohort_arrival_ms": [
+        0.0,
+        5000.0
+      ],
+      "control_opportunities_ms": [],
+      "interpretation": "initial-alpha cold start; no AIMD opportunity is available during the registered arrival horizon"
+    },
+    "steady_state": {
+      "common_warmup_arrival_ms": [
+        0.0,
+        90000.0
+      ],
+      "measurement_cohort_arrival_ms": [
+        90000.0,
+        180000.0
+      ],
+      "arrival_cutoff_ms": 180000.0,
+      "control_opportunities_ms": [
+        30000.0,
+        60000.0,
+        90000.0,
+        120000.0,
+        150000.0,
+        180000.0
+      ],
+      "cohort_rule": "report workflows whose common workflow_arrival_ms is >=90000 and <=180000; warmup tasks are executed and retained in raw state but never mixed into the steady-state cohort statistic",
+      "interpretation": "preregistered complementary steady-state view; never replaces or deletes cold-start-inclusive evidence"
+    },
+    "paired_seeds": [
+      2026082600,
+      2026082601,
+      2026082602
+    ],
+    "pilot_seeds": [
+      2026082600
+    ],
+    "pilot_fault_probes_per_domain_per_regime": 4,
+    "prompt_seal_schedule": "chunk ordinal becomes eligible at dispatch + prefill_setup_ms + token_end * prefill_ms_per_token; it never reads realized output length or realized final service time",
+    "normal_path_copy_wct_rule": "source-owned HBM and DRAM copies are asynchronous and independently queued; transfer or copy-lane wait is not directly added to output WCT. Only serving-HBM capacity competition enters dispatch/queue WCT. Copy completion still controls committed recovery state.",
+    "copy_path_composition": "max of independent HBM and DRAM own transfer service for reporting only; never sum",
+    "serving_priority": "a primary serving reservation may evict or reject Peer-HBM backup at the physical target; a protection reservation never delays its source request dispatch",
+    "topology_bijection": "even local GPU indices use same-node successor; odd local GPU indices use next-node predecessor, giving one logical source per physical Peer-HBM target",
+    "modeled_boundary": "Copy bandwidths, service coefficients and contention semantics remain modeled and are not A100 measurements."
+  },
+  "batched_s2": {
+    "policies": [
+      "Native Mooncake",
+      "AegisKV"
+    ],
+    "failure_rates_per_1000_gpu_shard_hour": [
+      0.0,
+      5.952,
+      20.833
+    ],
+    "window_horizon_ms": 90000.0,
+    "system_dp": 16,
+    "gpus_per_node": 8,
+    "domain_repair_ms": 60000.0,
+    "failure_type_weights": {
+      "source_worker_gpu": 0.5,
+      "source_node": 0.5
+    },
+    "paired_workload_seeds": [
+      2026082600,
+      2026082601,
+      2026082602
+    ],
+    "independent_exposure_windows_per_workload_seed": 2800,
+    "total_windows_per_rate": 8400,
+    "exposure_gpu_shard_hours_per_rate": 3.36,
+    "expected_candidate_events": {
+      "0.0": 0.0,
+      "5.952": 19.99872,
+      "20.833": 69.99888
+    },
+    "event_seed_derivation": "sha256(experiment_id, workload_seed, window_index, decimal rate) first 64 bits",
+    "ledger_first": true,
+    "policy_pairing": "the exact same frozen window ledger is replayed for both policies",
+    "zero_event_memoization": "a zero-event window uses the exact healthy DES output for the matching policy/workload seed; an executable equivalence gate must show zero-event injection is byte-for-byte equal in completion values",
+    "estimator": "arithmetic mean over all actual independent 90s window samples, including every zero-event window; never conditional WCT times analytic probability",
+    "effective_sample_reporting": "report total windows, event-bearing windows, accepted/no-op events, unique workload seeds and per-seed window counts",
+    "pilot": {
+      "workload_seeds": [
+        2026082600
+      ],
+      "windows_per_rate": 2800,
+      "expected_candidate_events": {
+        "0.0": 0.0,
+        "5.952": 6.66624,
+        "20.833": 23.33296
+      },
+      "purpose": "bounded mechanism and estimator validation only; not paper-ready"
+    }
+  },
+  "hard_gates": [
+    "copy byte and duration accounting conserves admitted per-tier bytes",
+    "HBM and DRAM transfer service uses max not sum",
+    "asynchronous copy is not directly charged to serving finish",
+    "physical target HBM occupancy equals logical controller occupancy under a bijective mapping",
+    "serving plus target backup never exceeds the frozen shared budget",
+    "all prompt seals occur after dispatch and use no realized-output oracle",
+    "a request's unsealed or future backup is never part of its own dispatch gate",
+    "physical target aggregation across source routes never exceeds 40 GiB",
+    "evicted or reclaimed replica bytes are absent from the committed recovery prefix",
+    "all batch ledgers are generated and hashed before event-bearing replay",
+    "zero-event memoization exactly matches an executed zero-event DES",
+    "event ledgers and workload universes are paired across policies",
+    "no seed or window is selected by result shape"
+  ],
+  "paper_ready": false
+}

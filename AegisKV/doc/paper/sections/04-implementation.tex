@@ -1,0 +1,58 @@
+\section{Implementation}
+\label{sec:implementation}
+
+\system{} maps onto an SGLang--Mooncake-style serving stack through policy
+and metadata hooks; it does not introduce a second KV data plane.  Mooncake's
+Master already maintains
+logical object placement and segment allocation, while SGLang HiCache exposes
+batched storage reads and writes~\cite{qin2025mooncake,xie2025hicache}.  KV
+bytes continue to move directly between Workers and Store segments.
+
+\paragraph{Application and request metadata.}
+The agent runtime invokes Algorithm~\ref{alg:slack-update} after a model request
+or tool call completes.  Its GBDT model consumes only causally visible branch
+features.  The runtime adds a workflow identifier, graph version, agent
+identifier, observation time, and Slack to the next serving request.  The
+Router forwards these fields without interpreting the graph.  The Controller
+rejects stale versions and treats an absent or invalid value as zero Slack.
+
+\paragraph{Router and Controller.}
+The Router extends its request record with a route version, the last accepted
+output position, and one compatible recovery target.  The Aegis Controller
+extends the Store Master with one serialized metadata queue per pool, so it can
+update free space, rent, and the exposed-tail heap atomically.  The KV
+Directory persists chunk identity, token interval, route version, shard
+completion, location, and commit state.  Landlord rent, heap entries, pending
+actions, and AIMD counters are reconstructible policy state and are not part of
+the recovery truth.
+
+\paragraph{Worker data path.}
+The KV Manager emits a seal event only after all pages in a configured chunk
+are immutable.  Prefix and decode chunks use 4096 and 256 tokens by default,
+respectively; both values are configuration parameters and all accounting uses
+the realized byte size.  The action consumer submits direct peer copies or
+Store writes through the existing Transfer Engine.  Completion callbacks carry
+the chunk and route versions plus per-shard status.  The Controller publishes a
+chunk only after every required shard acknowledges; a late or failed callback
+frees the pending reservation.
+
+Peer-HBM pages live in a private shadow namespace and cannot satisfy a normal
+prefix-cache lookup.  A local enforcer admits them only below the latest
+$\alpha_pM_p$ quota and the underlying allocator's foreground reserve.  If an
+AIMD decrease makes current shadow use exceed the new quota, new admission
+stops and the Controller reclaims suffix tails in \textsc{SlackLandlord} order;
+already allocated pages remain charged until release completes.
+
+\paragraph{Failure path.}
+The Router detects or receives a fail-stop event, fences the old route, and
+stops output publication.  The Controller snapshots committed directory state
+and creates one recovery job per ready request.  Workers adopt a compatible
+peer prefix, load the longest committed Store prefix, or recompute.  An open
+tail is always recomputed.  After all ranks reach the same continuation
+boundary, the Worker silently replays any accepted-output gap and the Router
+restores output authority under the new route version.
+
+% Evidence gate: before submission, replace this source comment with a compact
+% table of code changes and LOC only after SlackLandlord, GuardedAIMD, physical
+% peer-HBM copies, hard-kill recovery, and output fencing are present in the
+% production runtime.  Current SGLSim metadata models are not that evidence.

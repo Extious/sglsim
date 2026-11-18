@@ -1,0 +1,29 @@
+{
+  "schema_version": "aegiskv.physical-request.v1",
+  "layer": "request",
+  "description": "Matched physical replay selection bound to the final S1-S9 plus E1 metadata-DES lineage",
+  "source_lineage": {
+    "relative_path": "results/20260829T064719Z_paper_complete_v2",
+    "manifest_sha256": "1c76aefce8fe112caf3ee96af79e25b2952da3f02e6e1d7aedc09a9296d3d5c7",
+    "audit_sha256": "30c794482f2f05325a06a91efe499a210ba9061c8fd81d0f03675c804fa9a3aa",
+    "summary_sha256": "a3bc33b60cf2529f6e56026de1432d488bd0c0a9e532d264286cfce99f240e06",
+    "current_design_sha256": "0fdfd097a536ab73cd9f7eb12099eb6f5b9c068a061da30af57a8e6798caacac",
+    "required_audit_status": "PASS_WITH_PHYSICAL_CALIBRATION_BLOCKER"
+  },
+  "selection": {
+    "groups": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "E1"],
+    "independent_seed_count_per_group": 3,
+    "seed_rule": "three_numerically_smallest_preregistered_paper_seeds_per_group",
+    "retain_all_non_seed_axes": true,
+    "expected_cell_count": 201,
+    "expected_cells_by_group": {"S1": 12, "S2": 54, "S3": 24, "S4": 12, "S5": 9, "S6": 6, "S7": 36, "S8": 24, "S9": 18, "E1": 6}
+  },
+  "replay_contract": {
+    "reuse_source_cell_workload_sha256": true,
+    "reuse_source_shadow_schedule": true,
+    "reuse_source_failure_time_ms": true,
+    "resampling_allowed": false,
+    "simulation_outcomes_are_not_physical_expectations": true,
+    "paired_policy_universe_required": true
+  }
+}

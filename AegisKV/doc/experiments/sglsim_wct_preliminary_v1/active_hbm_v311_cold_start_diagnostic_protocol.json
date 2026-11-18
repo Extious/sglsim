@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-v311-cold-start-steady-cohort-diagnostic",
+  "status": "PREREGISTERED_BEFORE_COLD_START_DIAGNOSTIC_RESULTS",
+  "v311_protocol": "active_hbm_v311_paired_rerun_protocol.json",
+  "v311_protocol_sha256": "b047795bd7fb06f64d4bc874cd77c1b95b059a3efe42e44f0e85df8bcff779ec",
+  "v31_des": "active_hbm_v31.py",
+  "v31_des_sha256": "dca2c99abcc7913d48021b499103f0ae6917529e058db2a97e85e2831206a495",
+  "matrix": {
+    "model": "Qwen3-8B TP1 PP1",
+    "system_dp": 16,
+    "context_tokens": 40960,
+    "active_requests_per_gpu": 16,
+    "arrival_start_ms": 0.0,
+    "arrival_cutoff_ms": 180000.0,
+    "reporting_window_ms": 30000.0,
+    "warmup_interval_ms": [0.0, 90000.0],
+    "inclusive_arrival_cohort_ms": [0.0, 180000.0],
+    "steady_arrival_cohort_ms": [90000.0, 180000.0],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "native_reference_cells": 3,
+    "aegiskv_initial_alpha": [0.25, 0.03125],
+    "aegiskv_control_window_ms": [10000.0, 30000.0, 60000.0],
+    "aegiskv_cells": 18,
+    "expected_cells": 21,
+    "fault_probes": 0
+  },
+  "factor_basis": {
+    "initial_alpha": "checked-in default and checked-in minimum, not selected by WCT outcome",
+    "control_window": "one third of default, registered default, and twice default",
+    "steady_cohort": "fixed final 90 seconds after exactly three default 30-second warmup opportunities; backlog is retained"
+  },
+  "required_outputs": [
+    "warmup-inclusive and fixed steady-arrival-cohort healthy WCT decomposition",
+    "fixed 30-second bin integrals of active requests, waiting requests, serving GiB, Peer-HBM backup GiB, and headroom GiB",
+    "all controller steps with alpha, pressure, release and dispatch",
+    "paired seed differences against the single Native reference",
+    "workflow/cohort hashes and capacity invariants"
+  ],
+  "hard_gates": {
+    "common_full_workflow_universe_by_seed": true,
+    "common_fixed_steady_cohort_by_seed": true,
+    "capacity_violations": 0,
+    "projection_matches_actual_admission": true,
+    "no_first_30_seconds_deleted": true,
+    "no_performance_direction_or_win_threshold": true
+  },
+  "evidence_boundary": "Healthy-path cold-start sensitivity in the preliminary metadata DES. It is not physical evidence; initial alpha and control windows are configuration sensitivity factors, not measured optimal settings."
+}

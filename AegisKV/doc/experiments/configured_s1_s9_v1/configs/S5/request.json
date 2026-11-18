@@ -1,0 +1,16 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S5",
+  "layer": "request",
+  "description": "Five load levels for online control and occupancy timelines",
+  "workload": {
+    "arrival_window_ms": 180000,
+    "warmup_ms": 90000,
+    "model": "Qwen/Qwen3-8B",
+    "required_raw": ["used_bytes", "active_serving", "queue_integral", "alpha", "release_count", "dispatch_count"]
+  },
+  "axes": {
+    "paired_seed": [2026082600, 2026082601, 2026082602]
+  },
+  "matrix_note": "Each seed contains the frozen low/high/recovery phase trace"
+}

@@ -1,0 +1,98 @@
+{
+  "schema_version": "aegiskv.global-des-suite.v3",
+  "suite_id": "aegiskv-paper-global-des-v3",
+  "status": "planned_unexecuted",
+  "layers": [
+    "request",
+    "failure",
+    "deployment"
+  ],
+  "groups": [
+    {"id": "P0", "expected_cells": 12, "status": "planned_unexecuted"},
+    {"id": "P1", "expected_cells": 160, "status": "planned_unexecuted"},
+    {"id": "P2", "expected_cells": 240, "status": "planned_unexecuted"},
+    {"id": "P3", "expected_cells": 640, "status": "planned_unexecuted"},
+    {"id": "P4", "expected_cells": 40, "status": "planned_unexecuted"},
+    {"id": "P5", "expected_cells": 60, "status": "planned_unexecuted"},
+    {"id": "P6", "expected_cells": 200, "status": "planned_unexecuted"},
+    {"id": "P7", "expected_cells": 240, "status": "planned_unexecuted"},
+    {"id": "P8", "expected_cells": 160, "status": "planned_unexecuted"},
+    {"id": "P9", "expected_cells": 160, "status": "planned_unexecuted"},
+    {"id": "P10", "expected_cells": 120, "status": "planned_unexecuted"},
+    {"id": "P11", "expected_cells": 60, "status": "planned_unexecuted"},
+    {"id": "P12", "expected_cells": 54, "status": "planned_unexecuted"}
+  ],
+  "axis_ownership": {
+    "request": [
+      "contract_scenario",
+      "seed",
+      "load_multiplier",
+      "context_tokens",
+      "load_phase",
+      "reuse_level",
+      "dag_stratum"
+    ],
+    "failure": [
+      "failure_scenario",
+      "fault_domain",
+      "repair_horizon_s",
+      "failure_severity"
+    ],
+    "deployment": [
+      "policy",
+      "model",
+      "node_count",
+      "hbm_budget_gib_per_gpu",
+      "dram_budget_gib_per_node",
+      "replica_placement",
+      "cross_node_bandwidth_gb_s",
+      "algorithm_variant",
+      "verification_chunk_tokens"
+    ]
+  },
+  "expected_total_cells": 2146,
+  "p0_gate": {
+    "mode": "all_cells_and_invariants_pass",
+    "gate_group": "P0",
+    "blocks_groups": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6",
+      "P7",
+      "P8",
+      "P9",
+      "P10",
+      "P11",
+      "P12"
+    ],
+    "required_scenarios": [
+      "independent_dp_overlap",
+      "qwen3_8b_tp1_shard",
+      "qwen3_32b_tp4_shard",
+      "synthetic_pp2_shard",
+      "same_node_peer_hbm_path",
+      "cross_node_peer_hbm_path",
+      "source_to_node_dram_path",
+      "node_dram_to_recovery_gpu_path",
+      "failure_in_pending_window",
+      "failure_after_commit_source_first",
+      "target_first_and_node_failure",
+      "stable_same_timestamp_tie_hash"
+    ],
+    "required_invariants": [
+      "global_event_order",
+      "deterministic_event_hash",
+      "per_gpu_hbm_capacity",
+      "per_node_dram_capacity",
+      "kv_extent_conservation",
+      "legal_state_transition",
+      "all_shards_ack_before_commit",
+      "no_hbm_to_dram_edge",
+      "independent_hbm_dram_admission",
+      "non_lockstep_dp_overlap"
+    ]
+  }
+}

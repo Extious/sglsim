@@ -1,0 +1,40 @@
+{
+  "schema_version": "aegiskv.experiment-suite.v2",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "execution_engine": "sglsim_complete_metadata_des",
+  "groups": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "E1"],
+  "layer_files": ["request.json", "failure.json", "deployment.json"],
+  "axis_ownership": {
+    "request": ["seed", "load_multiplier", "context_tokens", "workload_profile"],
+    "failure": ["failure_scenario", "repair_time_ms", "mttf_gpu_hours"],
+    "deployment": ["policy", "model", "effective_bandwidth_GB_per_s", "host_dram_gib_per_node"]
+  },
+  "profiles": {
+    "smoke": {"sessions_per_provider_bin": 1, "max_rounds_per_session": 4, "weka_workflows": 1, "max_axis_values": 2},
+    "paper": {
+      "sessions_per_provider_bin": 3,
+      "max_rounds_per_session": 32,
+      "weka_workflows": 2,
+      "max_axis_values": null,
+      "minimum_distinct_seeds": {
+        "S1": 10,
+        "S2": 10,
+        "S3": 10,
+        "S4": 10,
+        "S5": 5,
+        "S6": 10,
+        "S7": 10,
+        "S8": 10,
+        "S9": 3,
+        "E1": 10
+      }
+    }
+  },
+  "result_contract": {
+    "immutable_lineage": true,
+    "paired_request_and_failure_universe": true,
+    "metadata_only": true,
+    "physical_result": false,
+    "plot_may_promote_evidence": false
+  }
+}

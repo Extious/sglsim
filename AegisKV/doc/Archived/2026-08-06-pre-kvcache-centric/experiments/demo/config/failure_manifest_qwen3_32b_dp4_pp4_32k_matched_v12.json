@@ -1,0 +1,88 @@
+{
+    "schema_version": 1,
+    "time_origin": "policy_workload_start",
+    "deployment": {
+        "nodes": 4,
+        "gpus_per_node": 4,
+        "dp_size": 4,
+        "pp_size": 4,
+        "failure_scope": "gpu",
+        "simulator_boundary": "pp_rank identifies the failed stage; current SGLSim makes the containing DP replica unavailable during replacement"
+    },
+    "events": [
+        {
+            "event_id": "failure-02",
+            "offset_s": 330.0,
+            "dp_rank": 2,
+            "pp_rank": 0,
+            "failure_scope": "gpu",
+            "duration_s": 12.0,
+            "victims": [
+                {
+                    "backup_key": "00ca01c4-p2-s0-t0",
+                    "execution_dp_rank": 2,
+                    "backup_dp_rank": 0
+                }
+            ]
+        },
+        {
+            "event_id": "failure-03",
+            "offset_s": 395.0,
+            "dp_rank": 3,
+            "pp_rank": 2,
+            "failure_scope": "gpu",
+            "duration_s": 12.0,
+            "victims": [
+                {
+                    "backup_key": "085411a4-p2-s1-t0",
+                    "execution_dp_rank": 3,
+                    "backup_dp_rank": 0
+                },
+                {
+                    "backup_key": "085411a4-p2-s1-t1",
+                    "execution_dp_rank": 3,
+                    "backup_dp_rank": 1
+                },
+                {
+                    "backup_key": "085411a4-p2-s1-t3",
+                    "execution_dp_rank": 3,
+                    "backup_dp_rank": 0
+                }
+            ]
+        },
+        {
+            "event_id": "failure-04",
+            "offset_s": 1010.0,
+            "dp_rank": 2,
+            "pp_rank": 1,
+            "failure_scope": "gpu",
+            "duration_s": 12.0,
+            "victims": [
+                {
+                    "backup_key": "0bc9c4f7-p2-s0-t23",
+                    "execution_dp_rank": 2,
+                    "backup_dp_rank": 3
+                },
+                {
+                    "backup_key": "0bc9c4f7-p2-s0-t29",
+                    "execution_dp_rank": 2,
+                    "backup_dp_rank": 0
+                }
+            ]
+        }
+    ],
+    "calibration_result": "/home/comp/zhanzhao/sglsim/AegisKV/demo/results/qwen3_32b_dp4_pp4_idle_matched_primary_v11/20260804-103542/aegiskv.json",
+    "victim_selection": "v11_observed_real_backups_only; victims with recompute-only acks dropped",
+    "schedule_basis": "v11 measured per-rank queue-depth idle windows plus outage-containment margins; dp2 fails twice in disjoint idle windows [319,478] and [1000,1399]; dp1/dp0 have no clean window with backed-up victims",
+    "completion_guard_s": 5.0,
+    "resolved_dp_size": 4,
+    "resolved_pp_size": 4,
+    "victim_count": 6,
+    "design_notes": {
+        "why_no_dp1_failure": "dp1 queue depth never hits 0 between t=82 and t=749 (07dd fan-out stream); late idle windows [1399,1468]/[1612,1688] only contain 0bc p2 requests whose algorithm-2 acks are recompute-only (no backup to reuse)",
+        "why_no_dp0_failure": "dp0 has no depth-0 window >= 40s anywhere in the v11 timeline",
+        "retry_safety": "every victim backup target is either never failed (dp0/dp1) or fully recovered before the victim retry checkpoint (dp3 recovers ~408s, first dp3-target retry ~1090s)",
+        "execution_safety": "no planned arrivals on the failed rank during any bounded outage: dp2 has none in [319,478] and [1000,1399]; dp3 has none in [350,~440]",
+        "pp_stage_coverage": "events use pp_rank 0/2/1 so the three events touch three distinct pipeline stages"
+    }
+}

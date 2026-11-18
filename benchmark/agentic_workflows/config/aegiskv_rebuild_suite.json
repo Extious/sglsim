@@ -1,0 +1,129 @@
+{
+  "description": "Minimal AegisKV beamer rebuild suite for requirements 2a-2d.",
+  "results_root": "benchmark/AegisKV/draft/experiments/sglsim_large/results/agentic_workflows",
+  "stages": [
+    {
+      "stage": "motivation",
+      "scenario": "motivation_main_subagent_dp8_no_failure",
+      "run_id": "motivation-main-subagent-dp8-baseline-r1",
+      "start_port": 37410
+    },
+    {
+      "stage": "motivation",
+      "scenario": "motivation_main_subagent_dp8_failure",
+      "run_id": "motivation-main-subagent-dp8-main-r1",
+      "start_port": 37420
+    },
+    {
+      "stage": "motivation",
+      "scenario": "motivation_main_subagent_dp8_subagent_failure",
+      "run_id": "motivation-main-subagent-dp8-subagent-r1",
+      "start_port": 37430
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_lowload_fail1_a010",
+      "run_id": "alpha-tradeoff-dp8-lowload-fail1-a010-r1",
+      "start_port": 37510
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_lowload_fail1_a030",
+      "run_id": "alpha-tradeoff-dp8-lowload-fail1-a030-r1",
+      "start_port": 37520
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_lowload_fail1_a050",
+      "run_id": "alpha-tradeoff-dp8-lowload-fail1-a050-r1",
+      "start_port": 37530
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_highload_fail1_a010",
+      "run_id": "alpha-tradeoff-dp8-highload-fail1-a010-r1",
+      "start_port": 37610
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_highload_fail1_a030",
+      "run_id": "alpha-tradeoff-dp8-highload-fail1-a030-r1",
+      "start_port": 37620
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_highload_fail1_a050",
+      "run_id": "alpha-tradeoff-dp8-highload-fail1-a050-r1",
+      "start_port": 37630
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_lowload_fail3_a010",
+      "run_id": "alpha-tradeoff-dp8-lowload-fail3-a010-r1",
+      "start_port": 37710
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_lowload_fail3_a030",
+      "run_id": "alpha-tradeoff-dp8-lowload-fail3-a030-r1",
+      "start_port": 37720
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_lowload_fail3_a050",
+      "run_id": "alpha-tradeoff-dp8-lowload-fail3-a050-r1",
+      "start_port": 37730
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_highload_fail3_a010",
+      "run_id": "alpha-tradeoff-dp8-highload-fail3-a010-r1",
+      "start_port": 37810
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_highload_fail3_a030",
+      "run_id": "alpha-tradeoff-dp8-highload-fail3-a030-r1",
+      "start_port": 37820
+    },
+    {
+      "stage": "alpha_dp8",
+      "scenario": "alpha_tradeoff_dp8_highload_fail3_a050",
+      "run_id": "alpha-tradeoff-dp8-highload-fail3-a050-r1",
+      "start_port": 37830
+    },
+    {
+      "stage": "policy_100k",
+      "scenario": "staged_13131_100k_context_no_backup",
+      "run_id": "policy-100k-dp4-no-backup-r1",
+      "start_port": 37910
+    },
+    {
+      "stage": "policy_100k",
+      "scenario": "staged_13131_100k_context_host_only",
+      "run_id": "policy-100k-dp4-host-only-r1",
+      "start_port": 37920
+    },
+    {
+      "stage": "policy_100k",
+      "scenario": "staged_13131_100k_context_gpu_replica",
+      "run_id": "policy-100k-dp4-gpu-replica-r1",
+      "start_port": 37930
+    },
+    {
+      "stage": "policy_100k",
+      "scenario": "staged_13131_100k_context_aegiskv",
+      "run_id": "policy-100k-dp4-aegiskv-r1",
+      "start_port": 37940
+    }
+  ],
+  "figure_scripts": [
+    "benchmark/AegisKV/draft/figures/scripts/render_system_overview_one_pool_style.py",
+    "benchmark/AegisKV/draft/figures/scripts/render_real_trace_aegiskv_motivation.py",
+    "benchmark/AegisKV/draft/figures/scripts/render_motivation_agent_failure_impact.py",
+    "benchmark/AegisKV/draft/figures/scripts/render_motivation_criticality_ci.py",
+    "benchmark/AegisKV/draft/figures/scripts/render_motivation_failure_replay_repeats.py",
+    "benchmark/AegisKV/draft/figures/scripts/render_gpu_replica_alpha_tradeoff.py",
+    "benchmark/AegisKV/draft/figures/scripts/render_backup_policy_comparison.py"
+  ]
+}

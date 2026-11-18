@@ -1,0 +1,51 @@
+{
+  "model_path": "mock-model",
+  "cache": {
+    "page_size": 1,
+    "l1_capacity_pages": 16384,
+    "l2_capacity_pages": 32768,
+    "enable_hierarchical_cache": true,
+    "hicache_write_policy": "write_through_selective"
+  },
+  "scheduler": {
+    "dp_size": 2,
+    "tp_size": 1,
+    "pp_size": 1,
+    "max_running_requests": 8,
+    "max_prefill_tokens": 4096,
+    "chunked_prefill_size": 4096,
+    "load_balance_method": "round_robin"
+  },
+  "predictor": {
+    "name": "heuristic",
+    "forward_scale": 0.001
+  },
+  "platform": {
+    "accelerator": {
+      "name": "a100_sxm",
+      "hbm_capacity_gb": 80
+    }
+  },
+  "aegis_l1_l2": {
+    "enabled": true,
+    "committed_copy_protocol": true,
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "prefix_chunk_tokens": 4096,
+    "decode_chunk_tokens": 256,
+    "initial_alpha": 1.0,
+    "min_alpha": 0.25,
+    "max_alpha": 1.0,
+    "aimd_decrease_factor": 0.5,
+    "aimd_increase_step": 0.1,
+    "aimd_stable_windows": 3,
+    "window_requests": 100,
+    "dram_static_fraction": 1.0,
+    "host_alignment_tokens": 1,
+    "topology": {
+      "dp_rank_to_node": [0, 1],
+      "pp_stages_per_node": 1,
+      "gpu_backup_requires_direct_retry_route": true,
+      "host_pool_scope": "node_shared_process_external"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+\paragraph{Slack is a priority, not a guarantee.}
+GBDT and CPM estimate the currently visible workflow.  Unknown future branches
+and prediction error can change which request should have been protected.  A
+missing or invalid estimate becomes zero Slack, which is conservative for
+priority but may over-protect that request.  None of these errors can bypass a
+Worker capacity check, validate an incomplete chunk, or authorize output.
+
+\paragraph{Online rather than globally optimal.}
+\textsc{SlackLandlord} is a bounded-overhead online policy.  Prefix constraints,
+variable-size chunks, cross-tier dependencies, and asynchronous copies mean
+that it does not inherit Landlord's original competitive ratio and does not
+solve a global placement optimum.  The exact small-instance oracle in
+\S\ref{sec:evaluation} measures this gap.  Slack updates are lazy, so the
+physical placement may temporarily lag the newest workflow priority.
+
+\paragraph{Protection gap.}
+When a candidate needs space, the current design evicts its victims before the
+new asynchronous copy commits.  A failure in this interval may recover less KV
+than before the admission and fall back to DRAM, SSD, or recomputation.  This
+choice keeps the common path simple and avoids reserving double capacity, but
+its frequency and cost must be measured.  Make-before-break replacement is a
+possible extension when spare capacity exists.
+
+\paragraph{Fault and layout scope.}
+The first system handles one fail-stop serving domain and same-layout recovery.
+It does not reshard KV across TP/PP/EP/CP layouts, splice surviving pipeline
+stages, tolerate correlated Store/Router failures, or preserve arbitrary
+multi-hypothesis decoding state.  These cases fail closed to request restart.
+Extending the failure model requires a new recovery contract, not only another
+placement tier.

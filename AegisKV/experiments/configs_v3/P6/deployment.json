@@ -1,0 +1,18 @@
+{
+  "schema_version": "aegiskv.global-des-layer.v3",
+  "layer": "deployment",
+  "group": "P6",
+  "extends": "../common/deployment.json",
+  "fixed": {
+    "aegiskv": {
+      "replica_placement_modes": {
+        "same_node_peer_hbm": "different_gpu_same_node",
+        "cross_node_peer_hbm": "different_node"
+      }
+    }
+  },
+  "axes": {
+    "replica_placement": ["same_node_peer_hbm", "cross_node_peer_hbm"],
+    "policy": ["recompute", "aegiskv"]
+  }
+}

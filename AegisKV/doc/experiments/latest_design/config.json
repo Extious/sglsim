@@ -1,0 +1,40 @@
+{
+  "experiment_id": "latest-independent-tiers-v1",
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "seeds": 32,
+  "requests_per_seed": 96,
+  "failure_time_ms": 55.0,
+  "target_failure_probability": 0.25,
+  "target_failure_time_ms": 38.0,
+  "hbm_pressure_time_ms": 34.0,
+  "hbm_capacity_tokens": 65536,
+  "dram_capacity_tokens": 131072,
+  "initial_hbm_alpha": 1.0,
+  "minimum_hbm_alpha": 0.25,
+  "maximum_hbm_alpha": 1.0,
+  "aimd_decrease_factor": 0.5,
+  "aimd_increase_step": 0.1,
+  "aimd_stable_windows": 3,
+  "prefix_chunk_tokens": 4096,
+  "decode_chunk_tokens": 256,
+  "token_choices": [2048, 4096, 6144, 8192, 12288],
+  "token_weights": [0.14, 0.28, 0.25, 0.23, 0.10],
+  "hbm_copy_success_probability": 0.985,
+  "dram_copy_success_probability": 0.995,
+  "recovery_timing": {
+    "recompute_setup_ms": 4.0,
+    "recompute_ms_per_token": 0.0108,
+    "hbm_setup_ms": 2.4,
+    "hbm_ms_per_token": 0.0019,
+    "dram_setup_ms": 7.5,
+    "dram_ms_per_token": 0.0036
+  },
+  "copy_timing": {
+    "hbm_setup_ms": 0.12,
+    "hbm_ms_per_token": 0.00045,
+    "dram_setup_ms": 0.30,
+    "dram_ms_per_token": 0.0012
+  },
+  "bootstrap_resamples": 4000,
+  "bootstrap_seed": 20260820
+}

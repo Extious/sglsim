@@ -1,0 +1,49 @@
+{
+  "experiment_id": "real-weka-capacity-matched-baselines-four-path-v2",
+  "status": "INVALIDATED_UPSTREAM_TCP_TRANSPORT",
+  "invalidation_evidence": "../transport-invalidation-rtx4090-20260823.json",
+  "base_experiment_config": "../real_weka_full_design/config.json",
+  "anchor_result_dir": "../real_weka_full_design/results/full_393_workflows_four_path_v2",
+  "fidelity_contract": "../../related_works/BASELINE_SELECTION_2026-08-21.md",
+  "primary_policies": [
+    "recompute_fcfs",
+    "dejavu_neighbor",
+    "raidserve_host",
+    "kevlarflow_ring",
+    "lumen_load_aware",
+    "aegiskv_latest"
+  ],
+  "dedicated_controls": [
+    "ghostserve_parity_tp8",
+    "recompute_load_aware",
+    "restore_or_recompute_split",
+    "cacheflow_3d_restore",
+    "bounded_state_restore"
+  ],
+  "ghostserve": {
+    "data_shards": 8,
+    "parity_shards": 2,
+    "encode_cost_model": "logical_bytes_times_parity_fraction_at_peer_hbm_bandwidth",
+    "decode_cost_model": "logical_bytes_times_one_shard_at_peer_hbm_bandwidth"
+  },
+  "lumen": {
+    "placement_lambda": 1.0,
+    "dispatch_overload_factor": 1.25,
+    "reservation_semantics": "oracle_favorable_observed_prompt_plus_output_tokens",
+    "reservation_note": "The paper reserves maximum context. Using observed request total is deliberately favorable to the baseline under the shared 64-GiB host budget."
+  },
+  "restore_controls": {
+    "cacheflow_layers": 32,
+    "cacheflow_gpu_lanes": 8,
+    "cacheflow_token_tiles": 32,
+    "bsr_chunk_tokens": 256,
+    "bsr_window_chunks": 32
+  },
+  "statistics": {
+    "bootstrap_resamples": 4000,
+    "bootstrap_seed": 20260821
+  },
+  "audit": {
+    "progress_every_chunks": 250000
+  }
+}

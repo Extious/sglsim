@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "events": [
+    {
+      "event_id": "failure-02",
+      "offset_s": 24.0,
+      "dp_rank": 1,
+      "duration_s": 10.0,
+      "victims": [
+        {
+          "backup_key": "7577f2dd-p2-s1-t6",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 3
+        },
+        {
+          "backup_key": "7577f2dd-p2-s2-t5",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 5
+        },
+        {
+          "backup_key": "7577f2dd-p3-m0",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 3
+        },
+        {
+          "backup_key": "8ab0a089-p1-m5",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 5
+        },
+        {
+          "backup_key": "d829e6b6-p1-m9",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 3
+        },
+        {
+          "backup_key": "fe1121fb-p2-s3-t0",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 2
+        },
+        {
+          "backup_key": "fe1121fb-p3-m2",
+          "execution_dp_rank": 1,
+          "backup_dp_rank": 3
+        }
+      ]
+    }
+  ],
+  "calibration_result": "/home/comp/zhanzhao/sglsim/benchmark/AegisKV/demo/results/quick_1k_matched_calibration/20260722-122147/aegiskv.json",
+  "victim_selection": "latest_completed_state_per_agent_on_failed_rank_with_pre_failure_completion_guard",
+  "completion_guard_s": 5.0,
+  "excluded_near_failure_boundary": 6,
+  "dropped_events_without_stable_victims": 1,
+  "victim_count": 7
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "time_origin": "policy_workload_start",
+  "description": "Four fixed-rank source-node failures used to derive matched DP4/PP4 node-failure victims from the AegisKV calibration run.",
+  "deployment": {
+    "nodes": 4,
+    "gpus_per_node": 4,
+    "dp_size": 4,
+    "pp_size": 4,
+    "failure_scope": "node",
+    "simulator_boundary": "SGLSim makes the containing DP replica unavailable; Algorithm 2 additionally rejects same-node GPU and Host protection."
+  },
+  "events": [
+    {"event_id": "node-failure-01", "offset_s": 45.0, "dp_rank": 0, "pp_rank": -1, "duration_s": 12.0},
+    {"event_id": "node-failure-02", "offset_s": 120.0, "dp_rank": 1, "pp_rank": -1, "duration_s": 12.0},
+    {"event_id": "node-failure-03", "offset_s": 195.0, "dp_rank": 2, "pp_rank": -1, "duration_s": 12.0},
+    {"event_id": "node-failure-04", "offset_s": 270.0, "dp_rank": 3, "pp_rank": -1, "duration_s": 12.0}
+  ]
+}

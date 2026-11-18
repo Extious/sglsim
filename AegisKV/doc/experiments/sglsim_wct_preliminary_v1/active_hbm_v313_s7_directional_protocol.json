@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sglsim-active-hbm-v313-s7-directional-repair-20260827",
+  "status": "PREREGISTERED_BEFORE_S7_RUN",
+  "paper_ready": false,
+  "design_semantics": "source_owned_independent_hbm_dram_v2",
+  "question": "How do independently varied Source-to-Peer-HBM copy, Source-to-DRAM copy, Peer-HBM recovery, DRAM recovery, and modeled replacement duration affect healthy burden and same-probe failure WCT?",
+  "selection_policy": "Execute and retain every registered direction, bandwidth, repair duration, policy, domain, and paired seed; no direction, seed, cell, or negative trend may be dropped by result shape.",
+  "model": {
+    "model_id": "Qwen/Qwen3-8B",
+    "display": "Qwen3-8B TP1/PP1",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "tp": 1,
+    "pp": 1,
+    "weight_bytes_per_rank": 16381470720,
+    "kv_bytes_per_token": 147456,
+    "request_max_output_tokens": 4096,
+    "service_status": "MODELED_SYNTHETIC_A100_COEFFICIENTS_NOT_PHYSICAL_CALIBRATION"
+  },
+  "hardware": {
+    "gpu": "NVIDIA A100 40GB modeled as 40 GiB addressable HBM",
+    "total_hbm_bytes_per_gpu": 42949672960,
+    "usable_hbm_bytes_per_gpu": 37795712204,
+    "runtime_reserve_bytes_per_gpu": 5153960756,
+    "serving_plus_peer_backup_budget_bytes_per_gpu": 21414241484,
+    "host_dram_capacity_bytes_per_worker": 68719476736,
+    "system_dp": 64,
+    "gpus_per_node": 8,
+    "node_count": 8,
+    "placement": "one TP1/PP1 replica per GPU; contiguous ranks in eight complete 8-GPU nodes",
+    "registered_s7_topology": "cross_node_remote_dram",
+    "registered_s7_topology_reason": "The fixed cross-node/remote route preserves committed replicas under source-node faults and makes copy versus recovery direction identifiable within the frozen 168-cell minimum plan. Same-node/local versus cross-node/remote topology is independently covered by S3; S7 does not select between them by outcome.",
+    "topology": {
+      "peer_hbm": "cross_node",
+      "dram": "remote",
+      "peer_rule": "same local GPU index on the next node in a node ring",
+      "dram_rule": "CPU DRAM attached to the next node in the same node ring"
+    },
+    "bandwidth_profile_id": "sglsim_a100_40gib_modeled_directional_v1",
+    "bandwidth_calibration_status": "MODELED_NOT_PHYSICALLY_CALIBRATED_A100",
+    "baseline_copy_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    },
+    "baseline_recovery_bandwidth_gb_s": {
+      "peer_hbm_same_node": 50.0,
+      "peer_hbm_cross_node": 10.0,
+      "dram_local": 16.0,
+      "dram_remote": 10.0
+    }
+  },
+  "capacity_equation": {
+    "invariant": "weight_bytes + runtime_reserve_bytes + active_serving_kv_bytes + peer_hbm_backup_used_bytes <= total_hbm_bytes",
+    "dispatch_reservation_formula": "(prompt_tokens + request_max_output_tokens) * kv_bytes_per_token",
+    "no_oracle": "dispatch must not inspect realized output length or realized service time",
+    "shared_budget_bytes_per_gpu": 21414241484
+  },
+  "workload": {
+    "context_tokens": 16384,
+    "offered_active_requests_per_gpu": 4,
+    "fixed_arrival_cutoff_ms": 180000.0,
+    "common_warmup_ms": 90000.0,
+    "measurement_start_ms": 90000.0,
+    "measurement_end_ms": 180000.0,
+    "control_opportunity_times_ms": [30000.0, 60000.0, 90000.0, 120000.0, 150000.0, 180000.0],
+    "fault_probes_per_cell": 12,
+    "bandwidth_failure_type": "source_worker_gpu",
+    "probe_schedule": "equal-width stratified timestamps over the common 90-180 s measurement window; timestamp and source-rank tuples paired across policies and every treatment for each seed",
+    "primary_denominator": "all workflows in the same 90-180 s measurement cohort for healthy and every same-probe failure replay"
+  },
+  "sweep": {
+    "policies": ["Native Mooncake", "AegisKV"],
+    "paired_seeds": [2026082600, 2026082601, 2026082602],
+    "bandwidth_values_gb_s": [1.0, 5.0, 10.0, 25.0, 50.0],
+    "bandwidth_directions": {
+      "source_to_peer_hbm_copy": {
+        "phase": "copy",
+        "protocol_table": "copy_bandwidth_gb_s",
+        "protocol_key": "peer_hbm_cross_node",
+        "primary_mechanism": "healthy protection copy service/queue burden"
+      },
+      "source_to_dram_copy": {
+        "phase": "copy",
+        "protocol_table": "copy_bandwidth_gb_s",
+        "protocol_key": "dram_remote",
+        "primary_mechanism": "healthy protection copy service/queue burden"
+      },
+      "peer_hbm_recovery": {
+        "phase": "recovery",
+        "protocol_table": "load_bandwidth_gb_s",
+        "protocol_key": "peer_hbm_cross_node",
+        "primary_mechanism": "fault recovery service and benefit-conditioned admission"
+      },
+      "dram_recovery": {
+        "phase": "recovery",
+        "protocol_table": "load_bandwidth_gb_s",
+        "protocol_key": "dram_remote",
+        "primary_mechanism": "fault recovery service and benefit-conditioned admission"
+      }
+    },
+    "repair_durations_ms": [10000.0, 30000.0, 60000.0, 120000.0],
+    "repair_failure_domains": ["source_worker_gpu", "source_node"],
+    "repair_parameter": "failure_model.policy_failover.replacement_delay_ms",
+    "fixed_modeled_activation_delay_ms": 500.0,
+    "policy_contract": {
+      "Native Mooncake": {
+        "source_worker_gpu": "replacement_wait",
+        "source_node": "replacement_wait"
+      },
+      "AegisKV": {
+        "source_worker_gpu": "prebound_fence_activation",
+        "source_node": "cross-domain committed replica uses fence activation; only no-survivor requests use replacement"
+      }
+    },
+    "bandwidth_cell_count": 120,
+    "repair_cell_count": 48,
+    "registered_cell_count": 168
+  },
+  "statistics": {
+    "seed_unit": "three paired workload seeds",
+    "interval": "Student-t 95% confidence interval across seed-level paired differences (df=2)",
+    "primary": [
+      "healthy all-workflow mean and p99 WCT",
+      "same-probe failure all-workflow mean and p99 WCT",
+      "absolute fault-WCT saved: Native Mooncake minus AegisKV",
+      "relative fault-WCT gain: 1 minus AegisKV divided by Native Mooncake",
+      "recovery service mean, recovery hit/coverage, normal-path copy burden, copy bytes/jobs/queue, reclaim, and capacity"
+    ],
+    "forbidden_primary_metric": "changed-only workflow WCT across policies",
+    "performance_direction_gates": "none; copy and recovery axes are not required to move in the same direction, and no minimum gain is required"
+  },
+  "figure_grammar": {
+    "filename_stem": "s7_v313_directional_bandwidth_repair",
+    "size_inches": [7.0, 5.8],
+    "layout": "2x3 panels: absolute fault-WCT saved, relative gain, copy burden, recovery service, recovery coverage, and repair sensitivity",
+    "x_bandwidth_unit": "GB/s",
+    "x_repair_unit": "seconds",
+    "minimum_font_pt": 7.0,
+    "png_minimum_width_px": 1800,
+    "panel_text_boundary": "no preliminary, seed, hash, or evidence-boundary prose inside panels; those qualifiers remain in manifest and caption"
+  },
+  "hard_gates": [
+    "exactly 168 preregistered cells are atomically published",
+    "all four direction labels and all five bandwidth values are retained without direction selection",
+    "only the registered table/key changes in each bandwidth treatment",
+    "workflow universe, measurement cohort, and probe timestamp/source tuples match across policies and treatments for each seed",
+    "source-worker failure invalidates exactly one rank and source-node failure invalidates exactly eight ranks",
+    "cross-node Peer-HBM and remote DRAM replicas survive source-node failure only when COMMITTED",
+    "policy-specific replacement versus activation contract is applied without a common delay",
+    "scheduled/controller copy bytes and physical target capacity conserve exactly",
+    "future or unsealed backup never blocks dispatch or participates in recovery",
+    "empty fault replay exactly reproduces healthy completion and fault replay never lowers WCT",
+    "no performance-direction, gain, seed, cell, or path-selection gate",
+    "single-page vector PDF, PNG width at least 1800 px, and extracted minimum font size at least 7 pt"
+  ],
+  "sources": {
+    "runner": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s7_directional.py",
+      "sha256": "d846e0acc23fd8dacdf8bedf08bb5daa82f29f37d9b89402fe83e5bcf36250ed"
+    },
+    "directional_gate": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/test_active_hbm_v313_s7_directional.py",
+      "sha256": "0b21ba18366669124a45c427cc4c2aabaa033f222c385f2e174f44d9fe3b16ca"
+    },
+    "protocol_gate": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/test_active_hbm_v313_s7_protocol.py",
+      "sha256": "f4fb40ed175682007de811c200d32f9eef0cd288cf98511ba24a98358acda1af"
+    },
+    "active_hbm_v313": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v313.py",
+      "sha256": "1f1facd8fc020e000a5ad66805d155102488c62ed38a60dece9049bbf0c9732b"
+    },
+    "active_hbm_v312": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v312.py",
+      "sha256": "59cc237feae699ece7558473441c00336b98a88cfd0ae3d8a36dc32ba8afeb25"
+    },
+    "active_hbm_v31": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v31.py",
+      "sha256": "dca2c99abcc7913d48021b499103f0ae6917529e058db2a97e85e2831206a495"
+    },
+    "core_des": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/run_preliminary.py",
+      "sha256": "0bb1dfb06c21dabb3e6460c6005ecea3ee1baa52db225f07b26660bb36a192fb"
+    },
+    "capacity_protocol": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_v3_protocol.json",
+      "sha256": "155a3d17fce6d33154da2eaaa456643d417e13916200d3a9369b5b9b92b0b95f"
+    },
+    "minimum_execution_plan": {
+      "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/sglsim_s1_s9_minimum_execution_plan.json",
+      "sha256": "d5ec9081ad0733f96349bbe451ff0a8bcb66f1e34438039b1a21cf15a63f4519"
+    }
+  },
+  "evidence_boundary": "Three-seed steady-measurement metadata DES sensitivity. The 40 GiB capacity equation and model bytes are frozen, but A100 directional bandwidth values, 500 ms fence activation, and 10/30/60/120 s replacement durations are modeled/unmeasured. Native Mooncake is a modeled Router+Store approximation. The fixed cross-node/remote S7 route is not a physical A100 measurement and is not paper-ready evidence."
+}

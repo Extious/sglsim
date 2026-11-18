@@ -1,0 +1,68 @@
+<mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="1" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="AegisKV: workflow-aware KV protection and recovery" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#183B56;" vertex="1" parent="1">
+      <mxGeometry x="350" y="20" width="900" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="workflow" value="Agentic Workflow" style="swimlane;startSize=34;rounded=1;fillColor=#EAF2FB;strokeColor=#2D638F;fontColor=#183B56;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="100" width="330" height="660" as="geometry"/>
+    </mxCell>
+    <mxCell id="dag" value="Instantiated execution graph\nrevealed dependencies" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2D638F;fontSize=15;" vertex="1" parent="workflow">
+      <mxGeometry x="45" y="70" width="240" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="metadata" value="workflow / stage / turn\nowner / token span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2D638F;fontSize=15;" vertex="1" parent="workflow">
+      <mxGeometry x="45" y="220" width="240" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="wct" value="Objective\nworkflow completion time" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DFF2E8;strokeColor=#327E60;fontSize=15;fontStyle=1;" vertex="1" parent="workflow">
+      <mxGeometry x="45" y="410" width="240" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="control" value="AegisKV Control Plane" style="swimlane;startSize=34;rounded=1;fillColor=#F3EFFB;strokeColor=#66529B;fontColor=#3D3260;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="450" y="100" width="500" height="660" as="geometry"/>
+    </mxCell>
+    <mxCell id="critical" value="1. Workflow loss estimator\nslack + failure scenario" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#66529B;fontSize=15;" vertex="1" parent="control">
+      <mxGeometry x="45" y="65" width="410" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="placement" value="2. Replica placement\nvalue-density greedy under budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#66529B;fontSize=15;" vertex="1" parent="control">
+      <mxGeometry x="45" y="205" width="410" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="directory" value="3. Safe-frontier directory\nACK, version, location, validity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#66529B;fontSize=15;" vertex="1" parent="control">
+      <mxGeometry x="45" y="345" width="410" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="dispatcher" value="4. Recovery dispatcher\nmin(GPU, Host, recompute)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DFF2E8;strokeColor=#327E60;fontSize=15;fontStyle=1;" vertex="1" parent="control">
+      <mxGeometry x="45" y="485" width="410" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="data" value="SGLang / SGLSim Data Plane" style="swimlane;startSize=34;rounded=1;fillColor=#FFF0DE;strokeColor=#B56F28;fontColor=#6F4218;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="100" width="520" height="660" as="geometry"/>
+    </mxCell>
+    <mxCell id="rank0" value="Owner DP rank\nactive KV + scheduler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B56F28;fontSize=15;" vertex="1" parent="data">
+      <mxGeometry x="45" y="65" width="190" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="rank1" value="Healthy peer rank\nbackup HBM budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DFF2E8;strokeColor=#327E60;fontSize=15;" vertex="1" parent="data">
+      <mxGeometry x="285" y="65" width="190" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="host" value="L2 Backup\nwrite-through committed pages" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#F6F4F0;strokeColor=#59636F;fontSize=15;" vertex="1" parent="data">
+      <mxGeometry x="45" y="250" width="190" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="replica" value="L1 Backup\nselected committed atoms" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#DFF2E8;strokeColor=#327E60;fontSize=15;" vertex="1" parent="data">
+      <mxGeometry x="285" y="250" width="190" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="failure" value="Fail-stop owner rank" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE6E4;strokeColor=#B54A43;fontColor=#7A2621;fontSize=15;fontStyle=1;" vertex="1" parent="data">
+      <mxGeometry x="45" y="450" width="190" height="75" as="geometry"/>
+    </mxCell>
+    <mxCell id="resume" value="Retry on survivor\nrestore prefix + replay suffix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DFF2E8;strokeColor=#327E60;fontSize=15;fontStyle=1;" vertex="1" parent="data">
+      <mxGeometry x="285" y="440" width="190" height="95" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#2D638F;endArrow=block;" edge="1" source="dag" target="critical" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#2D638F;endArrow=block;" edge="1" source="metadata" target="critical" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#66529B;endArrow=block;" edge="1" source="critical" target="placement" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#66529B;endArrow=block;" edge="1" source="placement" target="rank1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#B56F28;endArrow=block;" edge="1" source="rank0" target="host" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#327E60;endArrow=block;" edge="1" source="rank0" target="replica" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#59636F;endArrow=block;" edge="1" source="host" target="directory" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#327E60;endArrow=block;" edge="1" source="replica" target="directory" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#B54A43;endArrow=block;" edge="1" source="failure" target="dispatcher" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#327E60;endArrow=block;" edge="1" source="dispatcher" target="resume" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;html=1;strokeColor=#327E60;endArrow=block;" edge="1" source="resume" target="wct" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,49 @@
+<mxfile host="Electron" modified="2026-08-10T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="recovery-frontier-gap" name="Page-1">
+    <mxGraphModel dx="1066" dy="654" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="570" pageHeight="225" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="live-title" value="Live KV at failure" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];fontFamily=DejaVu Sans;fontSize=22;fontStyle=1;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="18" y="4" width="220" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="recoverable-prefix" value="Recoverable prefix" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DCEAF7;strokeColor=#356A9A;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=22;fontStyle=1;fontColor=#17324D;" vertex="1" parent="1">
+          <mxGeometry x="18" y="52" width="324" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="exposed-suffix" value="Exposed suffix" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFF1DF;strokeColor=#C65D21;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=22;fontStyle=1;fontColor=#7C2D12;" vertex="1" parent="1">
+          <mxGeometry x="342" y="52" width="190" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="frontier-marker" value="" style="shape=line;strokeWidth=3;direction=south;strokeColor=#1D4ED8;" vertex="1" parent="1">
+          <mxGeometry x="332" y="36" width="20" height="92" as="geometry"/>
+        </mxCell>
+        <mxCell id="frontier-label" value="F(t&lt;sub&gt;f&lt;/sub&gt;)" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=DejaVu Sans;fontSize=19;fontStyle=1;fontColor=#1D4ED8;" vertex="1" parent="1">
+          <mxGeometry x="302" y="25" width="80" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="failure-marker" value="" style="shape=line;strokeWidth=3;direction=south;strokeColor=#B91C1C;" vertex="1" parent="1">
+          <mxGeometry x="522" y="36" width="20" height="92" as="geometry"/>
+        </mxCell>
+        <mxCell id="failure-label" value="L(t&lt;sub&gt;f&lt;/sub&gt;)" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=DejaVu Sans;fontSize=19;fontStyle=1;fontColor=#B91C1C;" vertex="1" parent="1">
+          <mxGeometry x="492" y="25" width="70" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="retry-title" value="Retry" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];fontFamily=DejaVu Sans;fontSize=22;fontStyle=1;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="18" y="159" width="68" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="retry-restore" value="Restore prefix" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#DCEAF7;strokeColor=#356A9A;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=21;fontStyle=1;fontColor=#17324D;" vertex="1" parent="1">
+          <mxGeometry x="88" y="150" width="145" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="retry-recompute" value="Recompute suffix" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFF1DF;strokeColor=#C65D21;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=21;fontStyle=1;fontColor=#7C2D12;" vertex="1" parent="1">
+          <mxGeometry x="270" y="150" width="166" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="resume" value="Resume" style="rounded=1;whiteSpace=wrap;html=1;arcSize=14;fillColor=#F1F5F9;strokeColor=#475569;strokeWidth=2;fontFamily=DejaVu Sans;fontSize=20;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="1">
+          <mxGeometry x="472" y="150" width="78" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-restore-recompute" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;" edge="1" parent="1" source="retry-restore" target="retry-recompute">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-recompute-resume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;" edge="1" parent="1" source="retry-recompute" target="resume">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

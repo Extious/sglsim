@@ -1,0 +1,37 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S9",
+  "layer": "deployment",
+  "description": "Independent RTX4090 holdout against four frozen fitted service curves",
+  "topology": {
+    "hardware": "two NVIDIA RTX4090 GPUs in one node",
+    "transport": "PCIe/host-staged four-direction profile",
+    "layout": "matched physical microbenchmark and simulator curve"
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "acceptance_rule": "all 16 cells must have MAPE <= 10%; no refitting or exclusions"
+  },
+  "axes": {
+    "transfer_path": ["source_to_peer_hbm", "source_to_dram", "peer_hbm_recovery", "dram_recovery"]
+  },
+  "planned_cells": 16,
+  "unique_cells": 16,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "independent physical holdout collector plus frozen service-curve evaluator",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_s9_rtx4090_four_direction_holdout_141411_v1/data/holdout_errors_by_path_payload.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_s9_rtx4090_four_direction_holdout_141411_v1/audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_s9_rtx4090_four_direction_holdout_141411_v1/lineage/active_hbm_s9_rtx4090_four_direction_holdout_141411_evaluation_protocol.json",
+    "expected_rows": 16,
+    "plot_kind": "four_direction_calibration_holdout",
+    "figure_slug": "rtx4090_four_direction_holdout"
+  },
+  "evidence": {
+    "class": "physical_rtx4090_independent_calibration_holdout",
+    "paper_ready": false,
+    "known_gaps": ["calibration acceptance FAIL: peer_hbm_recovery at 64 MiB has 10.635% MAPE", "not an A100 WCT result"]
+  },
+  "matrix_note": "4 paths x 4 payloads"
+}

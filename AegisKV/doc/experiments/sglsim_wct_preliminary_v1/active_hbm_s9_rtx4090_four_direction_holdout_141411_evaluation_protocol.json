@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "sglsim-s9-rtx4090-four-direction-independent-holdout-141411-v1",
+  "status": "FROZEN_INPUT_BINDING_BEFORE_EVALUATION",
+  "created_at": "2026-08-27T10:18:00+08:00",
+  "preregistered_protocol": {
+    "path": "/home/comp/zhanzhao/sglsim/AegisKV/experiments/sglsim_wct_preliminary_v1/active_hbm_s9_rtx4090_four_direction_holdout_protocol.json",
+    "sha256": "53b381b9ad8fa94a75439c02781337050110b5aac2121359032077ec6729036e",
+    "frozen_before_holdout_collection": true
+  },
+  "fit_input": {
+    "role": "FIT_ONLY",
+    "slurm_job_id": "141298",
+    "run_id": "staged-four-path-fp16-calibration-141298-20260826T141218Z",
+    "path": "/home/comp/zhanzhao/Mooncake/aegiskv/runs/staged-four-path-fp16-calibration-141298-20260826T141218Z/staged-four-path-calibration.json",
+    "sha256": "80959b42427e481d442b47eb804c4ae7ed46f43f6f69a654a086d8ab092325da",
+    "sample_count": 80
+  },
+  "holdout_input": {
+    "role": "HOLDOUT_ONLY",
+    "slurm_job_id": "141411",
+    "run_id": "staged-four-path-fp16-calibration-141411-20260827T015428Z",
+    "immutable_execution_root": "/home/comp/zhanzhao/Mooncake/aegiskv/artifacts/immutable-execution-root-gpu17-r2-v7-20260827T015339Z",
+    "calibration_path": "/home/comp/zhanzhao/Mooncake/aegiskv/artifacts/immutable-execution-root-gpu17-r2-v7-20260827T015339Z/aegiskv/runs/staged-four-path-fp16-calibration-141411-20260827T015428Z/staged-four-path-calibration.json",
+    "calibration_sha256": "e201405378485b83199ce27e7bd9d451fa84791bab6727102e9ca91124b55b66",
+    "contract_path": "/home/comp/zhanzhao/Mooncake/aegiskv/artifacts/immutable-execution-root-gpu17-r2-v7-20260827T015339Z/aegiskv/runs/staged-four-path-fp16-calibration-141411-20260827T015428Z/staged-fp16-contract.json",
+    "contract_sha256": "61a3bcbef8b04822254f8f6e3c41898ad553577afb6d75ebe9f61515dc424a2f",
+    "gate_path": "/home/comp/zhanzhao/Mooncake/aegiskv/artifacts/immutable-execution-root-gpu17-r2-v7-20260827T015339Z/aegiskv/runs/staged-four-path-fp16-calibration-141411-20260827T015428Z/staged-calibration-gate-report.json",
+    "gate_sha256": "15efbce086735fb1f83210c7a734a0f31d04d6b6205dde7b777e23ccdc7e75a5",
+    "checksums_path": "/home/comp/zhanzhao/Mooncake/aegiskv/artifacts/immutable-execution-root-gpu17-r2-v7-20260827T015339Z/aegiskv/runs/staged-four-path-fp16-calibration-141411-20260827T015428Z/checksums.sha256",
+    "checksums_sha256": "a5513f1db2a0577667dc00601bd742fed7c17c7af07d777cf660d723d79c43a1",
+    "sample_identity_sha256": "359f137114ec53272c3c4a2fb885525c294d3ad268b385078600e196350fd59f",
+    "sample_count": 80,
+    "cell_count": 16,
+    "repeats_per_cell": 5
+  },
+  "join_key": ["path", "payload_bytes"],
+  "paths": ["source_to_peer_hbm", "source_to_dram", "peer_hbm_recovery", "dram_recovery"],
+  "payload_bytes": [67108864, 268435456, 536870912, 1073741824],
+  "fit": {
+    "formula": "transfer_ms = setup_ms + payload_bytes * inverse_bandwidth_ms_per_byte",
+    "estimator": "scipy.optimize.nnls",
+    "one_initial_fit_from_job141298_only": true,
+    "refit_after_holdout_forbidden": true,
+    "shared_parameter_across_paths_forbidden": true
+  },
+  "acceptance": {
+    "metric": "cell MAPE over all five raw holdout repeats",
+    "threshold_percent": 10.0,
+    "rule": "PASS iff every one of the 16 registered cells has MAPE <= 10%; retain and report FAIL without refitting or exclusions"
+  },
+  "uncertainty": {
+    "method": "deterministic exhaustive nonparametric bootstrap over all 5^5 resamples within each cell",
+    "quantiles": [0.025, 0.975],
+    "random_seed": null,
+    "deviation_note": "The preregistration required a seed frozen before collection but did not record one. Exhaustive enumeration is seed-free and is used only for display intervals; it cannot affect the deterministic acceptance gate."
+  },
+  "evidence_boundary": "Independent RTX4090 physical holdout calibration only. This does not measure or alter the A100 40 GiB main SGLSim profile, and it is not an AegisKV WCT result."
+}

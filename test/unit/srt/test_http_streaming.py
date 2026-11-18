@@ -145,3 +145,64 @@ def test_completions_reports_generated_tokens_separately():
     assert sim_stats["output_length"] == 2
     assert sim_stats["generated_tokens"] == 2
     engine.stop_background_scheduler()
+
+
+def test_calibration_telemetry_uses_common_online_schema():
+    engine = Engine(
+        ServerArgs(
+            streaming_arrival=True,
+            model_path="mock-model",
+            scheduler_telemetry=True,
+        )
+    )
+    engine.start_background_scheduler()
+    try:
+        app = create_app(engine)
+        client = TestClient(app)
+        response = client.post(
+            "/v1/completions",
+            json={
+                "model": "mock-model",
+                "input_len": 3,
+                "max_tokens": 2,
+                "user": "calibration-row",
+            },
+        )
+        assert response.status_code == 200
+
+        telemetry = client.get("/calibration/telemetry")
+        assert telemetry.status_code == 200
+        payload = telemetry.json()
+        assert payload["simulation_time_mode"] == "wall"
+        assert payload["request_stats"]["calibration-row"]["status"] == "completed"
+        assert payload["scheduler_telemetry"]
+        assert payload["calibration_metrics"]["request_count"] == 1
+        assert payload["calibration_metrics"]["pipeline_accounting_by_dp"]["0"][
+            "batch_count"
+        ] >= 1
+        topology = payload["physical_topology"]
+        assert topology["topology_contract"] == (
+            "one_scheduler_process_per_dp_pp_tp_stage"
+        )
+        assert topology["expected_process_count"] == 1
+        assert topology["process_count"] == 1
+        assert topology["alive_process_count"] == 1
+        assert topology["stage_ids"] == ["dp0.pp0.tp0"]
+    finally:
+        engine.shutdown()
+
+
+def test_calibration_telemetry_is_explicitly_opt_in():
+    engine = Engine(
+        ServerArgs(
+            streaming_arrival=True,
+            model_path="mock-model",
+        )
+    )
+    engine.start_background_scheduler()
+    try:
+        response = TestClient(create_app(engine)).get("/calibration/telemetry")
+        assert response.status_code == 409
+        assert "--scheduler-telemetry" in response.json()["detail"]
+    finally:
+        engine.shutdown()

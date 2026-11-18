@@ -50,6 +50,7 @@ class ChatCompletionBody(BaseModel):
 
 class SimulateDpFailureBody(BaseModel):
     dp_rank: int
+    event_id: str | None = None
 
 
 def _fixed_client_settings() -> dict[str, Any]:
@@ -106,6 +107,19 @@ def create_app(engine: Engine) -> FastAPI:
     @app.get("/simulate/failure_status")
     def simulate_failure_status() -> dict[str, Any]:
         return engine.soft_failure_status()
+
+    @app.get("/aegis/status")
+    def aegis_status(after_sequence: int = 0) -> dict[str, Any]:
+        """Expose Router hints and rank-local Algorithm 2/3 metadata for demos."""
+
+        return engine.aegis_status(after_sequence=max(int(after_sequence), 0))
+
+    @app.get("/calibration/telemetry")
+    def calibration_telemetry() -> dict[str, Any]:
+        try:
+            return engine.calibration_telemetry()
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     @app.post("/simulate/fail_dp")
     def simulate_fail_dp(body: SimulateDpFailureBody) -> dict[str, Any]:

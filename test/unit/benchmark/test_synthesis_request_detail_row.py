@@ -24,6 +24,12 @@ def test_sim_stats_to_detail_row_preserves_aegis_fields():
             "aegis_assigned_dp_rank": 1,
             "aegis_host_visible_tokens": 108,
             "aegis_gpu_replica_tokens": 16,
+            "aegis_gpu_replica_dp_rank": 2,
+            "aegis_gpu_replica_quota_tokens": 64,
+            "aegis_gpu_replica_overlap_tokens": 12,
+            "aegis_gpu_replica_unique_tokens": 4,
+            "aegis_gpu_replica_reserved_tokens": 16,
+            "aegis_gpu_replica_evictable": True,
             "aegis_safe_frontier_tokens": 108,
             "aegis_recompute_tokens": 0,
             "aegis_recovery_action": "gpu_replica",
@@ -66,6 +72,12 @@ def test_sim_stats_to_detail_row_preserves_aegis_fields():
     assert row.aegis_assigned_dp_rank == 1
     assert row.aegis_host_visible_tokens == 108
     assert row.aegis_gpu_replica_tokens == 16
+    assert row.aegis_gpu_replica_dp_rank == 2
+    assert row.aegis_gpu_replica_quota_tokens == 64
+    assert row.aegis_gpu_replica_overlap_tokens == 12
+    assert row.aegis_gpu_replica_unique_tokens == 4
+    assert row.aegis_gpu_replica_reserved_tokens == 16
+    assert row.aegis_gpu_replica_evictable is True
     assert row.aegis_safe_frontier_tokens == 108
     assert row.aegis_recompute_tokens == 0
     assert row.aegis_recovery_action == "gpu_replica"

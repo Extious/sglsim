@@ -1,0 +1,178 @@
+{
+  "schema_version": "aegiskv.source-registry.v2",
+  "sources": {
+    "a100_ampere": {
+      "kind": "vendor_primary",
+      "title": "NVIDIA Ampere Architecture In-Depth",
+      "url": "https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/",
+      "supports": ["A100-40GB HBM capacity", "1555 GB/s HBM bandwidth", "600 GB/s NVLink aggregate"]
+    },
+    "a100_hgx_guide": {
+      "kind": "vendor_primary",
+      "title": "NVIDIA HGX A100 Software Guide",
+      "url": "https://docs.nvidia.com/datacenter/tesla/hgx-software-guide/index.html",
+      "supports": ["263-275 GB/s measured unidirectional GPU peer bandwidth", "22.5-22.9 GB/s pinned host-device sample bandwidth"]
+    },
+    "dgx_a100_guide": {
+      "kind": "vendor_primary",
+      "title": "NVIDIA DGX A100 User Guide",
+      "url": "https://docs.nvidia.com/dgx/dgxa100-user-guide/introduction-to-dgxa100.html",
+      "supports": ["8x A100-40GB per node", "1 TB standard system memory", "up to 200 Gb/s networking"]
+    },
+    "qwen3_8b_config": {
+      "kind": "model_primary",
+      "title": "Qwen3-8B config.json",
+      "url": "https://huggingface.co/Qwen/Qwen3-8B/blob/main/config.json",
+      "supports": ["36 layers", "8 KV heads", "128 head dimension", "BF16", "40960 context"]
+    },
+    "qwen3_32b_config": {
+      "kind": "model_primary",
+      "title": "Qwen3-32B config.json",
+      "url": "https://huggingface.co/Qwen/Qwen3-32B/blob/main/config.json",
+      "supports": ["64 layers", "8 KV heads", "128 head dimension", "BF16", "40960 context", "32.8B parameters"]
+    },
+    "tracelab_paper": {
+      "kind": "paper_primary",
+      "title": "TraceLab: Characterizing Coding Agent Workloads for LLM Serving",
+      "url": "https://arxiv.org/abs/2606.30560",
+      "supports": ["real Claude Code and Codex sessions", "long autonomous loops", "long contexts with short outputs", "high but imperfect prefix reuse"]
+    },
+    "tracelab_release": {
+      "kind": "artifact_primary",
+      "title": "TraceLab v0.0.2 release",
+      "url": "https://github.com/uw-syfi/TraceLab/releases/download/v0.0.2/syfi_coding_trace.duckdb",
+      "sha256": "a7bab286bc640844560850965ccf47975cf66407154132abaab90f27ec9be744",
+      "size_bytes": 160182272,
+      "supports": ["pinned request artifact"]
+    },
+    "tracelab_repo": {
+      "kind": "artifact_primary",
+      "title": "TraceLab repository",
+      "url": "https://github.com/uw-syfi/TraceLab",
+      "supports": ["schema", "license", "release provenance"]
+    },
+    "tracelab_artifact_audit": {
+      "kind": "artifact_measurement",
+      "title": "Pinned TraceLab v0.0.2 DuckDB audit",
+      "path": "data/cache/syfi_coding_trace-v0.0.2.duckdb",
+      "sha256": "a7bab286bc640844560850965ccf47975cf66407154132abaab90f27ec9be744",
+      "supports": ["665453 LLM rounds", "8058 provider sessions", "743819 tool calls", "round-level token and timestamp schema"]
+    },
+    "nvidia_aiperf_tracelab": {
+      "kind": "vendor_primary",
+      "title": "NVIDIA AIPerf: Replay TraceLab Agentic Coding Traces",
+      "url": "https://docs.nvidia.com/aiperf/dev/tutorials/datasets-inputs/replay-trace-lab-agentic-coding-traces",
+      "supports": ["session grouping", "fixed-schedule timestamps", "prefix/newly-appended token replay", "subagent links are reconstructed rather than ground truth"]
+    },
+    "agentx_methodology": {
+      "kind": "artifact_primary",
+      "title": "InferenceX AgentX Benchmark Methodology",
+      "url": "https://inferencex.semianalysis.com/agentx/methodology",
+      "supports": ["393 public Weka workflows", "recorded request timing and token counts", "prefix block hashes", "subagent identities and workflow graph", "private prompt contents"]
+    },
+    "aiperf_weka": {
+      "kind": "vendor_primary",
+      "title": "NVIDIA AIPerf Weka trace replay guide",
+      "url": "https://github.com/ai-dynamo/aiperf/blob/main/docs/tutorials/weka-trace.md",
+      "supports": ["Weka trace schema", "prefix hash block replay", "workflow and subagent replay semantics"]
+    },
+    "agentx_artifact_audit": {
+      "kind": "artifact_measurement",
+      "title": "Pinned full AgentX Weka JSONL audit",
+      "path": "AegisKV/doc/Archived/2026-08-06-pre-kvcache-centric/presentations/presentation/experiments/sglsim_large/traces/cc-traces-weka-062126/traces.materialized.jsonl",
+      "sha256": "29b6a19e751ff5230771519aab755f80a0f43a4ba9cf96b72d3a6a437ec99276",
+      "size_bytes": 1847151435,
+      "supports": ["393 workflows", "98827 model requests", "323 observed parallel stages", "all requests carry prefix hash IDs", "64-token hash blocks"]
+    },
+    "weka_causal_source": {
+      "kind": "local_code",
+      "title": "AegisKV Weka streaming parser and causal Algorithm-1 cross-fit adapter",
+      "path": "AegisKV/experiments/src/request/weka_causal.py",
+      "supports": ["workflow-disjoint train/calibration/evaluation folds", "request-return-only features", "workflow-level simultaneous conformal calibration", "fail-close zero for unavailable or late tickets"]
+    },
+    "servegen_nsdi26": {
+      "kind": "paper_primary",
+      "title": "ServeGen: Workload Characterization and Generation of Large Language Model Serving in Production",
+      "url": "https://www.usenix.org/conference/nsdi26/presentation/xiang-servegen",
+      "supports": ["per-client workload composition", "time-varying arrival rates", "conversation-aware request generation", "naive arrival generation can misbenchmark serving systems"]
+    },
+    "pythia_local": {
+      "kind": "local_paper",
+      "title": "Pythia: Exploiting Workflow Predictability for Efficient Agent-Native LLM Serving",
+      "path": "AegisKV/doc/related_works/2026/Pythia - Exploiting Workflow Predictability for Efficient Agent-Native LLM Serving.pdf",
+      "pages": [4, 5, 11, 12],
+      "url": "https://openreview.net/pdf?id=OMmRfGGuUJ",
+      "supports": ["production coding-assistant workflow evidence", "agent-role output statistics", "fork/join workflow structure", "workflow completion time as an agentic-serving metric"]
+    },
+    "meta_hpca_reliability": {
+      "kind": "paper_primary",
+      "title": "Revisiting Reliability in Large-Scale Machine Learning Research Clusters",
+      "url": "https://arxiv.org/abs/2410.21680",
+      "supports": ["150 million A100 GPU-hours", "1024-GPU job MTTF of 7.9 hours", "8-GPU job MTTF of 47.7 days", "job MTTF approximately scales inversely with GPU count above 32 GPUs"]
+    },
+    "aegis_nsdi_reliability": {
+      "kind": "paper_primary",
+      "title": "Evolution of Aegis: Fault Diagnosis for AI Model Training Service in Production",
+      "url": "https://www.usenix.org/system/files/nsdi25-dong.pdf",
+      "supports": ["A100 GPU mean failure interval of approximately 400 days", "45.6 percent of observed failures were GPU-related", "production cluster contains O(10K) GPUs"]
+    },
+    "failsafe_local": {
+      "kind": "local_paper",
+      "title": "FailSafe / RaidServe",
+      "path": "AegisKV/doc/related_works/2025/FailSafe - High-performance Resilient Serving.pdf",
+      "pages": [3, 5, 6, 8, 9, 10],
+      "url": "https://arxiv.org/abs/2511.14116",
+      "supports": ["one-GPU failure setting", "host checkpointing", "10-second modeled reconfiguration in trace simulation", "530 ms host and 120 ms full recovery examples"]
+    },
+    "lumen_local": {
+      "kind": "local_paper",
+      "title": "LUMEN",
+      "path": "AegisKV/doc/related_works/2026/LUMEN - Coordinated Failure Recovery for Distributed LLM Serving.pdf",
+      "pages": [8, 11, 12],
+      "url": "https://arxiv.org/abs/2606.17787",
+      "supports": ["A800 prototype and A100-class simulation", "26 GB/s GPU-CPU input", "one-to-five failed-worker sweep", "25-percent proportional failure sweep", "29.9-second LUMEN failure-impact recovery window"]
+    },
+    "ghostserve_local": {
+      "kind": "local_paper",
+      "title": "GhostServe",
+      "path": "AegisKV/doc/related_works/2026/GhostServe - A Lightweight Checkpointing System in the Shadow for Fault-Tolerant LLM Serving.pdf",
+      "pages": [1, 2, 4, 6, 8, 9, 10, 12],
+      "url": "https://arxiv.org/abs/2605.00831",
+      "supports": ["host-memory parity", "failure sensitivity", "restore reconstruct recompute choices"]
+    },
+    "dejavu_local": {
+      "kind": "local_paper",
+      "title": "DejaVu",
+      "path": "AegisKV/doc/related_works/2024/DejaVu - KV-cache Streaming for Fast, Fault-tolerant Generative LLM Serving.pdf",
+      "url": "https://proceedings.mlr.press/v235/strati24a.html",
+      "supports": ["neighbor KV streaming", "checkpoint ACK", "replay recovery"]
+    },
+    "mooncake_local": {
+      "kind": "local_paper",
+      "title": "Mooncake",
+      "path": "AegisKV/doc/related_works/kvcache_backup/01_fast25_mooncake.pdf",
+      "pages": [5, 12],
+      "url": "https://www.usenix.org/conference/fast25/presentation/qin",
+      "supports": ["network bandwidth needs", "one-TB DRAM cache scale"]
+    },
+    "aegiskv_current_design": {
+      "kind": "local_design_authority",
+      "title": "AegisKV current design",
+      "path": "AegisKV/doc/design/current_design.md",
+      "supports": ["4096-token prefix chunks", "256-token decode chunks", "source-owned independent HBM and DRAM semantics"]
+    },
+    "sglsim_complete_source": {
+      "kind": "local_code",
+      "title": "SGLSim AegisKV complete metadata DES",
+      "path": "python/sglsim/srt/simulation/aegis_complete.py",
+      "supports": ["complete current-design control and fault semantics", "metadata-only evidence boundary"]
+    },
+    "sglsim_modeled_service": {
+      "kind": "local_code",
+      "title": "SGLSim modeled Qwen service coefficients",
+      "path": "python/sglsim/srt/simulation/aegis_large_scale.py",
+      "supports": ["unvalidated A100 service-time input coefficients"],
+      "paper_ready": false
+    }
+  }
+}

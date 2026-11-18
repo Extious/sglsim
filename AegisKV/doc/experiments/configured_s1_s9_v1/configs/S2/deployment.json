@@ -1,0 +1,37 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S2",
+  "layer": "deployment",
+  "description": "AegisKV versus modeled Native Mooncake at the S1 topology",
+  "topology": {
+    "hardware": "NVIDIA A100 40 GiB modeled capacity",
+    "layout": "Qwen3-8B TP1/PP1",
+    "system_dp": 16,
+    "node_count": 2,
+    "gpus_per_node": 8
+  },
+  "policy": {
+    "design_semantics": "source_owned_independent_hbm_dram_v2",
+    "native_boundary": "modeled Router+Store approximation"
+  },
+  "axes": {},
+  "planned_cells": 50,
+  "unique_cells": 50,
+  "reuse_from": null,
+  "execution": {
+    "mode": "consume_frozen_audited_result",
+    "runner": "AegisKV/experiments/sglsim_wct_preliminary_v1/run_active_hbm_v313_s2_full_concurrency.py",
+    "source_csv": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s2_full_concurrency_physical_rate_v1/paired_ci.csv",
+    "source_audit": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s2_full_concurrency_physical_rate_v1/audit.json",
+    "source_lineage": "AegisKV/experiments/sglsim_wct_preliminary_v1/results/active_hbm_v313_s2_full_concurrency_physical_rate_v1/manifest.json",
+    "expected_rows": 15,
+    "plot_kind": "concurrency_failure_rate",
+    "figure_slug": "concurrency_three_failure_rates"
+  },
+  "evidence": {
+    "class": "modeled_metadata_des_preliminary",
+    "paper_ready": false,
+    "known_gaps": []
+  },
+  "matrix_note": "5 concurrency levels x 10 seeds; both policies and all three rates are evaluated inside each frozen job"
+}

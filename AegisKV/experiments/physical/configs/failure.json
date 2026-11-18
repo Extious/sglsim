@@ -1,0 +1,33 @@
+{
+  "schema_version": "aegiskv.physical-failure.v1",
+  "layer": "failure",
+  "description": "Safe process-level realization of the simulated fail-stop schedule",
+  "injection": {
+    "mechanism": "SIGKILL_replica_process_group",
+    "scope_source": "matched_cell.failed_workers",
+    "time_source": "matched_cell.failure_time_ms",
+    "paired_across_policies": true,
+    "controller_and_client_remain_alive": true,
+    "hardware_power_cycle_allowed": false,
+    "gpu_reset_allowed": false,
+    "node_reboot_allowed": false,
+    "network_partition_allowed": false,
+    "operator_confirmation_required": true
+  },
+  "required_observations": {
+    "signal_send_timestamp": true,
+    "process_exit_timestamp": true,
+    "route_rebind_timestamp": true,
+    "first_recovery_issue_timestamp": true,
+    "last_recovery_commit_timestamp": true,
+    "workflow_completion_timestamp": true,
+    "unfailed_control_run": true,
+    "gpu_telemetry": true,
+    "transport_telemetry": true
+  },
+  "evidence_boundary": {
+    "repair_time_ms_is_capacity_restoration_horizon": true,
+    "not_a_hardware_repair_distribution": true,
+    "field_mttf_is_reported_separately": true
+  }
+}

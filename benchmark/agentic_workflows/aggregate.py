@@ -17,6 +17,7 @@ GROUP_FIELDS = (
     "scenario",
     "dp_size",
     "workflow_count",
+    "total_agentic_requests",
     "turns",
     "groups",
     "prompts_per_group",

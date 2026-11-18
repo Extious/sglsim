@@ -1,0 +1,29 @@
+{
+  "schema_version": "aegiskv.s1-s9-three-layer.v1",
+  "group": "S7",
+  "layer": "failure",
+  "description": "Additive bandwidth-path and repair-domain sensitivity submatrices",
+  "fault_model": {
+    "enabled": true,
+    "failure_rate_per_1k_gpu_shard_hour": 5.952,
+    "directionality_rule": "copy and recovery bandwidths remain distinct"
+  },
+  "components": [
+    {
+      "name": "bandwidth",
+      "axes": {
+        "transfer_path": ["peer_hbm_same_node", "peer_hbm_cross_node", "dram_local", "dram_remote"],
+        "bandwidth_gb_s": [1, 5, 10, 25, 50]
+      }
+    },
+    {
+      "name": "repair",
+      "axes": {
+        "failure_domain": ["source_worker_gpu", "source_node"],
+        "repair_duration_seconds": [10, 30, 60, 120]
+      }
+    }
+  ],
+  "matrix_note": "Bandwidth and repair components are additive: 20 + 8 cases"
+}
+
